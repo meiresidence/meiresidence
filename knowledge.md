@@ -1,68 +1,76 @@
 # Mei Residence — Knowledge Base (bot brain)
 
-> Source of truth for the AI agent. Prices below are INDICATIVE and the price list
-> does not mark sold/available, so the bot always confirms current price and
-> availability with the sales team before promising anything. Never invent a number
-> or term that isn't here.
+> Source of truth for the AI agent. Prices are INDICATIVE and the list does not mark
+> sold/available, so always confirm current price and availability with the sales team.
+> ROI and appreciation figures below are the company's marketing positioning — present
+> them as potential, not guaranteed. Never invent a number or term that isn't here.
 
 ## What Mei Residence is
-- Premium branded seaside residence operated as **Ramada Residences® by Wyndham**,
-  in partnership with **Wyndham Hotels & Resorts** (the world's largest hospitality
-  company) — international standards, strong rental potential, global brand recognition.
-- Location: **Qerret, on the Albanian Adriatic coast** — golden-sand beach, pine
-  forest, and quiet surroundings, only **40 minutes from Tirana International Airport**.
-- **Suitable for BOTH personal use and rental income.** (This resolves earlier
-  ambiguity: personal use is allowed — see the owner-use policy below.)
-- Websites: meiresidence.com / mei.al. Instagram: @mei_residence.
-  Sales: +355 67 508 8808, +355 67 609 9900. info@meiresidence.com.
+- Premium branded seaside residence — **Ramada Residences® by Wyndham**, in partnership
+  with **Wyndham Hotels & Resorts** (world's largest hospitality company).
+- Location: **Qerret, Durrës, on the Albanian Adriatic coast** — golden-sand beach and
+  pine forest. **~280 m from the beach**, ~45 min from Tirana / ~40 min from Tirana
+  International Airport.
+- **Architect: Roberto Felicetti** (robertofelicetti.it) — modern architecture, smooth
+  lines and rounded shapes, high functionality.
+- **Suitable for BOTH personal use and rental income** (personal use is allowed — see
+  owner-use policy below).
+- Websites: meiresidence.com / mei.al / projekte.al · Instagram: @mei_residence.
+
+## Sales team — route leads to the right manager
+- **Eglent Bici** — Sales Manager: **+355 67 508 8808**
+- **Visard Koleci** — Sales Manager: **+355 67 609 9900**
+- **Ania Pawlak** — Sales Manager, **Poland**: **+48 668 412 328**
+- **Martin Chalupský** — Sales Manager, **Czech Republic**: **+420 724 752 702**
+- Email: **info@meiresidence.com**. Typically replies within ~1 hour.
+- Routing hint: Polish clients → Ania; Czech clients → Martin; others → Eglent or Visard.
+- Strong buyer markets: Albanian **diaspora in Switzerland, Germany, UK**, plus Poland
+  and Czech Republic.
 
 ## Developers / investment partners
-- **Best Invest shpk**, led by entrepreneur **Eglent Bici**.
-- **Agna Group** — one of Albania's largest and most respected companies.
-- **Lika Group** — a Switzerland-based company known for quality and excellence.
+- **Best Invest shpk** (led by **Eglent Bici**), **Agna Group** (major Albanian company),
+  **Lika Group** (Switzerland-based).
 
-## Construction quality & materials (EU standards; acoustic, thermal, fire safety)
-- **REHAU ARTEVO** windows with **triple glazing** (max thermal + acoustic insulation).
-- Full **REHAU hydraulic system** for longevity and reliability.
-- **KNAUF Diamond** interior partitions with **10 cm rock wool** — superior sound
-  insulation between apartments.
-- **FIBRAN "kapotë" façade system with 8 cm rock wool** — energy efficiency + higher
-  fire safety.
-- Premium materials and modern technical solutions to international hospitality standards.
-- Energy class A+.
+## Construction quality & materials (EU standards)
+- **REHAU ARTEVO** triple-glazed windows; full **REHAU** hydraulic system.
+- **KNAUF Diamond** partitions + **10 cm rock wool** (acoustic isolation between units).
+- **FIBRAN** façade system + **8 cm rock wool** (energy efficiency + fire safety).
+- Energy class A+; premium international-hospitality-standard finishes.
 
 ## Amenities — 500+ m² of premium shared spaces
-- Swimming pool, gym, kids' play areas, **concierge**, **gourmet restaurant**,
-  landscaped green/relaxation areas. (Also underground parking, elevators, A/C in every
-  apartment, solar-heated hot water, video intercom, controlled access.)
+- **Semi-Olympic outdoor pool**, modern **gym/fitness**, **kids' playground**,
+  **concierge**, **restaurant & bar** (gourmet, local flavors), landscaped green areas.
+- **24/7 security/surveillance**, high-speed/unlimited **Wi-Fi**, underground parking,
+  elevators, A/C in every apartment, solar-heated hot water, video intercom, controlled access.
 
 ## Investment & rental program (managed by Ramada® by Wyndham)
-- Professional property management + rental program run by the Ramada/Wyndham operator.
-- **Investors receive 65% of the net rental income**; the operator handles all management.
-- **Owners get free personal use** of their apartment: **10 days in high season** plus
-  **2–3 weeks in the off-season**.
-- (A "6% guaranteed return for 5 years" promo has appeared in past campaigns — if a
-  client asks specifically about that, confirm exact terms with the sales team; do not
-  state guarantee conditions that aren't here.)
-- Monthly administration fee ~0.6 EUR/m² (maintenance, utilities, management).
+- Professional management + rental program; Wyndham handles marketing, bookings, cleaning,
+  maintenance — fully hands-off passive income for the owner.
+- **Investors receive 65% of net rental income.**
+- **Marketed rental ROI up to ~8% per year** (blogs cite 8–10%). Present as potential.
+- **Owners get free personal use:** ~**10 days in high season** + **2–3 weeks off-season**.
+- Area appreciation: company cites property values rising ~10%/yr (marketing claim).
+- Monthly administration fee ~0.6 EUR/m².
+- (A "6% guaranteed return for 5 years" promo appeared in past campaigns — confirm exact
+  terms with a specialist; do not state guarantee conditions not written here.)
+
+## Payment
+- **Flexible installment payments and financing options are available.** Exact terms
+  (deposit %, schedule, financing) are arranged with the sales team — hand off for a
+  personalized plan.
 
 ## Timeline
-- **Construction start:** Q4 2024
-- **Construction completion:** Q4 2026
-- **Official opening:** June 2027
-- Positioned in one of Europe's fastest-growing coastal markets — strong potential for
-  value appreciation and rental income.
+- Construction start **Q4 2024**; completion **Q4 2026** (ready by end of 2026);
+  official opening **June 2027**.
 
 ## Apartment types & price ranges (EUR)
-- **1+1:** from ~76,000 (typically 76,000–103,000)
-- **2+1:** from ~82,000 (range 82,000–220,000 depending on size/floor/view)
-- **Duplex:** from ~105,300 (range 105,300–155,000)
-- **Parking post:** 15,000 or 18,000 each
+- **1+1:** from ~76,000 (76,000–103,000) · **2+1:** from ~82,000 (82,000–220,000) ·
+  **Duplex:** from ~105,300 (105,300–155,000) · **Parking:** 15,000 or 18,000 each.
 - Price depends on typology, floor and view (sea-view costs more).
 
-## Still confirm with the team (not yet provided)
-- Exact 6% guarantee terms; payment plan (deposit %, installments, financing);
-  current sold/available status per unit.
+## Still confirm with the team
+- Exact 6% guarantee terms; exact deposit/installment schedule; current sold/available
+  status per unit.
 
 ## Inventory — apartments (indicative prices, EUR)
 Prices are INDICATIVE; availability is not marked, so confirm current
