@@ -185,9 +185,9 @@ app.get('/', (_q, r) => r.send('Mei Residence GHL agent is running.'));
 app.post('/ghl-webhook', async (req, res) => {
   try {
     const b = req.body || {};
-    const contactId = b.contactId || b.contact_id || b.contact?.id;
+    const contactId = b.contactId || b.contact_id || b.id || b.contact?.id;
     if (!contactId) { console.warn('[ghl-webhook] no contactId'); return res.status(200).json({ reply: '' }); }
-    const name = b.full_name || b.first_name || b.contact?.name || '';
+    const name = b.full_name || b.first_name || b.name || b.contact?.name || '';
     // Prefer the workflow-passed text; if missing/unresolved, read it from the CRM.
     let text = b.message || b.body || b.last_message || b.customData?.message || '';
     if (!text || String(text).trim() === '' || String(text).includes('{{')) {
