@@ -1,9 +1,7 @@
-// Mei Residence WhatsApp AI Agent — GoHighLevel edition (native-send).
+// Mei Residence WhatsApp AI Agent — GoHighLevel edition (direct send).
 // Flow: GHL workflow (Customer replied) -> POST /ghl-webhook -> Claude ->
-// the reply is RETURNED in the HTTP response, and the GHL workflow sends it
-// natively (GHL blocks external API sends on this WhatsApp integration).
-// The bot also fetches the customer's message text directly from the CRM,
-// so it never depends on the workflow passing the text.
+// the server reads the customer's message from the CRM, asks Claude, and sends
+// the reply back via the GHL API. Works with a plain "Webhook" workflow action.
 
 import express from 'express';
 import fs from 'fs';
@@ -76,11 +74,12 @@ async function ghl(path, method, body, version = '2021-04-15') {
   if (!res.ok) console.error('[ghl]', method, path, res.status, JSON.stringify(data).slice(0, 200));
   return { ok: res.ok, data };
 }
+const sendWhatsApp = (contactId, message) =>
+  ghl('/conversations/messages', 'POST', { type: 'WhatsApp', contactId, message }, '2021-04-15');
 const addTags = (contactId, tags) =>
   ghl(`/contacts/${contactId}/tags`, 'POST', { tags }, '2021-07-28');
 
-// Pull the customer's most recent inbound message text straight from the CRM,
-// so we never depend on the workflow passing the text through.
+// Pull the customer's most recent inbound message text straight from the CRM.
 async function fetchLastInboundText(contactId) {
   try {
     const s = await ghl(`/conversations/search?locationId=${cfg.ghl.locationId}&contactId=${contactId}`, 'GET', null, '2021-04-15');
@@ -93,32 +92,6 @@ async function fetchLastInboundText(contactId) {
     }
     return '';
   } catch (e) { console.error('[fetchLastInbound]', e.message); return ''; }
-}
-
-
-// Write the AI reply into the contact's "AI Reply" custom field, so the GHL
-// workflow can send it natively (GHL blocks external API sends here).
-let replyFieldId = null;
-async function getReplyFieldId() {
-  if (replyFieldId) return replyFieldId;
-  const r = await ghl(`/locations/${cfg.ghl.locationId}/customFields`, 'GET', null, '2021-07-28');
-  const fields = r.data?.customFields || r.data?.customField || [];
-  const f = fields.find((x) => {
-    const n = (x.name || '').toLowerCase();
-    const k = (x.fieldKey || x.key || '').toLowerCase();
-    return n === 'ai reply' || k.includes('ai_reply');
-  });
-  replyFieldId = f?.id || null;
-  if (!replyFieldId) console.warn('[reply-field] "AI Reply" custom field not found — create it in GHL');
-  return replyFieldId;
-}
-async function writeReplyToContact(contactId, reply) {
-  try {
-    const fid = await getReplyFieldId();
-    if (!fid) return;
-    const r = await ghl(`/contacts/${contactId}`, 'PUT', { customFields: [{ id: fid, value: reply }] }, '2021-07-28');
-    console.log(`[reply-field] wrote reply to ${contactId}: ${r.ok ? 'ok' : 'FAILED'}`);
-  } catch (e) { console.error('[reply-field]', e.message); }
 }
 
 // ---- memory ----
@@ -188,7 +161,6 @@ app.post('/ghl-webhook', async (req, res) => {
     const contactId = b.contactId || b.contact_id || b.id || b.contact?.id;
     if (!contactId) { console.warn('[ghl-webhook] no contactId'); return res.status(200).json({ reply: '' }); }
     const name = b.full_name || b.first_name || b.name || b.contact?.name || '';
-    // Prefer the workflow-passed text; if missing/unresolved, read it from the CRM.
     let text = b.message || b.body || b.last_message || b.customData?.message || '';
     if (!text || String(text).trim() === '' || String(text).includes('{{')) {
       text = await fetchLastInboundText(contactId);
@@ -197,9 +169,8 @@ app.post('/ghl-webhook', async (req, res) => {
     const conv = getConv(contactId, name);
     conv.history.push({ role: 'user', content: String(text) });
     const reply = await generateReply(conv, contactId);
-    await writeReplyToContact(contactId, reply);
-    console.log(`[msg] ${contactId} <= "${String(text).slice(0,40)}" => "${reply.slice(0, 60)}"`);
-    // The GHL workflow sends this reply natively (GHL blocks external API sends here).
+    const sent = await sendWhatsApp(contactId, reply); // direct send via GHL API
+    console.log(`[msg] ${contactId} <= "${String(text).slice(0,40)}" => sent:${sent.ok} "${reply.slice(0, 60)}"`);
     return res.status(200).json({ reply, contactId });
   } catch (e) {
     console.error('[ghl-webhook] error', e);
