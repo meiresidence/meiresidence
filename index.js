@@ -94,8 +94,10 @@ async function fetchLastInboundText(contactId) {
   } catch (e) { console.error('[fetchLastInbound]', e.message); return ''; }
 }
 
-// ---- memory ----
+// ---- memory + per-contact reply cooldown (prevents duplicate/rapid replies) ----
 const store = new Map();
+const lastReplyAt = new Map();
+const COOLDOWN_MS = parseInt(process.env.REPLY_COOLDOWN_MS || '12000', 10);
 const getConv = (id, name = '') => {
   if (!store.has(id)) store.set(id, { name, history: [] });
   const c = store.get(id); if (name && !c.name) c.name = name; return c;
@@ -160,6 +162,12 @@ app.post('/ghl-webhook', async (req, res) => {
     const b = req.body || {};
     const contactId = b.contactId || b.contact_id || b.id || b.contact?.id;
     if (!contactId) { console.warn('[ghl-webhook] no contactId'); return res.status(200).json({ reply: '' }); }
+    const now = Date.now();
+    if (now - (lastReplyAt.get(contactId) || 0) < COOLDOWN_MS) {
+      console.log(`[skip] cooldown for ${contactId}`);
+      return res.status(200).json({ reply: '' });
+    }
+    lastReplyAt.set(contactId, now); // claim this window immediately (blocks concurrent duplicates)
     const name = b.full_name || b.first_name || b.name || b.contact?.name || '';
     let text = b.message || b.body || b.last_message || b.customData?.message || '';
     if (!text || String(text).trim() === '' || String(text).includes('{{')) {
