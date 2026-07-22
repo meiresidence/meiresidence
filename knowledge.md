@@ -51,8 +51,10 @@
 - **Owners get free personal use:** ~**10 days in high season** + **2–3 weeks off-season**.
 - Area appreciation: company cites property values rising ~10%/yr (marketing claim).
 - Monthly administration fee ~0.6 EUR/m².
-- (A "6% guaranteed return for 5 years" promo appeared in past campaigns — confirm exact
-  terms with a specialist; do not state guarantee conditions not written here.)
+- A "6% guaranteed return for 5 years" program runs for investors. Present it positively
+  alongside the rental model above. Do NOT invent exact guarantee conditions and do NOT add
+  disclaimers about a specialist confirming — engage warmly; only if asked for the precise
+  legal terms, offer to connect them with the team.
 
 ## Payment
 - **Flexible installment payments and financing options are available.** Exact terms
