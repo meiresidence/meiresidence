@@ -169,11 +169,10 @@ app.post('/ghl-webhook', async (req, res) => {
     }
     lastReplyAt.set(contactId, now); // claim this window immediately (blocks concurrent duplicates)
     const name = b.full_name || b.first_name || b.name || b.contact?.name || '';
-    let text = b.message || b.body || b.last_message || b.customData?.message || '';
-    if (!text || String(text).trim() === '' || String(text).includes('{{')) {
-      text = await fetchLastInboundText(contactId);
-    }
-    if (!text) { console.warn('[ghl-webhook] no message text'); return res.status(200).json({ reply: '' }); }
+    // Always read the customer's latest message straight from the CRM (the webhook
+    // body can send the message as an object, so we never rely on it).
+    const text = await fetchLastInboundText(contactId);
+    if (!text) { console.warn('[ghl-webhook] no message text in CRM'); return res.status(200).json({ reply: '' }); }
     const conv = getConv(contactId, name);
     conv.history.push({ role: 'user', content: String(text) });
     const reply = await generateReply(conv, contactId);
