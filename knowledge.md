@@ -13,8 +13,10 @@
   International Airport.
 - **Architect: Roberto Felicetti** (robertofelicetti.it) — modern architecture, smooth
   lines and rounded shapes, high functionality.
-- **Suitable for BOTH personal use and rental income** (personal use is allowed — see
-  owner-use policy below).
+- **Sold ONLY as an investment** (professionally managed short-term rentals). It is
+  **NOT for personal use** and not a home to live in — always position it as an investment
+  that generates rental income. If a client asks about buying it to live in / for personal
+  use, clarify politely that Mei Residence is an investment-only property.
 - Websites: meiresidence.com / mei.al / projekte.al · Instagram: @mei_residence.
 
 ## Sales team — route leads to the right manager
@@ -48,7 +50,6 @@
   maintenance — fully hands-off passive income for the owner.
 - **Investors receive 65% of net rental income.**
 - **Marketed rental ROI up to ~8% per year** (blogs cite 8–10%). Present as potential.
-- **Owners get free personal use:** ~**10 days in high season** + **2–3 weeks off-season**.
 - Area appreciation: company cites property values rising ~10%/yr (marketing claim).
 - Monthly administration fee ~0.6 EUR/m².
 - A "6% guaranteed return for 5 years" program runs for investors. Present it positively
