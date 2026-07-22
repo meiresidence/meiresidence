@@ -1,6 +1,7 @@
 // Mei Residence WhatsApp AI Agent — GoHighLevel edition (single file).
-// Flow: GHL workflow (Customer replied) -> POST /ghl-webhook -> Claude -> reply
-// sent back via the LeadConnector API. Chats stay visible in your GHL mobile app.
+// Flow: GHL workflow (Customer replied) -> POST /ghl-webhook -> Claude -> reply.
+// The reply is (a) attempted via the GHL API AND (b) returned in the HTTP response
+// so the GHL workflow can send it natively if the API token path is unavailable.
 
 import express from 'express';
 import fs from 'fs';
@@ -14,11 +15,10 @@ const cfg = {
     maxTokens: parseInt(process.env.ANTHROPIC_MAX_TOKENS || '600', 10),
   },
   ghl: {
-    apiKey: process.env.GHL_API_KEY,               // GHL Private Integration token (pit-...)
+    apiKey: process.env.GHL_API_KEY,
     locationId: process.env.GHL_LOCATION_ID || 'kYtT2id1lBqDXsFCeHgY',
     base: 'https://services.leadconnectorhq.com',
   },
-  // Shared secret so only your GHL workflow can call the webhook.
   webhookSecret: process.env.WEBHOOK_SECRET || '',
   historyWindow: parseInt(process.env.HISTORY_WINDOW || '20', 10),
 };
@@ -45,12 +45,13 @@ KNOWLEDGE RULES: answer ONLY from the KNOWLEDGE BASE. Prices there are indicativ
 availability is not marked, so quote the price but say you'll confirm current price
 and availability with the team. Never invent numbers, guarantee terms, or a fixed
 total not listed. For the 6% guarantee: say it exists, a specialist explains terms.
-No legal/tax/mortgage advice.
+No legal/tax/mortgage advice. You can share a unit's virtual-tour link if asked.
 
 HAND OFF (call escalate_to_agent) when: they ask for a person, want a personalized
 quote/viewing/reservation, need payment-plan or exact guarantee terms, are clearly
 hot, are an agency partner, or you can't answer from the KB. After calling it, also
-reply warmly that a Mei specialist will contact them shortly.
+reply warmly that a Mei specialist will contact them shortly. Route Polish clients to
+Ania, Czech clients to Martin, others to Eglent or Visard (see KB).
 
 NON-TEXT: if they send a voice note/image/doc you can't read, say you received it,
 ask them to type, and escalate if it seems important.
@@ -59,12 +60,12 @@ KNOWLEDGE BASE:
 ${KNOWLEDGE_BASE}`;
 
 // ---- GHL (LeadConnector) API ----
-async function ghl(path, method, body) {
+async function ghl(path, method, body, version = '2021-07-28') {
   const res = await fetch(`${cfg.ghl.base}${path}`, {
     method,
     headers: {
       Authorization: `Bearer ${cfg.ghl.apiKey}`,
-      Version: '2021-07-28',
+      Version: version,
       'Content-Type': 'application/json',
       Accept: 'application/json',
     },
@@ -75,11 +76,11 @@ async function ghl(path, method, body) {
   return { ok: res.ok, data };
 }
 const sendWhatsApp = (contactId, message) =>
-  ghl('/conversations/messages', 'POST', { type: 'WhatsApp', contactId, message });
+  ghl('/conversations/messages', 'POST', { type: 'WhatsApp', contactId, message }, '2021-04-15');
 const addTags = (contactId, tags) =>
-  ghl(`/contacts/${contactId}/tags`, 'POST', { tags });
+  ghl(`/contacts/${contactId}/tags`, 'POST', { tags }, '2021-07-28');
 
-// ---- memory (per contactId; resets on redeploy) ----
+// ---- memory ----
 const store = new Map();
 const getConv = (id, name = '') => {
   if (!store.has(id)) store.set(id, { name, history: [] });
@@ -101,7 +102,7 @@ const TOOLS = [{
 
 async function escalate(contactId, name, args) {
   await addTags(contactId, ['needs-human', 'hot-lead', 'bot-paused']);
-  console.log(`[handoff] tagged ${contactId} for human:`, args.lead_summary || '');
+  console.log(`[handoff] tagged ${contactId}:`, args.lead_summary || '');
   return { ok: true };
 }
 
@@ -141,21 +142,29 @@ app.use(express.json());
 app.get('/', (_q, r) => r.send('Mei Residence GHL agent is running.'));
 
 app.post('/ghl-webhook', async (req, res) => {
-  res.sendStatus(200);
   try {
     const b = req.body || {};
-    if (cfg.webhookSecret && b.secret !== cfg.webhookSecret) { console.warn('[ghl-webhook] bad secret'); return; }
-    // Map fields from your GHL workflow webhook payload (customize keys there).
+    if (cfg.webhookSecret && b.secret !== cfg.webhookSecret) {
+      console.warn('[ghl-webhook] bad secret');
+      return res.status(200).json({ reply: '' });
+    }
     const contactId = b.contactId || b.contact_id || b.contact?.id;
     const name = b.full_name || b.first_name || b.contact?.name || '';
     const text = b.message || b.body || b.last_message || b.customData?.message;
-    if (!contactId || !text) { console.warn('[ghl-webhook] missing contactId/message', JSON.stringify(b).slice(0,300)); return; }
+    if (!contactId || !text) {
+      console.warn('[ghl-webhook] missing contactId/message');
+      return res.status(200).json({ reply: '' });
+    }
     const conv = getConv(contactId, name);
     conv.history.push({ role: 'user', content: String(text) });
     const reply = await generateReply(conv, contactId);
-    await sendWhatsApp(contactId, reply);
-    console.log(`[msg] ${contactId} handled`);
-  } catch (e) { console.error('[ghl-webhook] error', e); }
+    sendWhatsApp(contactId, reply).catch(() => {}); // best-effort API send
+    console.log(`[msg] ${contactId} replied: ${reply.slice(0, 60)}`);
+    return res.status(200).json({ reply, contactId }); // backup: workflow can send this
+  } catch (e) {
+    console.error('[ghl-webhook] error', e);
+    return res.status(200).json({ reply: '' });
+  }
 });
 
 app.listen(cfg.port, () => console.log(`Mei Residence GHL agent on :${cfg.port} (model ${cfg.anthropic.model})`));
