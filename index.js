@@ -1,7 +1,9 @@
-// Mei Residence WhatsApp AI Agent — GoHighLevel edition (single file).
-// Flow: GHL workflow (Customer replied) -> POST /ghl-webhook -> Claude -> reply.
-// The reply is (a) attempted via the GHL API AND (b) returned in the HTTP response
-// so the GHL workflow can send it natively if the API token path is unavailable.
+// Mei Residence WhatsApp AI Agent — GoHighLevel edition (native-send).
+// Flow: GHL workflow (Customer replied) -> POST /ghl-webhook -> Claude ->
+// the reply is RETURNED in the HTTP response, and the GHL workflow sends it
+// natively (GHL blocks external API sends on this WhatsApp integration).
+// The bot also fetches the customer's message text directly from the CRM,
+// so it never depends on the workflow passing the text.
 
 import express from 'express';
 import fs from 'fs';
@@ -19,7 +21,6 @@ const cfg = {
     locationId: process.env.GHL_LOCATION_ID || 'kYtT2id1lBqDXsFCeHgY',
     base: 'https://services.leadconnectorhq.com',
   },
-  webhookSecret: process.env.WEBHOOK_SECRET || '',
   historyWindow: parseInt(process.env.HISTORY_WINDOW || '20', 10),
 };
 for (const k of ['ANTHROPIC_API_KEY', 'GHL_API_KEY']) {
@@ -53,14 +54,14 @@ hot, are an agency partner, or you can't answer from the KB. After calling it, a
 reply warmly that a Mei specialist will contact them shortly. Route Polish clients to
 Ania, Czech clients to Martin, others to Eglent or Visard (see KB).
 
-NON-TEXT: if they send a voice note/image/doc you can't read, say you received it,
-ask them to type, and escalate if it seems important.
+NON-TEXT: if the message is empty or clearly a voice note/image/doc you can't read,
+say you received it, ask them to type their question, and escalate if it seems important.
 
 KNOWLEDGE BASE:
 ${KNOWLEDGE_BASE}`;
 
 // ---- GHL (LeadConnector) API ----
-async function ghl(path, method, body, version = '2021-07-28') {
+async function ghl(path, method, body, version = '2021-04-15') {
   const res = await fetch(`${cfg.ghl.base}${path}`, {
     method,
     headers: {
@@ -72,13 +73,27 @@ async function ghl(path, method, body, version = '2021-07-28') {
     body: body ? JSON.stringify(body) : undefined,
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) console.error('[ghl]', method, path, res.status, JSON.stringify(data));
+  if (!res.ok) console.error('[ghl]', method, path, res.status, JSON.stringify(data).slice(0, 200));
   return { ok: res.ok, data };
 }
-const sendWhatsApp = (contactId, message) =>
-  ghl('/conversations/messages', 'POST', { type: 'WhatsApp', contactId, message }, '2021-04-15');
 const addTags = (contactId, tags) =>
   ghl(`/contacts/${contactId}/tags`, 'POST', { tags }, '2021-07-28');
+
+// Pull the customer's most recent inbound message text straight from the CRM,
+// so we never depend on the workflow passing the text through.
+async function fetchLastInboundText(contactId) {
+  try {
+    const s = await ghl(`/conversations/search?locationId=${cfg.ghl.locationId}&contactId=${contactId}`, 'GET', null, '2021-04-15');
+    const convId = s.data?.conversations?.[0]?.id;
+    if (!convId) return '';
+    const m = await ghl(`/conversations/${convId}/messages`, 'GET', null, '2021-04-15');
+    const msgs = m.data?.messages?.messages || m.data?.messages || [];
+    for (const msg of msgs) {
+      if (msg.direction === 'inbound' && msg.body && String(msg.body).trim()) return String(msg.body).trim();
+    }
+    return '';
+  } catch (e) { console.error('[fetchLastInbound]', e.message); return ''; }
+}
 
 // ---- memory ----
 const store = new Map();
@@ -92,7 +107,7 @@ const trim = (c) => { if (c.history.length > cfg.historyWindow) c.history = c.hi
 const anthropic = new Anthropic({ apiKey: cfg.anthropic.apiKey });
 const TOOLS = [{
   name: 'escalate_to_agent',
-  description: 'Hand this lead to a human Mei sales agent (tags the contact needs-human + hot-lead and pauses the bot). Call when they ask for a person, want a personalized quote/viewing/reservation, need payment or guarantee terms, are hot, are an agency, or you cannot answer from the KB. After calling, also reply that a specialist will contact them.',
+  description: 'Hand this lead to a human Mei sales agent (tags the contact needs-human + hot-lead). Call when they ask for a person, want a personalized quote/viewing/reservation, need payment or guarantee terms, are hot, are an agency, or you cannot answer from the KB. After calling, also reply that a specialist will contact them.',
   input_schema: { type: 'object', properties: {
     reason: { type: 'string' }, lead_summary: { type: 'string' },
     interested_in: { type: 'string' }, buyer_type: { type: 'string' },
@@ -101,7 +116,7 @@ const TOOLS = [{
 }];
 
 async function escalate(contactId, name, args) {
-  await addTags(contactId, ['needs-human', 'hot-lead', 'bot-paused']);
+  addTags(contactId, ['needs-human', 'hot-lead']).catch(() => {});
   console.log(`[handoff] tagged ${contactId}:`, args.lead_summary || '');
   return { ok: true };
 }
@@ -144,23 +159,21 @@ app.get('/', (_q, r) => r.send('Mei Residence GHL agent is running.'));
 app.post('/ghl-webhook', async (req, res) => {
   try {
     const b = req.body || {};
-    if (cfg.webhookSecret && b.secret !== cfg.webhookSecret) {
-      console.warn('[ghl-webhook] bad secret');
-      return res.status(200).json({ reply: '' });
-    }
     const contactId = b.contactId || b.contact_id || b.contact?.id;
+    if (!contactId) { console.warn('[ghl-webhook] no contactId'); return res.status(200).json({ reply: '' }); }
     const name = b.full_name || b.first_name || b.contact?.name || '';
-    const text = b.message || b.body || b.last_message || b.customData?.message;
-    if (!contactId || !text) {
-      console.warn('[ghl-webhook] missing contactId/message');
-      return res.status(200).json({ reply: '' });
+    // Prefer the workflow-passed text; if missing/unresolved, read it from the CRM.
+    let text = b.message || b.body || b.last_message || b.customData?.message || '';
+    if (!text || String(text).trim() === '' || String(text).includes('{{')) {
+      text = await fetchLastInboundText(contactId);
     }
+    if (!text) { console.warn('[ghl-webhook] no message text'); return res.status(200).json({ reply: '' }); }
     const conv = getConv(contactId, name);
     conv.history.push({ role: 'user', content: String(text) });
     const reply = await generateReply(conv, contactId);
-    sendWhatsApp(contactId, reply).catch(() => {}); // best-effort API send
-    console.log(`[msg] ${contactId} replied: ${reply.slice(0, 60)}`);
-    return res.status(200).json({ reply, contactId }); // backup: workflow can send this
+    console.log(`[msg] ${contactId} <= "${String(text).slice(0,40)}" => "${reply.slice(0, 60)}"`);
+    // The GHL workflow sends this reply natively (GHL blocks external API sends here).
+    return res.status(200).json({ reply, contactId });
   } catch (e) {
     console.error('[ghl-webhook] error', e);
     return res.status(200).json({ reply: '' });
