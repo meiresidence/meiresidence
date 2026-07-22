@@ -95,6 +95,32 @@ async function fetchLastInboundText(contactId) {
   } catch (e) { console.error('[fetchLastInbound]', e.message); return ''; }
 }
 
+
+// Write the AI reply into the contact's "AI Reply" custom field, so the GHL
+// workflow can send it natively (GHL blocks external API sends here).
+let replyFieldId = null;
+async function getReplyFieldId() {
+  if (replyFieldId) return replyFieldId;
+  const r = await ghl(`/locations/${cfg.ghl.locationId}/customFields`, 'GET', null, '2021-07-28');
+  const fields = r.data?.customFields || r.data?.customField || [];
+  const f = fields.find((x) => {
+    const n = (x.name || '').toLowerCase();
+    const k = (x.fieldKey || x.key || '').toLowerCase();
+    return n === 'ai reply' || k.includes('ai_reply');
+  });
+  replyFieldId = f?.id || null;
+  if (!replyFieldId) console.warn('[reply-field] "AI Reply" custom field not found — create it in GHL');
+  return replyFieldId;
+}
+async function writeReplyToContact(contactId, reply) {
+  try {
+    const fid = await getReplyFieldId();
+    if (!fid) return;
+    const r = await ghl(`/contacts/${contactId}`, 'PUT', { customFields: [{ id: fid, value: reply }] }, '2021-07-28');
+    console.log(`[reply-field] wrote reply to ${contactId}: ${r.ok ? 'ok' : 'FAILED'}`);
+  } catch (e) { console.error('[reply-field]', e.message); }
+}
+
 // ---- memory ----
 const store = new Map();
 const getConv = (id, name = '') => {
@@ -171,6 +197,7 @@ app.post('/ghl-webhook', async (req, res) => {
     const conv = getConv(contactId, name);
     conv.history.push({ role: 'user', content: String(text) });
     const reply = await generateReply(conv, contactId);
+    await writeReplyToContact(contactId, reply);
     console.log(`[msg] ${contactId} <= "${String(text).slice(0,40)}" => "${reply.slice(0, 60)}"`);
     // The GHL workflow sends this reply natively (GHL blocks external API sends here).
     return res.status(200).json({ reply, contactId });
