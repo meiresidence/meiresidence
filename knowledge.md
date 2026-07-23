@@ -1,7 +1,8 @@
 # Mei Residence — Knowledge Base (bot brain)
 
-> Source of truth for the AI agent. Prices are INDICATIVE and the list does not mark
-> sold/available, so always confirm current price and availability with the sales team.
+> Source of truth for the AI agent. Prices are INDICATIVE and each unit is tagged
+> FREE / SOLD / RESERVED from the latest price list, but status changes fast — always
+> confirm the current price and availability with the sales team before quoting.
 > ROI and appreciation figures below are the company's marketing positioning — present
 > them as potential, not guaranteed. Never invent a number or term that isn't here.
 
@@ -71,8 +72,9 @@ fire safety).
   official opening **June 2027**.
 
 ## Apartment types & price ranges (EUR)
-- **1+1:** from ~93,200 (93,200–103,000) · **2+1:** from ~82,000 (82,000–220,000) ·
-  **Duplex:** from ~105,300 (105,300–155,000) · **Parking:** 15,000 or 18,000 each.
+- **1+1:** free from ~93,200 (93,200–118,000) · **2+1:** free from ~129,000 (129,000–280,000) ·
+  **3+1:** 224,000 · **Duplex:** free from ~111,300 (111,300–169,200) · **Parking:** 15,000 or 18,000 each.
+- Ranges above cover **available** units only.
 - Price depends on typology, floor and view (sea-view costs more).
 
 ## Still confirm with the team
@@ -87,119 +89,180 @@ edhe fiton para çdo vit."
 "Cheaper nearby" objection → "Janë 30% më lirë, por varet çfarë blen" + stress
 brand, management, and build-quality difference.
 ## Inventory — apartments (indicative prices, EUR)
-Prices are INDICATIVE; availability is not marked, so confirm current
-price and availability with the sales team. Unit codes: A/B + floor + number;
+Prices are INDICATIVE; each unit is tagged **FREE / SOLD / RESERVED** from the latest
+price list, but status changes fast — confirm current price and availability with the
+sales team. Buyer names in the source sheet are confidential and never shown. Unit codes: A/B + floor + number;
 type after the slash. Each unit has a **virtual tour link** (share it when a
 client asks for photos/video/layout) and a **detailed floor-plan PDF** the
 sales team can send on request.
 
-- 1+1: 55 units, 76,000–103,000 EUR
-- 2+1: 15 units, 82,000–220,000 EUR
-- Duplex: 18 units, 105,300–155,000 EUR
+Totals: 152 apartments — **63 available, 53 sold, 2 reserved, 34 not-released / price-on-request**.
+- 1+1: **37 available**, 93,200–118,000 EUR (44 sold, 1 reserved, 21 not-released/TBC)
+- 2+1: **16 available**, 129,000–280,000 EUR (2 sold, 7 not-released)
+- 3+1: **1 available**, 224,000 EUR (1 sold)
+- Duplex: **9 available**, 111,300–169,200 EUR (6 sold, 1 reserved, 6 not-released/TBC)
 - Parking posts: 15,000 or 18,000 EUR each
 
 Per-unit (unit | total m2 | price EUR | virtual tour):
 
 **KATI PËRDHE**
-- APARTAMENT B001/Duplex — 93.3 m2 — 130,500 EUR | tour: https://app.screencast.com/WUpkZ9ioMGpEO
-- APARTAMENT B002/Duplex — 100.9 m2 — 146,000 EUR | tour: https://app.screencast.com/E8bM8jxHz6Qkk
-- APARTAMENT B003/ Duplex — 100.9 m2 — 150,000 EUR | tour: https://app.screencast.com/IYVE3a4zc0RNj
-- APARTAMENT B004/Duplex — 100.9 m2 — 150,000 EUR | tour: https://app.screencast.com/IYVE3a4zc0RNj
-- APARTAMENT B005/Duplex — 100.9 m2 — 150,000 EUR | tour: https://app.screencast.com/QfmVJku8WSDqa
-- APARTAMENT B006/Duplex — 104.6 m2 — 155,000 EUR | tour: https://app.screencast.com/0B5749yWfSLIP
-- APARTAMENT A007/Duplex — 102.3 m2 — 150,000 EUR | tour: https://app.screencast.com/0B5749yWfSLIP
-- APARTAMENT A008/Duplex — 93.4 m2 — 131,000 EUR | tour: https://app.screencast.com/cAHONMQqnRugf
-- APARTAMENT  A009/Duplex — 96.4 m2 — 136,000 EUR | tour: https://app.screencast.com/IGG2KEsJq1bTK
-- APARTAMENT A010/Duplex — 95.9 m2 — 145,000 EUR | tour: https://app.screencast.com/llDDT3ktawJu0
-- APARTAMENT A015/Duplex — 79.1 m2 — 110,000 EUR | tour: https://app.screencast.com/DvzzgCQFTMy7Q
-- APARTAMENT B016/Duplex — 79.1 m2 — 110,000 EUR | tour: https://app.screencast.com/G4odvVr0Q3vxj
-- APARTAMENT B017/Duplex — 76.3 m2 — 105,300 EUR | tour: https://app.screencast.com/J4mHzdCA0JDhG
-- APARTAMENT B018/Duplex — 76.3 m2 — 105,300 EUR | tour: https://app.screencast.com/J4mHzdCA0JDhG
-- APARTAMENT B019/Duplex — 76.3 m2 — 105,300 EUR | tour: https://app.screencast.com/MPzwEy4BM3EpB
-- APARTAMENT B020/Duplex — 76.3 m2 — 153,000 EUR | tour: https://app.screencast.com/K8uN6WzvyWds4
-- APARTAMENT B021/Duplex — 79.1 m2 — 107,000 EUR | tour: https://app.screencast.com/IBdRkdUyyFkVd
-- APARTAMENT B022/Duplex — 98.3 m2 — 152,500 EUR | tour: https://app.screencast.com/IBdRkdUyyFkVd
+- APARTAMENT B001/Duplex — 93.3 m2 — RESERVED
+- APARTAMENT B002/Duplex — 100.9 m2 — 163,500 EUR — FREE | tour: https://app.screencast.com/E8bM8jxHz6Qkk
+- APARTAMENT B003/Duplex — 100.9 m2 — 161,300 EUR — SOLD
+- APARTAMENT B004/Duplex — 100.9 m2 — 168,600 EUR — FREE | tour: https://app.screencast.com/IYVE3a4zc0RNj
+- APARTAMENT B005/Duplex — 100.9 m2 — 169,200 EUR — FREE | tour: https://app.screencast.com/QfmVJku8WSDqa
+- APARTAMENT B006/Duplex — 104.6 m2 — 168,000 EUR — FREE | tour: https://app.screencast.com/0B5749yWfSLIP
+- APARTAMENT A007/Duplex — 102.3 m2 — 167,900 EUR — FREE | tour: https://app.screencast.com/0B5749yWfSLIP
+- APARTAMENT A008/Duplex — 93.4 m2 — price on request
+- APARTAMENT A009/Duplex — 96.4 m2 — price on request
+- APARTAMENT A010/Duplex — 95.9 m2 — SOLD
+- APARTAMENT A011/Duplex — 72.6 m2 — not yet released (price on request)
+- APARTAMENT A012/Duplex — 74.3 m2 — not yet released (price on request)
+- APARTAMENT A013/Duplex — 110.2 m2 — not yet released (price on request)
+- APARTAMENT A014/Duplex — 79.1 m2 — not yet released (price on request)
+- APARTAMENT A015/Duplex — 79.1 m2 — 117,200 EUR — SOLD
+- APARTAMENT B016/Duplex — 79.1 m2 — 120,000 EUR — FREE | tour: https://app.screencast.com/G4odvVr0Q3vxj
+- APARTAMENT B017/Duplex — 76.3 m2 — 109,500 EUR — SOLD
+- APARTAMENT B018/Duplex — 76.3 m2 — 109,500 EUR — SOLD
+- APARTAMENT B019/Duplex — 76.3 m2 — 111,300 EUR — FREE | tour: https://app.screencast.com/MPzwEy4BM3EpB
+- APARTAMENT B020/Duplex — 76.3 m2 — SOLD
+- APARTAMENT B021/Duplex — 79.1 m2 — 120,000 EUR — FREE | tour: https://app.screencast.com/IBdRkdUyyFkVd
+- APARTAMENT B022/Duplex — 98.4 m2 — 140,500 EUR — FREE | tour: https://app.screencast.com/IBdRkdUyyFkVd
 
 **KATI PARË**
-- APARTAMENT B101/1+1 — 50.6 m2 — 76,000 EUR | tour: https://app.screencast.com/hBa2p0QeQ18cY
-- APARTAMENT B103/2+1 — 111.5 m2 — 170,000 EUR | tour: https://app.screencast.com/Fr5RoMOcwpRi9
-- APARTAMENTI B104 /1+1 — 57.1 m2 — 79,926 EUR | tour: https://app.screencast.com/Nl1DPvTiXjUpC
-- APARTAMENTI B104/2+1 — 80.3 m2 — 126,074 EUR | tour: https://app.screencast.com/WwjpMvyJricRT
-- APARTAMENT NR.4/2+1 — 137.4 m2 — 206,000 EUR
-- APARTAMENT  B108/1+1 — 56.5 m2 — 88,000 EUR | tour: https://app.screencast.com/WwjpMvyJricRT
-- APARTAMENT A110/1+1 — 52.7 m2 — 82,000 EUR | tour: https://app.screencast.com/3cdIkzlvSOM1e
-- APARTAMENT A111/1+1 — 52.2 m2 — 81,500 EUR | tour: https://app.screencast.com/dilmZcNocWTgB
-- APARTAMENT A112/1+1 — 52.2 m2 — 81,500 EUR | tour: https://app.screencast.com/bvMYdRyXA9lmT
-- APARTAMENT A113/2+1 — 122.9 m2 — 190,500 EUR | tour: https://app.screencast.com/NSIbcrq5lhkXQ
-- APARTAMENT A114/2+1 — 95.2 m2 — 148,000 EUR | tour: https://app.screencast.com/NSIbcrq5lhkXQ
-- APARTAMENT A115/2+1 — 52.5 m2 — 82,000 EUR | tour: https://app.screencast.com/IQTQoCbPEGDto
-- APARTAMENT A116/1+1 — 52.8 m2 — 82,000 EUR | tour: https://app.screencast.com/fdBigPRUVKxPX
-- APARTAMENT A123/1+1 — 62.4 m2 — 87,000 EUR | tour: https://app.screencast.com/Jl30ZDGPidxDs
-- APARTAMENT B124/1+1 — 61.7 m2 — 86,000 EUR | tour: https://app.screencast.com/62fDXoFnUvjml
-- APARTAMENT B129/1+1 — 60.3 m2 — 84,000 EUR | tour: https://app.screencast.com/ynGzhdA1W7fkS
-- APARTAMENT B130/1+1 — 60.3 m2 — 84,000 EUR | tour: https://app.screencast.com/ynGzhdA1W7fkS
-- APARTAMENT B131/1+1 — 62.3 m2 — 87,000 EUR | tour: https://app.screencast.com/VceEXrhsUwiaJ
+- APARTAMENT B101/1+1 — 50.6 m2 — SOLD
+- APARTAMENT NR.2/1+1/BA — 86.6 m2 — SOLD
+- APARTAMENT B103/2+1 — 111.5 m2 — 205,000 EUR — FREE | tour: https://app.screencast.com/Fr5RoMOcwpRi9
+- APARTAMENT B104/1+1 — 57.1 m2 — 93,200 EUR — FREE | tour: https://app.screencast.com/Nl1DPvTiXjUpC
+- APARTAMENT B104/2+1 — 80.3 m2 — 135,000 EUR — FREE | tour: https://app.screencast.com/WwjpMvyJricRT
+- APARTAMENT NR.B105/1+1 — 54.4 m2 — SOLD
+- APARTAMENT NR.B106/1+1 — 53.6 m2 — SOLD
+- APARTAMENT NR.B107/1+1 — 53.6 m2 — SOLD
+- APARTAMENT B108/1+1 — 56.5 m2 — 99,000 EUR — SOLD
+- APARTAMENT A109/2+1 — 139.4 m2 — not yet released (price on request)
+- APARTAMENT A110/1+1 — 52.7 m2 — 99,800 EUR — FREE | tour: https://app.screencast.com/3cdIkzlvSOM1e
+- APARTAMENT A111/1+1 — 52.2 m2 — 95,000 EUR — SOLD
+- APARTAMENT A112/1+1 — 52.2 m2 — 95,000 EUR — SOLD
+- APARTAMENT A113/2+1 — 122.9 m2 — 216,000 EUR — FREE | tour: https://app.screencast.com/NSIbcrq5lhkXQ
+- APARTAMENT A114/2+1 — 95.2 m2 — 171,000 EUR — FREE | tour: https://app.screencast.com/NSIbcrq5lhkXQ
+- APARTAMENT A115/1+1 — 52.5 m2 — 91,000 EUR — SOLD
+- APARTAMENT A116/1+1 — 52.8 m2 — 96,000 EUR — FREE | tour: https://app.screencast.com/fdBigPRUVKxPX
+- APARTAMENT A117/1+1 — 55.6 m2 — not yet released (price on request)
+- APARTAMENT A118/1+1/P — 114.4 m2 — not yet released (price on request)
+- APARTAMENT A119/2+1/P — 139.2 m2 — not yet released (price on request)
+- APARTAMENT A120/1+1 — 60.3 m2 — not yet released (price on request)
+- APARTAMENT A121/1+1 — 60.3 m2 — not yet released (price on request)
+- APARTAMENT A122/1+1 — 60.3 m2 — not yet released (price on request)
+- APARTAMENT A123/1+1 — 62.4 m2 — 94,000 EUR — SOLD
+- APARTAMENT B124/1+1 — 61.7 m2 — 98,000 EUR — FREE | tour: https://app.screencast.com/62fDXoFnUvjml
+- APARTAMENT NR B125/1+1 — 62.3 m2 — SOLD
+- APARTAMENT NR B126/1+1 — 60.3 m2 — SOLD
+- APARTAMENT NR B127/1+1 — 60.3 m2 — SOLD
+- APARTAMENT NR B128/1+1 — 60.3 m2 — SOLD
+- APARTAMENT B129/1+1 — 60.3 m2 — 89,600 EUR — SOLD
+- APARTAMENT B130/1+1 — 60.3 m2 — 89,600 EUR — SOLD
+- APARTAMENT B131/1+1 — 62.3 m2 — 93,000 EUR — SOLD
 
 **KATI 2**
-- APARTAMENT B201/1+1 — 50.6 m2 — 80,000 EUR | tour: https://app.screencast.com/gwDKLDiLg8qoN
-- APARTAMENT B203/2+1 — 111.5 m2 — 182,000 EUR | tour: https://app.screencast.com/ek8OHxjcEExGi
-- APARTAMENTI B204/1+1 — 57.1 m2 — ask EUR | tour: https://app.screencast.com/epghkZH96WVxK
-- APARTAMENTI B204/1/2+1 — 80.3 m2 — ask EUR | tour: https://app.screencast.com/YPWsMQIOAaUJv
-- APARTAMENT NR.4/2+1 — 137.4 m2 — 215,000 EUR
-- APARTAMENT B205/1+1 — 54.4 m2 — 85,500 EUR | tour: https://app.screencast.com/XzMqbT0P6chuI
-- APARTAMENT A210/1+1 — 52.7 m2 — 85,000 EUR | tour: https://app.screencast.com/SGkdSb6ixeKZn
-- APARTAMENT A211/1+1 — 52.2 m2 — 83,500 EUR | tour: https://app.screencast.com/Kw74nXxm85Pgt
-- APARTAMENT A212/1+1 — 52.2 m2 — 83,500 EUR | tour: https://app.screencast.com/M4w08lIJEVLgw
-- APARTAMENT A214/2+1 — 95.2 m2 — 154,500 EUR | tour: https://app.screencast.com/Axddx2HhaMUDv
-- APARTAMENT A215/1+1 — 52.5 m2 — 83,000 EUR | tour: https://app.screencast.com/hRJNNyxJCo0Ph
-- APARTAMENT A216/1+1 — 52.8 m2 — 83,200 EUR | tour: https://app.screencast.com/hRJNNyxJCo0Ph
-- APARTAMENT A222/1+1 — 60.3 m2 — 90,000 EUR | tour: https://app.screencast.com/p1j8SHfL0lpOs
-- APARTAMENT A223/1+1 — 62.4 m2 — 92,000 EUR | tour: https://app.screencast.com/bDdzfLaURJ9J9
-- APARTAMENT B224/1+1 — 61.7 m2 — 92,000 EUR | tour: https://app.screencast.com/yop7U5pl4jVx7
-- APARTAMENT B228/1+1 — 60.3 m2 — 90,000 EUR | tour: https://app.screencast.com/wX9i9nXEkIeU5
-- APARTAMENT B230/1+1 — 60.3 m2 — 90,000 EUR | tour: https://app.screencast.com/KtNxaFgBhqUp5
-- APARTAMENT B031/1+1 — 62.3 m2 — 93,000 EUR | tour: https://app.screencast.com/cPgezfZrM0WKt
+- APARTAMENT B201/1+1 — 50.6 m2 — 102,000 EUR — FREE | tour: https://app.screencast.com/gwDKLDiLg8qoN
+- APARTAMENT B202/2+1 — 86.6 m2 — SOLD
+- APARTAMENT B203/2+1 — 111.5 m2 — 215,300 EUR — FREE | tour: https://app.screencast.com/ek8OHxjcEExGi
+- APARTAMENT B204/3+1 — 137.4 m2 — 224,000 EUR — FREE
+- APARTAMENT B204/1+1 — 57.1 m2 — 95,000 EUR — FREE | tour: https://app.screencast.com/epghkZH96WVxK
+- APARTAMENT B204/1/2+1 — 80.3 m2 — 129,000 EUR — FREE | tour: https://app.screencast.com/YPWsMQIOAaUJv
+- APARTAMENT B205/1+1 — 54.4 m2 — 93,600 EUR — SOLD
+- APARTAMENT B206/1+1 — 53.6 m2 — SOLD
+- APARTAMENT B207/1+1 — 53.6 m2 — SOLD
+- APARTAMENT B208/1+1 — 56.5 m2 — SOLD
+- APARTAMENT A209/2+1 — 139.4 m2 — not yet released (price on request)
+- APARTAMENT A210/1+1 — 52.7 m2 — 99,200 EUR — RESERVED
+- APARTAMENT A211/1+1 — 52.2 m2 — 103,500 EUR — FREE | tour: https://app.screencast.com/Kw74nXxm85Pgt
+- APARTAMENT A212/1+1 — 52.2 m2 — 103,500 EUR — FREE | tour: https://app.screencast.com/M4w08lIJEVLgw
+- APARTAMENT A213/2+1 — 122.9 m2 — 229,000 EUR — FREE
+- APARTAMENT A214/2+1 — 95.2 m2 — 175,000 EUR — FREE | tour: https://app.screencast.com/Axddx2HhaMUDv
+- APARTAMENT A215/1+1 — 52.5 m2 — 98,000 EUR — FREE | tour: https://app.screencast.com/hRJNNyxJCo0Ph
+- APARTAMENT A216/1+1 — 52.8 m2 — 98,000 EUR — FREE | tour: https://app.screencast.com/hRJNNyxJCo0Ph
+- APARTAMENT A217/1+1 — 55.6 m2 — not yet released (price on request)
+- APARTAMENT A218/2+1 — 114.4 m2 — not yet released (price on request)
+- APARTAMENT A219/2+1 — 139.2 m2 — not yet released (price on request)
+- APARTAMENT A220/1+1 — 60.3 m2 — not yet released (price on request)
+- APARTAMENT A221/1+1 — 60.3 m2 — not yet released (price on request)
+- APARTAMENT A222/1+1 — 60.3 m2 — 95,000 EUR — SOLD
+- APARTAMENT A223/1+1 — 62.4 m2 — 104,000 EUR — FREE | tour: https://app.screencast.com/bDdzfLaURJ9J9
+- APARTAMENT B224/1+1 — 61.7 m2 — 103,500 EUR — FREE | tour: https://app.screencast.com/yop7U5pl4jVx7
+- APARTAMENT B225/1+1 — 62.3 m2 — SOLD
+- APARTAMENT B226/1+1 — 60.3 m2 — SOLD
+- APARTAMENT B227/1+1 — 60.3 m2 — SOLD
+- APARTAMENT B228/1+1 — 60.3 m2 — 103,200 EUR — FREE | tour: https://app.screencast.com/wX9i9nXEkIeU5
+- APARTAMENT B229/1+1 — 60.3 m2 — price on request
+- APARTAMENT B230/1+1 — 60.3 m2 — 103,200 EUR — FREE | tour: https://app.screencast.com/KtNxaFgBhqUp5
+- APARTAMENT B231/1+1 — 62.3 m2 — 104,000 EUR — FREE | tour: https://app.screencast.com/cPgezfZrM0WKt
 
 **KATI  3**
-- APARTAMENT B301/1+1 — 50.6 m2 — 83,000 EUR | tour: https://app.screencast.com/iI9Ze1310NMb2
-- APARTAMENT B302/2+1 — 86.6 m2 — 150,000 EUR | tour: https://app.screencast.com/ZLKvUhKeUrUbf
-- APARTAMENT B303/2+1 — 111.5 m2 — 190,000 EUR | tour: https://app.screencast.com/ZLKvUhKeUrUbf
-- APARTAMENT B304/1/2+1 — 80.3 m2 — ask EUR | tour: https://app.screencast.com/cwgCFTIIRZvkc
-- APARTAMENT B304/2/2+1 — 137.4 m2 — 220,000 EUR
-- APARTAMENT A310/1+1 — 52.7 m2 — 85,000 EUR | tour: https://app.screencast.com/wpHQ4x12gvg39
-- APARTAMENT A311/1+1 — 52.2 m2 — 84,500 EUR | tour: https://app.screencast.com/XDSOmtThNSYCd
-- APARTAMENT A312/1+1 — 52.2 m2 — 84,500 EUR | tour: https://app.screencast.com/H91fT0pjTp8pH
-- APARTAMENT A314/2+1 — 95.2 m2 — 155,000 EUR | tour: https://app.screencast.com/fudk6XbuEhj5Q
-- APARTAMENT A315/1+1 — 52.5 m2 — 84,500 EUR | tour: https://app.screencast.com/sm3klTgvl7aU9
-- APARTAMENT A316/1+1 — 52.8 m2 — 84,600 EUR | tour: https://app.screencast.com/RHwjMv2ROQwoT
-- APARTAMENT A323/1+1 — 62.4 m2 — 98,000 EUR | tour: https://app.screencast.com/PWkatCwC9kHkO
-- APARTAMENT B324/1+1 — 61.7 m2 — 97,000 EUR | tour: https://app.screencast.com/2AgYKOsOkYD4l
-- APARTAMENT B329/1+1 — 60.3 m2 — 95,000 EUR | tour: https://app.screencast.com/2AgYKOsOkYD4l
-- APARTAMENT B330/1+1 — 60.3 m2 — 95,000 EUR | tour: https://app.screencast.com/vQP6e2xYC3fmH
-- APARTAMENT B331/1+1 — 62.3 m2 — 98,000 EUR | tour: https://app.screencast.com/9GvEZn5urJGkE
+- APARTAMENT B301/1+1 — 50.6 m2 — 108,800 EUR — FREE | tour: https://app.screencast.com/iI9Ze1310NMb2
+- APARTAMENT B302/2+1 — 86.6 m2 — 178,000 EUR — FREE | tour: https://app.screencast.com/ZLKvUhKeUrUbf
+- APARTAMENT B303/2+1 — 111.5 m2 — 216,000 EUR — FREE | tour: https://app.screencast.com/ZLKvUhKeUrUbf
+- APARTAMENT B304/1+1 — 57.1 m2 — 102,000 EUR — FREE
+- APARTAMENT B304/1/2+1 — 80.3 m2 — 132,000 EUR — SOLD
+- APARTAMENT B305/1+1 — 54.4 m2 — SOLD
+- APARTAMENT B306/1+1 — 53.6 m2 — SOLD
+- APARTAMENT B307/1+1 — 53.6 m2 — SOLD
+- APARTAMENT B308/1+1 — 56.5 m2 — SOLD
+- APARTAMENT A309/2+1 — 139.4 m2 — not yet released (price on request)
+- APARTAMENT A310/1+1 — 52.7 m2 — SOLD
+- APARTAMENT A311/1+1 — 52.2 m2 — SOLD
+- APARTAMENT A312/1+1 — 52.2 m2 — SOLD
+- APARTAMENT A313/2+1 — 122.9 m2 — 242,000 EUR — FREE
+- APARTAMENT A314/2+1 — 95.2 m2 — 173,000 EUR — FREE | tour: https://app.screencast.com/fudk6XbuEhj5Q
+- APARTAMENT A315/1+1 — 52.5 m2 — 95,700 EUR — SOLD
+- APARTAMENT A316/1+1 — 52.8 m2 — 99,800 EUR — FREE | tour: https://app.screencast.com/RHwjMv2ROQwoT
+- APARTAMENT A317/1+1 — 55.6 m2 — not yet released (price on request)
+- APARTAMENT A318/1+1 — 114.4 m2 — not yet released (price on request)
+- APARTAMENT A319/1+1 — 139.2 m2 — not yet released (price on request)
+- APARTAMENT A320/1+1 — 60.3 m2 — not yet released (price on request)
+- APARTAMENT A321/1+1 — 60.3 m2 — not yet released (price on request)
+- APARTAMENT A322/1+1 — 60.3 m2 — not yet released (price on request)
+- APARTAMENT A323/1+1 — 62.4 m2 — 105,000 EUR — FREE | tour: https://app.screencast.com/PWkatCwC9kHkO
+- APARTAMENT B324/1+1 — 61.7 m2 — 105,200 EUR — FREE | tour: https://app.screencast.com/2AgYKOsOkYD4l
+- APARTAMENT B325/1+1 — 62.3 m2 — SOLD
+- APARTAMENT B326/1+1 — 60.3 m2 — SOLD
+- APARTAMENT B327/1+1 — 60.3 m2 — SOLD
+- APARTAMENT B328/1+1 — 60.3 m2 — SOLD
+- APARTAMENT B329/1+1 — 60.3 m2 — 105,200 EUR — SOLD
+- APARTAMENT B330/1+1 — 60.3 m2 — 105,200 EUR — SOLD
+- APARTAMENT B331/1+1 — 62.3 m2 — 107,000 EUR — FREE | tour: https://app.screencast.com/9GvEZn5urJGkE
 
 **KATI 4**
-- APARTAMENT B401/1+1 — 50.6 m2 — 92,000 EUR | tour: https://app.screencast.com/CfmhrRFxBI9fS
-- APARTAMENT B402/2+1 — 86.6 m2 — 165,000 EUR | tour: https://app.screencast.com/CfmhrRFxBI9fS
-- APARTAMENT B404/1+1 — 57.1 m2 — ask EUR | tour: https://app.screencast.com/Pzj8UdMMzEDeo
-- APARTAMENT B404/1/2+1 — 80.3 m2 — ask EUR | tour: https://app.screencast.com/Pzj8UdMMzEDeo
-- APARTAMENTI NR.4 — 137.4 m2 — 240,000 EUR
-- APARTAMENT B405/1+1 — 54.4 m2 — 98,000 EUR | tour: https://app.screencast.com/l2PzhMcNHvIqs
-- APARTAMENT B406/1+1 — 53.6 m2 — 97,000 EUR | tour: https://app.screencast.com/Li02uIQ1xsVf8
-- APARTAMENT B407/1+1 — 53.6 m2 — 97,000 EUR | tour: https://app.screencast.com/4OykkOaY8Hyqu
-- APARTAMENT B408/1+1 — 56.5 m2 — 102,000 EUR | tour: https://app.screencast.com/4OykkOaY8Hyqu
-- APARTAMENT A410/1+1 — 52.7 m2 — 95,000 EUR | tour: https://app.screencast.com/pupuMGr0kzQNg
-- APARTAMENT A411/1+1 — 52.2 m2 — 94,500 EUR | tour: https://app.screencast.com/3OaudalOe1wHC
-- APARTAMENT A412/1+1 — 52.2 m2 — 94,500 EUR | tour: https://app.screencast.com/EtTuZu2DfuuzO
-- APARTAMENT A414/2+1 — 95.2 m2 — 175,000 EUR | tour: https://app.screencast.com/D3wlfjY6RRLpm
-- APARTAMENT A415/1+1 — 52.5 m2 — 88,000 EUR | tour: https://app.screencast.com/lCGMFXHa4WR4x
-- APARTAMENT A416/1+1 — 52.8 m2 — 88,500 EUR | tour: https://app.screencast.com/NG1aLM79fFvxa
-- APARTAMENT A423/1+1 — 62.4 m2 — 103,000 EUR | tour: https://app.screencast.com/NG1aLM79fFvxa
-- APARTAMENT B424/1+1 — 61.7 m2 — 102,000 EUR | tour: https://app.screencast.com/lDBv0yfbnjBHD
-- APARTAMENT B425/1+1 — 62.3 m2 — 102,000 EUR | tour: https://app.screencast.com/xa7NmmtJ83rFh
-- APARTAMENT B426/1+1 — 60.3 m2 — 99,000 EUR | tour: https://app.screencast.com/xa7NmmtJ83rFh
-- APARTAMENT B427/1+1 — 60.3 m2 — 99,000 EUR | tour: https://app.screencast.com/wAWszzab47FuP
-- APARTAMENT B428/1+1 — 60.3 m2 — 99,000 EUR | tour: https://app.screencast.com/M4J8looA9x9w9
-- APARTAMENT B429/1+1 — 60.3 m2 — 99,000 EUR | tour: https://app.screencast.com/s6uHQ5Fcadz4n
-- APARTAMENT B430/1+1 — 60.3 m2 — 99,000 EUR | tour: https://app.screencast.com/W2lkg3szI9LZt
-- APARTAMENT B431/1+1 — 62.3 m2 — 102,000 EUR | tour: https://app.screencast.com/W2lkg3szI9LZt
+- APARTAMENT B401/1+1 — 50.6 m2 — 107,000 EUR — FREE | tour: https://app.screencast.com/CfmhrRFxBI9fS
+- APARTAMENT B402/2+1 — 86.6 m2 — 196,500 EUR — FREE | tour: https://app.screencast.com/CfmhrRFxBI9fS
+- APARTAMENT NR.B403/1+1 — 111.5 m2 — SOLD
+- APARTAMENT B404/3+1 — 137.4 m2 — 280,000 EUR — SOLD
+- APARTAMENT B404/1+1 — 57.1 m2 — 117,000 EUR — FREE | tour: https://app.screencast.com/Pzj8UdMMzEDeo
+- APARTAMENT B404/1/2+1 — 80.3 m2 — 163,000 EUR — FREE | tour: https://app.screencast.com/Pzj8UdMMzEDeo
+- APARTAMENT B405/1+1 — 54.4 m2 — SOLD
+- APARTAMENT B406/1+1 — 53.6 m2 — 111,000 EUR — SOLD
+- APARTAMENT B407/1+1 — 53.6 m2 — SOLD
+- APARTAMENT B408/1+1 — 56.5 m2 — 118,000 EUR — FREE | tour: https://app.screencast.com/4OykkOaY8Hyqu
+- APARTAMENT A409/2+1 — 139.4 m2 — not yet released (price on request)
+- APARTAMENT A410/1+1 — 52.7 m2 — 109,800 EUR — FREE | tour: https://app.screencast.com/pupuMGr0kzQNg
+- APARTAMENT A411/1+1 — 52.2 m2 — 105,000 EUR — FREE | tour: https://app.screencast.com/3OaudalOe1wHC
+- APARTAMENT A412/1+1 — 52.2 m2 — 105,000 EUR — SOLD
+- APARTAMENT A413/2+1 — 122.9 m2 — 280,000 EUR — FREE
+- APARTAMENT A414/2+1 — 95.2 m2 — 199,000 EUR — FREE | tour: https://app.screencast.com/D3wlfjY6RRLpm
+- APARTAMENT A415/1+1 — 52.5 m2 — 99,000 EUR — FREE | tour: https://app.screencast.com/lCGMFXHa4WR4x
+- APARTAMENT A416/1+1 — 52.8 m2 — 99,800 EUR — FREE | tour: https://app.screencast.com/NG1aLM79fFvxa
+- APARTAMENT A417/1+1 — 55.6 m2 — not yet released (price on request)
+- APARTAMENT A418/1+1 — 114.4 m2 — not yet released (price on request)
+- APARTAMENT A419/1+1 — 139.2 m2 — not yet released (price on request)
+- APARTAMENT A420/1+1 — 60.3 m2 — not yet released (price on request)
+- APARTAMENT A421/1+1 — 60.3 m2 — not yet released (price on request)
+- APARTAMENT A422/1+1 — 60.3 m2 — not yet released (price on request)
+- APARTAMENT A423/1+1 — 62.4 m2 — 115,000 EUR — FREE | tour: https://app.screencast.com/NG1aLM79fFvxa
+- APARTAMENT B424/1+1 — 61.7 m2 — 114,000 EUR — FREE | tour: https://app.screencast.com/lDBv0yfbnjBHD
+- APARTAMENT B425/1+1 — 62.3 m2 — 109,800 EUR — FREE | tour: https://app.screencast.com/xa7NmmtJ83rFh
+- APARTAMENT B426/1+1 — 60.3 m2 — 109,800 EUR — FREE | tour: https://app.screencast.com/xa7NmmtJ83rFh
+- APARTAMENT B427/1+1 — 60.3 m2 — 109,800 EUR — FREE | tour: https://app.screencast.com/wAWszzab47FuP
+- APARTAMENT B428/1+1 — 60.3 m2 — 109,800 EUR — FREE | tour: https://app.screencast.com/M4J8looA9x9w9
+- APARTAMENT B429/1+1 — 60.3 m2 — 109,800 EUR — FREE | tour: https://app.screencast.com/s6uHQ5Fcadz4n
+- APARTAMENT B430/1+1 — 60.3 m2 — 109,800 EUR — FREE | tour: https://app.screencast.com/W2lkg3szI9LZt
+- APARTAMENT B431/1+1 — 62.3 m2 — 113,500 EUR — FREE | tour: https://app.screencast.com/W2lkg3szI9LZt
