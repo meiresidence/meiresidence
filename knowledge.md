@@ -30,20 +30,24 @@
   and Czech Republic.
 
 ## Developers / investment partners
-- **Best Invest shpk** (led by **Eglent Bici**), **Agna Group** (major Albanian company),
-  **Lika Group** (Switzerland-based).
+Best Invest shpk — led by Eglent Bici (project lead/owner).
+Agna Group — one of Albania's largest, most respected companies.
+Lika Group — Switzerland-based, known for quality.
 
 ## Construction quality & materials (EU standards)
-- **REHAU ARTEVO** triple-glazed windows; full **REHAU** hydraulic system.
-- **KNAUF Diamond** partitions + **10 cm rock wool** (acoustic isolation between units).
-- **FIBRAN** façade system + **8 cm rock wool** (energy efficiency + fire safety).
-- Energy class A+; premium international-hospitality-standard finishes.
+REHAU ARTEVO triple-glazed windows (thermal + acoustic insulation).
+Full REHAU plumbing system.
+KNAUF Diamond internal partitions with 10 cm rock wool (acoustic
+insulation between apartments).
+FIBRAN external facade (kapotë) with 8 cm rock wool (energy efficiency +
+fire safety).
 
 ## Amenities — 500+ m² of premium shared spaces
 - **Semi-Olympic outdoor pool**, modern **gym/fitness**, **kids' playground**,
   **concierge**, **restaurant & bar** (gourmet, local flavors), landscaped green areas.
 - **24/7 security/surveillance**, high-speed/unlimited **Wi-Fi**, underground parking,
   elevators, A/C in every apartment, solar-heated hot water, video intercom, controlled access.
+  500+ m² of premium shared/common areas.
 
 ## Investment & rental program (managed by Ramada® by Wyndham)
 - Professional management + rental program; Wyndham handles marketing, bookings, cleaning,
@@ -67,14 +71,21 @@
   official opening **June 2027**.
 
 ## Apartment types & price ranges (EUR)
-- **1+1:** from ~76,000 (76,000–103,000) · **2+1:** from ~82,000 (82,000–220,000) ·
+- **1+1:** from ~93,200 (93,200–103,000) · **2+1:** from ~82,000 (82,000–220,000) ·
   **Duplex:** from ~105,300 (105,300–155,000) · **Parking:** 15,000 or 18,000 each.
 - Price depends on typology, floor and view (sea-view costs more).
 
 ## Still confirm with the team
 - Exact 6% guarantee terms; exact deposit/installment schedule; current sold/available
   status per unit.
-
+## Tone & objection-handling phrasing (Eglent's verified style — add to voice guide):
+Price-per-m² question → reframe: "Ne nuk shesim m2, por apartamente të branduar
+nga Ramada Residences by Wyndham."
+Generic "what do you sell" → "Ne nuk shesim apartament, por pronë të branduar nga
+brandi më i madh në botë, të menaxhuar 365 ditë të vitit — ku ti edhe e përdor,
+edhe fiton para çdo vit."
+"Cheaper nearby" objection → "Janë 30% më lirë, por varet çfarë blen" + stress
+brand, management, and build-quality difference.
 ## Inventory — apartments (indicative prices, EUR)
 Prices are INDICATIVE; availability is not marked, so confirm current
 price and availability with the sales team. Unit codes: A/B + floor + number;
