@@ -15,6 +15,11 @@
 //      That let a real message arriving moments later get silently dropped
 //      by the cooldown. The cooldown is now claimed only once we've found
 //      real text to reply to.
+//   3) A brand-new contact's very first message could trigger this webhook
+//      before GHL's own conversation-search/messages API had indexed that
+//      message yet, so the CRM read came back empty and the lead was never
+//      answered (confirmed for contact "Liman" on 2026-07-25). fetchLastInbound
+//      now retries a couple of times with a short delay before giving up.
 
 import express from 'express';
 import fs from 'fs';
@@ -113,22 +118,43 @@ const addTags = (contactId, tags) =>
   ghl(`/contacts/${contactId}/tags`, 'POST', { tags }, '2021-07-28');
 
 // Pull the customer's most recent inbound message (text + channel) straight from the CRM.
-async function fetchLastInbound(contactId) {
-  try {
-    const s = await ghl(`/conversations/search?locationId=${cfg.ghl.locationId}&contactId=${contactId}`, 'GET', null, '2021-04-15');
-    const convId = s.data?.conversations?.[0]?.id;
-    if (!convId) return { text: '', channel: 'WhatsApp' };
-    const m = await ghl(`/conversations/${convId}/messages`, 'GET', null, '2021-04-15');
-    const msgs = m.data?.messages?.messages || m.data?.messages || [];
-    for (const msg of msgs) {
-      if (msg.direction === 'inbound' && msg.body && String(msg.body).trim()) {
-        const rawType = msg.messageType || msg.type || 'TYPE_WHATSAPP';
-        const channel = CHANNEL_TYPE_MAP[rawType] || 'WhatsApp';
-        return { text: String(msg.body).trim(), channel };
-      }
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// A brand-new contact's very first message can trigger this webhook before
+// GHL's own conversation-search/messages API has indexed that message yet
+// (confirmed: "[ghl-webhook] no message text in CRM" moments after a first-ever
+// inbound message, e.g. contact "Liman" on 2026-07-25 — the webhook fired 5s
+// after the message arrived but the CRM read still came back empty, and since
+// that contact never messaged again there was no second chance to reply).
+// Retry a couple of times with a short delay before giving up.
+async function fetchLastInboundOnce(contactId) {
+  const s = await ghl(`/conversations/search?locationId=${cfg.ghl.locationId}&contactId=${contactId}`, 'GET', null, '2021-04-15');
+  const convId = s.data?.conversations?.[0]?.id;
+  if (!convId) return null;
+  const m = await ghl(`/conversations/${convId}/messages`, 'GET', null, '2021-04-15');
+  const msgs = m.data?.messages?.messages || m.data?.messages || [];
+  for (const msg of msgs) {
+    if (msg.direction === 'inbound' && msg.body && String(msg.body).trim()) {
+      const rawType = msg.messageType || msg.type || 'TYPE_WHATSAPP';
+      const channel = CHANNEL_TYPE_MAP[rawType] || 'WhatsApp';
+      return { text: String(msg.body).trim(), channel };
     }
-    return { text: '', channel: 'WhatsApp' };
-  } catch (e) { console.error('[fetchLastInbound]', e.message); return { text: '', channel: 'WhatsApp' }; }
+  }
+  return null;
+}
+
+async function fetchLastInbound(contactId, retries = 2, delayMs = 1500) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const found = await fetchLastInboundOnce(contactId);
+      if (found) return found;
+    } catch (e) { console.error('[fetchLastInbound]', e.message); }
+    if (attempt < retries) {
+      console.log(`[fetchLastInbound] no text yet for ${contactId}, retrying (${attempt + 1}/${retries})`);
+      await sleep(delayMs);
+    }
+  }
+  return { text: '', channel: 'WhatsApp' };
 }
 
 // ---- memory + per-contact reply cooldown (prevents duplicate/rapid replies) ----
