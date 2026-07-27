@@ -2,6 +2,19 @@
 // Flow: GHL workflow (Customer replied) -> POST /ghl-webhook -> Claude ->
 // the server reads the customer's message from the CRM, asks Claude, and sends
 // the reply back via the GHL API. Works with a plain "Webhook" workflow action.
+//
+// Multi-channel note (2026-07-27 fix): this agent now also serves Facebook
+// Messenger and Instagram DM (in addition to WhatsApp) via the same "Claude"
+// workflow. Two bugs were fixed here:
+//   1) The reply was always sent with type:'WhatsApp', which silently fails
+//      for Instagram/Facebook contacts (no phone number). Reply now uses the
+//      SAME channel the inbound message arrived on (WhatsApp / IG / FB).
+//   2) The per-contact cooldown was claimed on every webhook call, including
+//      calls with no real message text (e.g. an empty-body echo event that
+//      Instagram/GHL sometimes fires a few seconds before the real message).
+//      That let a real message arriving moments later get silently dropped
+//      by the cooldown. The cooldown is now claimed only once we've found
+//      real text to reply to.
 
 import express from 'express';
 import fs from 'fs';
@@ -27,15 +40,16 @@ for (const k of ['ANTHROPIC_API_KEY', 'GHL_API_KEY']) {
 
 const KNOWLEDGE_BASE = fs.readFileSync(new URL('./knowledge.md', import.meta.url), 'utf8');
 
-const SYSTEM_PROMPT = `You are the official WhatsApp assistant for Mei Residence, a
+const SYSTEM_PROMPT = `You are the official assistant for Mei Residence, a
 premium branded seaside residence (Ramada Residences by Wyndham) in Qerret, Durres,
-Albania, sold by Mei Realty. You reply to people messaging Mei on WhatsApp.
+Albania, sold by Mei Realty. You reply to people messaging Mei on WhatsApp, Facebook
+Messenger, or Instagram DM.
 
 GOALS: reply fast, warm and helpful like Mei's best human agent; give info from the
 KNOWLEDGE BASE; gently learn if they are an investor or agency, which unit type
 (1+1/2+1/duplex) and budget; hand off hot leads to a human.
 
-STYLE: warm, professional, WhatsApp-short (1-4 sentences, plain text, at most one
+STYLE: warm, professional, chat-short (1-4 sentences, plain text, at most one
 emoji). Use their name if known. Ask ONE question at a time. ALWAYS reply in the
 language the client writes in (Albanian, English, Italian, etc.); default Albanian
 for a bare greeting. Never say you are an AI language model.
@@ -80,24 +94,41 @@ async function ghl(path, method, body, version = '2021-04-15') {
   if (!res.ok) console.error('[ghl]', method, path, res.status, JSON.stringify(data).slice(0, 200));
   return { ok: res.ok, data };
 }
-const sendWhatsApp = (contactId, message) =>
-  ghl('/conversations/messages', 'POST', { type: 'WhatsApp', contactId, message }, '2021-04-15');
+
+// Map GHL's inbound message "messageType" to the outbound "type" the
+// send-message endpoint expects. Defaults to WhatsApp if unrecognized.
+const CHANNEL_TYPE_MAP = {
+  TYPE_WHATSAPP: 'WhatsApp',
+  TYPE_INSTAGRAM: 'IG',
+  TYPE_FACEBOOK: 'FB',
+  TYPE_SMS: 'SMS',
+};
+
+// Reply on whichever channel the inbound message actually came in on
+// (WhatsApp / IG / FB), keyed by contactId — not by phone number, since
+// Instagram/Facebook contacts have no phone.
+const sendReply = (contactId, message, channel = 'WhatsApp') =>
+  ghl('/conversations/messages', 'POST', { type: channel, contactId, message }, '2021-04-15');
 const addTags = (contactId, tags) =>
   ghl(`/contacts/${contactId}/tags`, 'POST', { tags }, '2021-07-28');
 
-// Pull the customer's most recent inbound message text straight from the CRM.
-async function fetchLastInboundText(contactId) {
+// Pull the customer's most recent inbound message (text + channel) straight from the CRM.
+async function fetchLastInbound(contactId) {
   try {
     const s = await ghl(`/conversations/search?locationId=${cfg.ghl.locationId}&contactId=${contactId}`, 'GET', null, '2021-04-15');
     const convId = s.data?.conversations?.[0]?.id;
-    if (!convId) return '';
+    if (!convId) return { text: '', channel: 'WhatsApp' };
     const m = await ghl(`/conversations/${convId}/messages`, 'GET', null, '2021-04-15');
     const msgs = m.data?.messages?.messages || m.data?.messages || [];
     for (const msg of msgs) {
-      if (msg.direction === 'inbound' && msg.body && String(msg.body).trim()) return String(msg.body).trim();
+      if (msg.direction === 'inbound' && msg.body && String(msg.body).trim()) {
+        const rawType = msg.messageType || msg.type || 'TYPE_WHATSAPP';
+        const channel = CHANNEL_TYPE_MAP[rawType] || 'WhatsApp';
+        return { text: String(msg.body).trim(), channel };
+      }
     }
-    return '';
-  } catch (e) { console.error('[fetchLastInbound]', e.message); return ''; }
+    return { text: '', channel: 'WhatsApp' };
+  } catch (e) { console.error('[fetchLastInbound]', e.message); return { text: '', channel: 'WhatsApp' }; }
 }
 
 // ---- memory + per-contact reply cooldown (prevents duplicate/rapid replies) ----
@@ -168,23 +199,32 @@ app.post('/ghl-webhook', async (req, res) => {
     const b = req.body || {};
     const contactId = b.contactId || b.contact_id || b.id || b.contact?.id;
     if (!contactId) { console.warn('[ghl-webhook] no contactId'); return res.status(200).json({ reply: '' }); }
+
+    // Cooldown check first, but we only CLAIM the cooldown window further
+    // below once we've confirmed there's real text to reply to. This stops
+    // an empty/no-op trigger (e.g. Instagram's echo event with no body) from
+    // consuming the window and silently dropping the real message that
+    // follows a few seconds later.
     const now = Date.now();
     if (now - (lastReplyAt.get(contactId) || 0) < COOLDOWN_MS) {
       console.log(`[skip] cooldown for ${contactId}`);
       return res.status(200).json({ reply: '' });
     }
-    lastReplyAt.set(contactId, now); // claim this window immediately (blocks concurrent duplicates)
+
     const name = b.full_name || b.first_name || b.name || b.contact?.name || '';
     // Always read the customer's latest message straight from the CRM (the webhook
-    // body can send the message as an object, so we never rely on it).
-    const text = await fetchLastInboundText(contactId);
+    // body can send the message as an object, so we never rely on it), along with
+    // which channel (WhatsApp/IG/FB) it came in on.
+    const { text, channel } = await fetchLastInbound(contactId);
     if (!text) { console.warn('[ghl-webhook] no message text in CRM'); return res.status(200).json({ reply: '' }); }
+
+    lastReplyAt.set(contactId, now); // claim the cooldown only now that we know we're replying
     const conv = getConv(contactId, name);
     conv.history.push({ role: 'user', content: String(text) });
     const reply = await generateReply(conv, contactId);
-    const sent = await sendWhatsApp(contactId, reply); // direct send via GHL API
-    console.log(`[msg] ${contactId} <= "${String(text).slice(0,40)}" => sent:${sent.ok} "${reply.slice(0, 60)}"`);
-    return res.status(200).json({ reply, contactId });
+    const sent = await sendReply(contactId, reply, channel); // reply on the same channel it arrived on
+    console.log(`[msg] ${contactId} (${channel}) <= "${String(text).slice(0,40)}" => sent:${sent.ok} "${reply.slice(0, 60)}"`);
+    return res.status(200).json({ reply, contactId, channel });
   } catch (e) {
     console.error('[ghl-webhook] error', e);
     return res.status(200).json({ reply: '' });
