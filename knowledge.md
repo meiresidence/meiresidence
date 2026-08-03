@@ -22,14 +22,15 @@
 - Websites: meiresidence.com / mei.al / projekte.al · Instagram: @mei_residence.
 
 ## Sales team — route leads to the right manager
-- **Eglent Bici** — Sales Manager: **+355 67 508 8808**
-- **Visard Koleci** — Sales Manager: **+355 67 609 9900**
-- **Ania Pawlak** — Sales Manager, **Poland**: **+48 668 412 328**
-- **Martin Chalupský** — Sales Manager, **Czech Republic**: **+420 724 752 702**
+## Contact — the ONLY number the bot gives out
+- **Eglent Bici** — Sales Manager: **+355 67 204 9400**
+  This is the single number shared with clients, in every language and market.
 - Email: **info@meiresidence.com**. Typically replies within ~1 hour.
-- Routing hint: Polish clients → Ania; Czech clients → Martin; others → Eglent or Visard.
-- Strong buyer markets: Albanian **diaspora in Switzerland, Germany, UK**, plus Poland
-  and Czech Republic.
+
+### Internal routing (never shown to clients)
+Used only in escalate_to_agent, never written in a reply:
+Visard Koleci · Ania Pawlak (Poland) · Martin Chalupský (Czech Republic).
+Polish leads → Ania; Czech leads → Martin; all others → Eglent.
 
 ## Developers / investment partners
 Best Invest shpk — led by Eglent Bici (project lead/owner).
