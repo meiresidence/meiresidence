@@ -28,7 +28,8 @@ const TOOLS = [
       'client asks for a person, wants a personalized price/viewing/reservation, ' +
       'needs exact payment-plan or guarantee terms, is a hot/ready lead, is a ' +
       'real-estate agency partner, or when you cannot answer from the knowledge base. ' +
-      'After calling this, also reply to the client that a specialist will contact them.',
+      'After calling this, ALSO reply to the client with Eglent Bici\'s direct number ' +
+'+355 67 204 9400 and a reason to contact him.',
     input_schema: {
       type: 'object',
       properties: {
