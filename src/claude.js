@@ -117,9 +117,12 @@ export async function generateFollowUp(conversation) {
       {
         role: 'user',
         content:
-          '[SYSTEM: The lead went quiet. Write ONE short, warm follow-up WhatsApp ' +
-          'message in the language they were using, gently offering to help and ' +
-          'inviting them to continue. No pressure. Plain text only, 1-2 sentences.]',
+  '[SYSTEM: The lead went quiet. Write ONE short, warm follow-up WhatsApp ' +
+  'message in the language they were using. Reference something specific from ' +
+  'the conversation, offer one concrete next step (floor plan, virtual tour, ' +
+  'or availability check), and include Eglent Bici\'s direct number ' +
+  '+355 67 204 9400 so they can write to him directly. Plain text only, ' +
+  '2-3 sentences, no emoji.]',
       },
     ],
   });
