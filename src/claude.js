@@ -15,7 +15,7 @@ const client = new Anthropic({ apiKey: config.anthropic.apiKey });
 // Build the system prompt once at startup (edit the .md files and redeploy to update).
 function buildSystemPrompt() {
   const promptTpl = fs.readFileSync(path.join(KNOWLEDGE_DIR, 'system-prompt.md'), 'utf8');
-  const kb = fs.readFileSync(path.join(KNOWLEDGE_DIR, 'mei-residence-kb.md'), 'utf8');
+  const kb = fs.readFileSync(path.join(__dirname, '..', 'knowledge.md'), 'utf8');
   return promptTpl.replace('{{KNOWLEDGE_BASE}}', kb);
 }
 const SYSTEM_PROMPT = buildSystemPrompt();
