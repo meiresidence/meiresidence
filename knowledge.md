@@ -12,7 +12,7 @@
   with **Wyndham Hotels & Resorts** (world's largest hospitality company).
 - Location: **Qerret, Durrës, on the Albanian Adriatic coast** — golden-sand beach and
   pine forest. **~280 m from the beach**, ~45 min from Tirana / ~40 min from Tirana
-  International Airport.
+  International Airport. Exact location: https://maps.app.goo.gl/snznLJWiGkdEPpEC6
 - **Architect: Roberto Felicetti** (robertofelicetti.it) — modern architecture, smooth
   lines and rounded shapes, high functionality.
 - **Sold ONLY as an investment** (professionally managed short-term rentals). It is
