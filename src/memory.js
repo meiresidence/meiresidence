@@ -87,6 +87,30 @@ export function appendTurns(phone, turns) {
   return c;
 }
 
+/**
+ * Last verbatim message the client typed, ignoring tool_result turns.
+ * @param {string} phone
+ * @returns {string} the raw text, or '' if none found
+ */
+export function getLastClientMessage(phone) {
+  const c = store.get(phone);
+  if (!c) return '';
+  for (let i = c.history.length - 1; i >= 0; i--) {
+    const m = c.history[i];
+    if (m.role !== 'user') continue;
+    if (typeof m.content === 'string') return m.content.trim();
+    if (Array.isArray(m.content)) {
+      const text = m.content
+        .filter((b) => b && b.type === 'text' && typeof b.text === 'string')
+        .map((b) => b.text)
+        .join(' ')
+        .trim();
+      if (text) return text;
+    }
+  }
+  return '';
+}
+
 export function markHandedOff(phone) {
   const c = getConversation(phone);
   c.handedOff = true;

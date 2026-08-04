@@ -1,10 +1,18 @@
 // Forwards hot leads to a human agent's WhatsApp and flags the conversation.
 import { config } from './config.js';
 import { sendText } from './whatsapp.js';
-import { markHandedOff, updateMeta } from './memory.js';
+import { markHandedOff, updateMeta, getLastClientMessage } from './memory.js';
+
+function truncate(str, max) {
+  const s = String(str).replace(/\s+/g, ' ').trim();
+  return s.length > max ? `${s.slice(0, max - 1)}\u2026` : s;
+}
 
 export async function escalateToAgent(phone, name, args) {
   const { reason, lead_summary, interested_in, buyer_type, language, budget } = args || {};
+
+  // Capture the client's own last words BEFORE anything else mutates state.
+  const lastMessage = getLastClientMessage(phone);
 
   updateMeta(phone, { interested_in, buyer_type, language, budget });
   markHandedOff(phone);
@@ -24,6 +32,7 @@ export async function escalateToAgent(phone, name, args) {
     language ? `Language: ${language}` : null,
     reason ? `Why now: ${reason}` : null,
     lead_summary ? `Summary: ${lead_summary}` : null,
+    lastMessage ? `\nLast message from client:\n"${truncate(lastMessage, 400)}"` : null,
     '',
     `Open chat: https://wa.me/${phone}`,
   ].filter(Boolean);
