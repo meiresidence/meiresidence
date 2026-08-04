@@ -260,31 +260,4 @@ app.post('/ghl-webhook', async (req, res) => {
   }
 });
 
-async function escalate(contactId, name, args) {
-  addTags(contactId, ['needs-human', 'hot-lead']).catch(() => {});
-
-  const conv = store.get(contactId);
-  const last = [...(conv?.history || [])]
-    .reverse()
-    .find((m) => m.role === 'user' && typeof m.content === 'string');
-
-  const lines = [
-    'HANDOFF - specialist needed',
-    `Name: ${name || 'Unknown'}`,
-    args.buyer_type ? `Type: ${args.buyer_type}` : null,
-    args.interested_in ? `Interested in: ${args.interested_in}` : null,
-    args.budget ? `Budget: ${args.budget}` : null,
-    args.reason ? `Why now: ${args.reason}` : null,
-    last ? `\nLast message:\n"${String(last.content).replace(/\s+/g, ' ').slice(0, 400)}"` : null,
-    '',
-    `Open: https://app.gohighlevel.com/v2/location/${cfg.ghl.locationId}/conversations/conversations/${contactId}`,
-  ].filter(Boolean);
-
-  if (process.env.SPECIALIST_CONTACT_ID) {
-    await sendReply(process.env.SPECIALIST_CONTACT_ID, lines.join('\n'), 'SMS');
-  }
-  console.log(`[handoff] tagged ${contactId}:`, args.lead_summary || '');
-  return { ok: true };
-}
-
 app.listen(cfg.port, () => console.log(`Mei Residence GHL agent on :${cfg.port} (model ${cfg.anthropic.model})`));
