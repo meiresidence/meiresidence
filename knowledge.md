@@ -103,7 +103,7 @@ Totals: 152 apartments — **63 available, 53 sold, 2 reserved, 34 not-released 
 - 2+1: **16 available**, 129,000–280,000 EUR (2 sold, 7 not-released)
 - 3+1: **1 available**, 224,000 EUR (1 sold)
 - Duplex: **9 available**, 111,300–169,200 EUR (6 sold, 1 reserved, 6 not-released/TBC)
-- Parking posts: 15,000 or 18,000 EUR each
+- Parking posts: not for sale
 
 Per-unit (unit | total m2 | price EUR | virtual tour):
 
