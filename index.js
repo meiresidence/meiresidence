@@ -182,10 +182,58 @@ const TOOLS = [{
   }, required: ['reason', 'lead_summary'] },
 }];
 
+// Pull the client's own last words out of the in-memory conversation.
+// Tool-result turns are also role:'user' but carry an array, so require a string.
+function lastClientText(contactId) {
+  const conv = store.get(contactId);
+  if (!conv) return '';
+  for (let i = conv.history.length - 1; i >= 0; i--) {
+    const m = conv.history[i];
+    if (m.role === 'user' && typeof m.content === 'string') return m.content.trim();
+  }
+  return '';
+}
+
 async function escalate(contactId, name, args) {
   addTags(contactId, ['needs-human', 'hot-lead']).catch(() => {});
-  console.log(`[handoff] tagged ${contactId}:`, args.lead_summary || '');
-  return { ok: true };
+
+  const specialist = process.env.SPECIALIST_CONTACT_ID;
+  if (!specialist) {
+    console.warn('[handoff] SPECIALIST_CONTACT_ID not set - no alert sent');
+    console.log(`[handoff] tagged ${contactId}:`, args.lead_summary || '');
+    return { ok: true, alerted: false };
+  }
+  if (specialist === contactId) {
+    console.warn('[handoff] specialist is the lead - skipping alert to avoid self-message');
+    return { ok: true, alerted: false };
+  }
+
+  const last = lastClientText(contactId);
+  const clip = (str, n) => {
+    const t = String(str).replace(/\s+/g, ' ').trim();
+    return t.length > n ? `${t.slice(0, n - 1)}\u2026` : t;
+  };
+
+  const lines = [
+    'HANDOFF - specialist needed',
+    `Name: ${name || 'Unknown'}`,
+    args.buyer_type ? `Type: ${args.buyer_type}` : null,
+    args.interested_in ? `Interested in: ${args.interested_in}` : null,
+    args.budget ? `Budget: ${args.budget}` : null,
+    args.language ? `Language: ${args.language}` : null,
+    args.reason ? `Why now: ${args.reason}` : null,
+    args.lead_summary ? `Summary: ${args.lead_summary}` : null,
+    last ? `\nLast message:\n"${clip(last, 400)}"` : null,
+    '',
+    `Open: https://app.gohighlevel.com/v2/location/${cfg.ghl.locationId}/conversations/conversations/${contactId}`,
+  ].filter(Boolean);
+
+  const channel = process.env.SPECIALIST_CHANNEL || 'WhatsApp';
+  const sent = await sendReply(specialist, lines.join('\n'), channel);
+  if (!sent.ok) console.error('[handoff] ALERT FAILED', JSON.stringify(sent.data).slice(0, 300));
+
+  console.log(`[handoff] tagged ${contactId}, alert sent:${sent.ok}`);
+  return { ok: true, alerted: sent.ok };
 }
 
 async function generateReply(conv, contactId) {
