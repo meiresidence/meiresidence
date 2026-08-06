@@ -188,6 +188,41 @@ const TOOLS = [{
 
 // Pull the client's own last words out of the in-memory conversation.
 // Tool-result turns are also role:'user' but carry an array, so require a string.
+// Custom field "Last Client Message" (LARGE_TEXT) - the handoff email renders it.
+const LAST_MSG_FIELD_ID = 'pgjCDvkHlPlXx0C1TJ1p';
+
+// Last N verbatim client messages, oldest first. Tool-result turns are also
+// role:'user' but carry an array, so require a string.
+function lastClientMessages(contactId, n = 3) {
+  const conv = store.get(contactId);
+  if (!conv) return [];
+  const out = [];
+  for (let i = conv.history.length - 1; i >= 0 && out.length < n; i--) {
+    const m = conv.history[i];
+    if (m.role === 'user' && typeof m.content === 'string') {
+      const t = m.content.trim();
+      if (t) out.push(t);
+    }
+  }
+  return out.reverse();
+}
+
+// Snapshot the recent client messages onto the contact so the GHL handoff
+// email shows the conversation, not just the final line.
+async function writeRecentMessages(contactId, n = 3) {
+  const msgs = lastClientMessages(contactId, n);
+  if (!msgs.length) return { ok: false };
+  const clip = (str, max) => {
+    const t = String(str).replace(/\s+/g, ' ').trim();
+    return t.length > max ? `${t.slice(0, max - 1)}\u2026` : t;
+  };
+  const value = msgs.map((m) => `- ${clip(m, 300)}`).join('\n');
+  const r = await ghl(`/contacts/${contactId}`, 'PUT',
+    { customFields: [{ id: LAST_MSG_FIELD_ID, value }] }, '2021-07-28');
+  if (!r.ok) console.error('[handoff] field update failed', JSON.stringify(r.data).slice(0, 200));
+  return r;
+}
+
 function lastClientText(contactId) {
   const conv = store.get(contactId);
   if (!conv) return '';
@@ -199,7 +234,10 @@ function lastClientText(contactId) {
 }
 
 async function escalate(contactId, name, args) {
-  addTags(contactId, ['needs-human', 'hot-lead']).catch(() => {});
+  // Write the recent messages first - the GHL email fires off the tag below,
+  // so the field must already hold the new value when that happens.
+  await writeRecentMessages(contactId, 3).catch(() => {});
+  await addTags(contactId, ['needs-human', 'hot-lead']).catch(() => {});
 
   const specialist = process.env.SPECIALIST_CONTACT_ID;
   if (!specialist) {
