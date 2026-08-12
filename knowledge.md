@@ -29,7 +29,7 @@
 - **Sold ONLY as an investment** (professionally managed short-term rentals). It is
   **NOT for personal use** and not a home to live in — always position it as an investment
   that generates rental income. If a client asks about buying it to live in / for personal
-  use, clarify politely that Mei Residence is an investment-only property.
+  use, clarify politely that the owners get **10 days free in high season + 2–3 weeks off-season.**
 - Websites: meiresidence.com / mei.al / projekte.al · Instagram: @mei_residence.
 
 ## Sales team — route leads to the right manager
@@ -289,3 +289,102 @@ Per-unit (unit | total m2 | price EUR | virtual tour):
 - APARTAMENT B429/1+1 — 60.3 m2 — 109,800 EUR — FREE | tour: https://app.screencast.com/s6uHQ5Fcadz4n
 - APARTAMENT B430/1+1 — 60.3 m2 — 109,800 EUR — FREE | tour: https://app.screencast.com/W2lkg3szI9LZt
 - APARTAMENT B431/1+1 — 62.3 m2 — 113,500 EUR — FREE | tour: https://app.screencast.com/W2lkg3szI9LZt
+
+
+
+# Mei Residence — Agent Learnings
+
+_A living document. Updated automatically every morning from the previous day's GoHighLevel conversations. Any Claude session in this project should read this file before answering buyer questions or writing content._
+
+**Privacy rule for this file:** never record client names, phone numbers, emails, or any personal identifier. Patterns only. No internal sales totals, no pipeline numbers.
+
+**Two GHL sub-accounts.** *Mei Residence* (mostly +355 domestic, WhatsApp + Instagram) and *Mei Residence 2* (broadcast/follow-up campaigns, overwhelmingly German and Swiss diaspora). They behave differently — see §6.
+
+
+---
+
+## 0. Confirmed facts from the sales team
+_(overrides older guidance where they conflict)_
+
+- **ONE return figure per conversation, never two** (confirmed 2026-08-10). Two mutually exclusive programs; the investor picks one:
+  - **(a) 6% guaranteed annual return, 5 years — the DEFAULT.** The only figure ever volunteered: *"6% kthim vjetor i garantuar."*
+  - **(b) 65% of net rental income** — only if the client explicitly asks about a revenue-share model. An *alternative*, never an addition.
+  - Never combine them. **The "up to ~8%" / "8–10%" figure is retired everywhere.** Applied to the agent repo (`index.js`, `knowledge.md`, `knowledge/system-prompt.md`).
+  - **Still open:** the project's custom instructions in claude.ai still say "up to ~8% annual return, projected not guaranteed", and `knowledge/mei-residence-kb.md` in the synced repo still says "ROI up to ~8%" and lists **Studio/Garsoniere** as a typology and "~200 m from the sea". All need correcting at source or they keep reappearing.
+- Reference figure for 6%: on the average listed price (~€130,000) ≈ €7,800/year; 1+1 (avg ~€103,000) ≈ €6,200/year; 2+1 (avg ~€191,000) ≈ €11,500/year. Wyndham runs marketing, bookings, cleaning, maintenance; the owner collects.
+- **Timeline:** construction started Q4 2024, **completes Q4 2026, official opening June 2027.**
+- **Typologies:** 1+1, 2+1, 3+1, Duplex. **No studios / garsoniere.**
+- **Distance to the sea: ~280 m** (the repo KB's "200 m" is stale).
+- **We are not an agency:** Mei Realty is the in-house sales team for Mei Residence (Best Invest shpk project, branded/managed by Ramada Residences by Wyndham).
+
+## 1. Most frequent buyer questions
+
+- **"A mund të marr më shumë informacion për këtë?"** — pasted from the Facebook ad headline *"6% kthim i garantuar në vit për 5 vite"*. Still the biggest inbound trigger. Reply: the program in 2–3 lines (Wyndham-managed → owner collects → **6% guaranteed**, one figure only), then ask **which typology**. Nearly every lead answers that.
+- **"Po mi dërgo" / "dërgomi opsionet"** — by far the most common reply to a broadcast (~25 in a single send). They want a small hand-picked selection with m², price and a tour link — not the whole price list.
+- **"Ku ndodhet objekti?" / "Ku janë ndërtesat, në Vlorë?"** — asked repeatedly by diaspora leads. Many do **not** know where the project is. Always name **Qerret, Durrës** early, and put it in every broadcast template.
+- **"Po nëse në një të ardhme dua ta marr të jetoj vetë në apartament?"** — see the contradiction box above; defer to a specialist for now.
+- **"6% të vlerës së investuar dmth?"** — buyers want to know what the 6% is calculated on. Confirm it is an annual return on the investment, and route to a specialist for the written terms (see §5).
+- **"Për sa vjet bëhen kontratat? Mirëmbajtja kujt i përket?"** — contract duration + who covers maintenance. Answer the maintenance half concretely (Wyndham), defer only the contract term.
+- **"Çka është nete?"** — buyers don't know the term: *"'Net' do të thotë e ardhura nga qiraja pasi zbriten shpenzimet e menaxhimit (pastrim, mirëmbajtje, marketing). Nga ajo shumë e mbetur, investitori merr 65%."*
+- **"Sa kushton një 1+1?" / "Sa shkon m²?"** — give the range, note it depends on floor and sea view, confirm availability with the team, then ask which floor/view. 1+1 is the most requested typology.
+- **"Kur përfundon ndërtimi?"** — Q4 2026 / June 2027 (§0).
+- **Price-per-m² challenge** — the line that works: *"Ne nuk i shesim apartamentet me çmim për m², por si prona të plota, të branduara nga Ramada Residences by Wyndham. Çmimi përfshin cilësinë e ndërtimit, menaxhimin nga Wyndham dhe programin e qirasë — jo thjesht metrat katrorë."*
+- **Floor numbering** confuses Albanian buyers: *Kati Përdhe* = ground floor, *Kati i Parë* = the floor above.
+
+## 2. Objections & how they were handled
+
+- **"So it's 6% AND 65% AND ~8%?"** → *"Jo, kështu nuk funksionon — janë dy programe të veçanta dhe zgjidhet vetëm njëri, jo të dyja së bashku, dhe nuk ka asnjë shifër tjetër si '~8%'."* Then offer to go deeper on one.
+- **"Është shumë e shtrenjtë për mua" / budget below the 1+1 entry** — common in diaspora broadcasts. Don't discount and don't push; name the smallest 1+1 honestly and offer to flag them when something fits.
+- **"Is everything you're telling me actually correct?"** → short empathy + written confirmation from a specialist before any decision.
+- **"It's a big step / I want to see it in person"** → validate, offer a site visit, hand to a specialist.
+- **"Too expensive"** (investment framing) → move to the income side, **6% guaranteed**, one figure only, then hand over for the payment plan.
+- **"I bought elsewhere" / "I'm investing in Switzerland"** → thank them warmly and leave the door open. Several such leads still refer friends — one volunteered German contacts who were interested.
+
+## 3. Phrasing that worked
+
+- **Virtual tour links do the selling.** 2–3 concrete units with area, price and a tour link produce the strongest replies (*"Ato i pashë dhe më pëlqyen."*).
+- Close every answer with **one question** ("Cili tip apartamenti — 1+1, 2+1 apo duplex?").
+- *"280 metra nga deti"* and *"merre para se çmimet të rriten"* still carry re-engagement.
+- Warm Albanian second person (*ti/ty*) matches how these leads write.
+- **Leads who have walked the site come back warm on their own**, months later, unprompted. Treat any "kalova për vizitë" message as a hot re-engagement window.
+
+## 4. What stalled conversations
+
+- **Broadcast replies left unanswered.** A single follow-up send produced ~68 live inbound replies within two hours, with nobody responding. Reply volume is front-loaded — the first hour is where the intent is. A broadcast with no one staffed to answer burns the list.
+- **Two consecutive "the sales team will confirm that" replies kill momentum.** A buyer deferred twice in a row (orientation, then floor plan) replied *"Ok gjithë të mirat"* and went quiet. If one answer must be deferred, answer the next one concretely.
+- **Handing over a bare phone number with no context.** An Instagram lead got just the manager's number — no reason, no question. Route with one line of substance + the contact.
+- Generic "how can I help you?" after a lead already asked something specific makes them repeat themselves.
+- Long multi-paragraph WhatsApp answers get skimmed; 2–4 lines + one question wins.
+
+## 5. Gaps — things buyers ask that we can't answer from the files
+
+1. **Personal use / owner nights** — see the contradiction box at the top. Highest priority; it is being asked live and we have three conflicting sources.
+2. **Is there a finished show apartment on site, and how are site visits booked?** A lead bringing a client for **two apartments** asked what could be walked through, on one fixed date. We had nothing. Highest-intent lead type we get.
+3. **Contract duration** — how many years the rental/management contract runs, and what happens at the end. Asked repeatedly; nothing written anywhere.
+4. **What the 6% is calculated on**, and what happens after year 5.
+5. **Orientation / view per unit.** No orientation column in the price list. Recurring blocker.
+6. **Floor-level site plans (planimetria e katit).** No shareable PDF.
+7. **Payment/installment procedure.** An approved one-paragraph summary of the reservation steps would keep threads warm.
+8. **Beach access** — asked whether access has been improved recently. No current answer.
+9. **Price consistency.** Always read the current spreadsheet before naming a figure — never reuse a price seen in an earlier chat.
+
+## 6. Language & audience notes
+
+- **Mei Residence (account 1):** mostly Albanian, +355 domestic, WhatsApp + Instagram DMs. Instagram is mixed — expect collaboration/PR/agency pitches alongside buyers; don't sell to those, route to a human.
+- **Mei Residence 2 (account 2):** broadcast/follow-up campaigns to **German (+49) and Swiss (+41) diaspora**, roughly equal shares, with a small Albanian, UK, Italian and Turkish tail. They write in Albanian (often Kosovo/Macedonia dialect — *"qysh mundem me këste me e pagu"*), a few in German or English. Expect German business auto-responders in the replies — those are not leads.
+- Diaspora leads are in Albania in summer and re-engage in person. August is peak in-country season.
+- Older buyers investing savings need a slower, reassuring tone and explicit "you'll get everything in writing before deciding."
+
+---
+
+## Copy rules for broadcasts & follow-up messages
+
+- **Name the location — Qerret, Durrës — in every broadcast.** Three leads in one send asked where the project even is.
+- Offer a small hand-picked selection, not the whole price list.
+- Never reference the client's budget or any assumption about their finances.
+- One idea + one question; curiosity gap over full explanation.
+- Always close with the phone contact: +355 67 508 8808.
+- Never leave a template placeholder unfilled — a message went out with `{emri}` visible.
+- Don't send a broadcast unless someone is staffed to answer for the next two hours.
+
+---
