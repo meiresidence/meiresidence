@@ -1,0 +1,60 @@
+{
+  "_comment": "Single source of truth for what the self-learning loop may NEVER write into knowledge/learnings.md. Edited by humans only. Both the learner prompt and the validator read this file.",
+
+  "immutableFacts": [
+    "ONE return figure per conversation, never two. 6% guaranteed annual return for 5 years is the DEFAULT and the only figure ever volunteered. 65% of net rental income is an ALTERNATIVE program, mentioned only if the client explicitly asks about revenue share. They are mutually exclusive and are never added together.",
+    "The 6% is 6% of the sum invested, paid to the owner's bank account at year end. Invest 100,000 EUR -> 6,000 EUR per year.",
+    "The contract runs 5 years with right of renewal; after 5 years the owner may terminate. Maintenance is on Mei, not the owner.",
+    "Typologies are 1+1, 2+1, 3+1 and Duplex. There are NO studios and NO garsoniere.",
+    "The project is approximately 280 m from the sea, in Qerret, Durres, Albania.",
+    "Construction started Q4 2024, completes Q4 2026, official opening June 2027.",
+    "Mei is sold and positioned as an investment, not as a home or holiday home. The owner still gets personal use: 10 days in summer plus 3 weeks off-season.",
+    "Mei Realty is the in-house sales team (Best Invest shpk project, branded and managed by Ramada Residences by Wyndham). We are not an agency.",
+    "The price spreadsheets are the only source of truth for price, area and availability. A price seen in a chat is never a fact."
+  ],
+
+  "bannedPatterns": [
+    { "id": "roi-8pct",        "regex": "(~|up to|deri n[eë]|rreth)?\\s*8\\s*%",                    "why": "The '~8%' / '8-10%' ROI figure is retired everywhere. Only 6% guaranteed or 65% of net." },
+    { "id": "roi-8to10",       "regex": "8\\s*[-–]\\s*10\\s*%",                                      "why": "Retired ROI range." },
+    { "id": "studio",          "regex": "\\b(studio|garsoniere|garsonjere)\\b",                      "why": "Mei has no studio / garsoniere typology. Smallest unit is 1+1." },
+    { "id": "200m",            "regex": "\\b200\\s*(m|metra|meters|metres)\\b",                      "why": "The distance to the sea is ~280 m, not 200 m." },
+    { "id": "combined-return", "regex": "6\\s*%[^.\\n]{0,40}(and|dhe|\\+)[^.\\n]{0,40}65\\s*%",      "why": "6% and 65% are mutually exclusive programs and must never appear as a combined offer." },
+    { "id": "guaranteed-8",    "regex": "guarante\\w*[^.\\n]{0,20}8\\s*%",                           "why": "Only 6% is guaranteed." },
+    { "id": "price-quote",     "regex": "(€|EUR|eur)\\s?\\d{2,3}[.,]?\\d{3}",                        "why": "Concrete prices must come from the spreadsheet at answer time, never be frozen into learnings.md." },
+    { "id": "price-per-m2",    "regex": "\\d{3,4}\\s*(€|EUR)\\s*/\\s*m2?",                            "why": "We do not sell by price per m2 and must not freeze a per-m2 figure." },
+    { "id": "payment-plan",    "regex": "(k[eë]ste|installment|payment plan)[^.\\n]{0,60}\\d+\\s*(muaj|month|vjet|year)", "why": "Installment schedules are never invented; the team gives current terms." }
+  ],
+
+  "piiPatterns": [
+    { "id": "phone-e164",  "regex": "\\+\\d{7,15}",                                        "why": "No client phone numbers." },
+    { "id": "phone-loose", "regex": "\\b(?:00|0)?(?:355|383|49|41|48|420|39|44)[\\s.-]?\\d{2}[\\s.-]?\\d{3}[\\s.-]?\\d{3,4}\\b", "why": "No client phone numbers." },
+    { "id": "email",       "regex": "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}",     "why": "No client email addresses." },
+    { "id": "ghl-id",      "regex": "\\b(?=[A-Za-z0-9]{18,26}\\b)(?=[^\\s]*[0-9])(?=[^\\s]*[a-z])(?=[^\\s]*[A-Z])[A-Za-z0-9]{18,26}\\b", "why": "Looks like a GoHighLevel contact/conversation ID — internal identifier." }
+  ],
+
+  "piiAllowlist": [
+    "info@meiresidence.com",
+    "meiresidence.com",
+    "+355675088808",
+    "+355676099900",
+    "KNOWLEDGEBASE",
+    "GUARDRAILS"
+  ],
+
+  "limits": {
+    "maxChars": 9000,
+    "minChars": 400,
+    "maxSections": 12,
+    "maxNewCharsPerRun": 3000,
+    "maxRemovedCharsPerRun": 2500
+  },
+
+  "requiredHeader": "# Mei Residence — Learnings from real client chats",
+
+  "requiredMarkers": [
+    "<!-- AUTO-GENERATED",
+    "## What buyers actually ask",
+    "## Phrasing that works",
+    "## What stalls a conversation"
+  ]
+}
