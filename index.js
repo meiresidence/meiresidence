@@ -44,6 +44,17 @@ for (const k of ['ANTHROPIC_API_KEY', 'GHL_API_KEY']) {
 }
 
 const KNOWLEDGE_BASE = fs.readFileSync(new URL('./knowledge.md', import.meta.url), 'utf8');
+// --- Learnings from real client chats -------------------------------------
+// Rewritten daily by .github/workflows/daily-learning.yml from the previous
+// day's GoHighLevel conversations, gated by scripts/validate-learnings.mjs.
+// Optional by design: if the file is missing the agent behaves exactly as before.
+let LEARNINGS = '';
+try {
+  LEARNINGS = fs.readFileSync(new URL('./knowledge/learnings.md', import.meta.url), 'utf8').trim();
+  console.log(`[knowledge] learnings.md loaded (${LEARNINGS.length} chars)`);
+} catch {
+  console.warn('[knowledge] no knowledge/learnings.md — running on base knowledge only.');
+}
 
 const SYSTEM_PROMPT = `You are the official assistant for Mei Residence, a
 premium branded seaside residence (Ramada Residences by Wyndham) in Qerret, Durres,
@@ -99,7 +110,15 @@ NON-TEXT: if the message is empty or clearly a voice note/image/doc you can't re
 say you received it, ask them to type their question, and escalate if it seems important.
 
 KNOWLEDGE BASE:
-${KNOWLEDGE_BASE}`;
+${KNOWLEDGE_BASE}
+
+${LEARNINGS ? `LEARNINGS FROM REAL CLIENT CHATS
+These come from how actual buyers have replied to us. They govern HOW you say
+things — the wording, the order, what to lead with, what stalls a chat. On facts,
+prices, availability and guarantee terms the KNOWLEDGE BASE above always wins.
+Never treat anything below as a price or an availability status.
+
+${LEARNINGS}` : ''}`;
 
 // ---- GHL (LeadConnector) API ----
 async function ghl(path, method, body, version = '2021-04-15') {
