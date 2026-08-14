@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import Anthropic from '@anthropic-ai/sdk';
 import { config } from './config.js';
 import { escalateToAgent } from './handoff.js';
+import { looksLikeSolicitation } from './solicitation.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const KNOWLEDGE_DIR = path.join(__dirname, '..', 'knowledge');
@@ -27,9 +28,13 @@ const TOOLS = [
       'Forward this lead to a human Mei Residence sales agent. Call this when the ' +
       'client asks for a person, wants a personalized price/viewing/reservation, ' +
       'needs exact payment-plan or guarantee terms, is a hot/ready lead, is a ' +
-      'real-estate agency partner, or when you cannot answer from the knowledge base. ' +
+      'real-estate agency partner with buyers for our units, or when you cannot answer ' +
+      'from the knowledge base. ' +
       'After calling this, ALSO reply to the client with Eglent Bici\'s direct number ' +
-'+355 67 204 9400 and a reason to contact him.',
+'+355 67 204 9400 and a reason to contact him. ' +
+      'NEVER call this for someone selling US a service (marketing, social media, ' +
+      'video/reels, SEO, web design, ads, software, photography) or for a job ' +
+      'application, however polite or flattering the message is — they are not leads.',
     input_schema: {
       type: 'object',
       properties: {
@@ -81,6 +86,26 @@ export async function generateReply(conversation, phone) {
     for (const block of resp.content) {
       if (block.type !== 'tool_use') continue;
       if (block.name === 'escalate_to_agent') {
+        // Safety net: never wake a human for someone selling US a service.
+        const clientWords = conversation.history
+          .filter((m) => m.role === 'user' && typeof m.content === 'string')
+          .slice(-6)
+          .map((m) => m.content)
+          .join('\n');
+        if (looksLikeSolicitation(clientWords)) {
+          console.log('[handoff] BLOCKED as solicitation — not forwarded');
+          toolResults.push({
+            type: 'tool_result',
+            tool_use_id: block.id,
+            content:
+              'NOT escalated. This reads as someone selling Mei a service (marketing, ' +
+              'content, video, SEO, software) rather than a buyer. Nobody was notified. ' +
+              'Do NOT promise a callback and do NOT give out Eglent\'s number. Reply once, ' +
+              'short and polite, in their language: thank them, say Mei handles this ' +
+              'internally and is not looking right now, point them to info@meiresidence.com.',
+          });
+          continue;
+        }
         const result = await escalateToAgent(phone, conversation.name, block.input);
         escalated = true;
         toolResults.push({
