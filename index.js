@@ -21,19 +21,21 @@
 //      answered (confirmed for contact "Liman" on 2026-07-25). fetchLastInbound
 //      now retries a couple of times with a short delay before giving up.
 //
-// Handoff fix (2026-08-14): inbound service pitches — marketing/social-media
-// agencies, reels editors, SEO sellers, web designers — were being escalated
-// like buyers, tagging the contact `needs-human` and firing the GHL workflow
-// that pings a specialist (confirmed on an Albanian "I saw your page and had an
-// idea for your Instagram" message). Two changes: the system prompt now names
-// this case and forbids the handoff, and escalate() runs a deterministic guard
-// (src/solicitation.js) that aborts the whole handoff — no tag of any kind, no
-// alert — when the conversation reads as a pitch and never showed buyer intent.
+// Handoff fix (2026-08-14): non-buyers were being escalated like buyers,
+// tagging the contact `needs-human` and firing the GHL workflow that pings a
+// specialist (confirmed on an Albanian "I saw your page and had an idea for
+// your Instagram" pitch). The rule is now general, not one exception: only
+// someone trying to BUY from Mei is a lead. Anyone selling to us (any trade),
+// applying for a job, asking for sponsorship or pitching a "collab" is not.
+// Two changes: the system prompt states that test up front, and escalate()
+// runs a deterministic guard (src/not-a-lead.js) that aborts the whole handoff
+// — no tag of any kind, no alert — when the conversation reads as non-buyer
+// outreach and never showed buyer intent.
 
 import express from 'express';
 import fs from 'fs';
 import Anthropic from '@anthropic-ai/sdk';
-import { looksLikeSolicitation } from './src/solicitation.js';
+import { looksLikeNonBuyerOutreach } from './src/not-a-lead.js';
 
 const cfg = {
   port: parseInt(process.env.PORT || '3000', 10),
@@ -113,21 +115,38 @@ answer from the KB. After calling it, also
 reply warmly that a Mei specialist will contact them shortly. Route Polish clients to
 Ania, Czech clients to Martin, others to Eglent or Visard (see KB).
 
-SOLICITATION — NEVER HAND OFF, NEVER TAG. Many inbound messages are not buyers: they
-are people selling US something. Social-media or marketing agencies, video/reels
-editors, SEO and backlink sellers, web designers, ads managers, CRM/AI tool vendors,
-photographers, influencers offering promotion, job applicants, invoice/spam. Typical
-signs: they compliment our website, page, videos or listings; they open with "I came
-across your page / rastesisht gjeta faqen tuaj"; they have "an idea" for our Instagram
-or our marketing; they mention their agency, portfolio, case studies or free
-audit/sample; they ask "would you be open to me showing you / a do te ishit te hapur
-qe t'jua tregoja". For these: DO NOT call escalate_to_agent. Do not qualify them, do
-not ask what unit they want, do not send prices, do not send anyone's phone number.
-Reply ONCE, short and polite, in their language: thank them, say Mei Residence handles
-marketing internally and is not looking for new providers right now, and tell them they
-can send their proposal to info@meiresidence.com. If they push again, repeat once and
-stop. "Agency partner" above means a REAL-ESTATE agency bringing us buyers — never an
-agency selling us marketing, content or software.
+WHO IS A LEAD — THE TEST, APPLIED TO EVERY MESSAGE. Before you even consider
+escalate_to_agent, ask: is this person trying to BUY something from Mei, or trying to
+SELL us something / GET something from us? Only buyers get a handoff. Anyone
+approaching Mei as a supplier, applicant, promoter or asker is NOT a lead — no matter
+how polite, flattering or well written the message is, and no matter whether their
+line of work appears in the examples below. This is a rule about direction, not about
+a list of industries: money and value flowing toward Mei is a lead; anything flowing
+the other way is not.
+
+NOT LEADS — NEVER call escalate_to_agent for these and NEVER let them be tagged:
+- anyone selling us a service or product: marketing, social media, video/reels
+  editing, SEO, web design, ads, software/CRM/AI tools, photography, printing,
+  furniture, construction materials, any supplier or contractor
+- anyone asking us for something: job or internship applications, sponsorship,
+  donations, press and interview requests, students asking for research help
+- "collaboration", "partnership" or "cooperation" offers that are really a pitch:
+  influencers, bloggers, barter, cross-promotion
+- crypto/forex/loan spam, invoices, phishing, bulk-blast messages, bots
+Typical tells: a compliment about our page, website, videos or listings as the opening
+line ("I came across your page" / "rastesisht gjeta faqen tuaj"); "an idea" for our
+Instagram or our marketing; a mention of their agency, portfolio, case studies, CV or
+a free audit/sample; the ask "would you be open to me showing you / a do te ishit te
+hapur qe t'jua tregoja". When you cannot tell whether someone is a buyer or a seller,
+ask them one plain question first — never escalate on the assumption.
+
+HANDLING A NON-LEAD: reply ONCE, short and polite, in their language. Thank them, say
+Mei handles this internally / is not looking right now, and point them to
+info@meiresidence.com if they want to send something. Do not qualify them, do not ask
+what unit they want, do not send prices or availability, do not give out any phone
+number, do not promise that anyone will get back to them. If they push again, repeat
+once and stop. "Agency partner" in the HAND OFF rule means a REAL-ESTATE agency
+bringing us buyers — never an agency selling us services.
 STAFF NAMES - STRICT: in replies to clients say only "nje specialist i Mei" / "a Mei
 specialist". NEVER name any staff member, NEVER invent, guess or repeat a person's
 name as the one handling the request - even if the client used a name first. The ONLY
@@ -235,7 +254,7 @@ const trim = (c) => { if (c.history.length > cfg.historyWindow) c.history = c.hi
 const anthropic = new Anthropic({ apiKey: cfg.anthropic.apiKey });
 const TOOLS = [{
   name: 'escalate_to_agent',
-  description: 'Hand this lead to a human Mei sales agent (tags the contact needs-human + hot-lead and pings a specialist). Call when they ask for a person, want a personalized quote/viewing/reservation, need payment or guarantee terms, are hot, are a real-estate agency partner with buyers for our units, or you cannot answer from the KB. After calling, also reply that a specialist will contact them. NEVER call this for someone selling US a service (marketing, social media, video/reels, SEO, web design, ads, software, photography) or for a job application, however polite or flattering the message is — those are not leads and must not be tagged.',
+  description: 'Hand this lead to a human Mei sales agent (tags the contact needs-human + hot-lead and pings a specialist). Call when they ask for a person, want a personalized quote/viewing/reservation, need payment or guarantee terms, are hot, are a real-estate agency partner with buyers for our units, or you cannot answer from the KB. After calling, also reply that a specialist will contact them. Only someone trying to BUY from Mei is a lead. NEVER call this for anyone approaching Mei to sell us something (any trade: marketing, social media, video, SEO, web, ads, software, photography, suppliers, contractors), to apply for a job or internship, to ask for sponsorship, donations or press, or to pitch a "collaboration" — however polite or flattering the message is. Those are not leads and must not be tagged. If you cannot tell which side they are on, ask one plain question instead of calling this.',
   input_schema: { type: 'object', properties: {
     reason: { type: 'string' }, lead_summary: { type: 'string' },
     interested_in: { type: 'string' }, buyer_type: { type: 'string' },
@@ -291,18 +310,19 @@ function lastClientText(contactId) {
 }
 
 async function escalate(contactId, name, args) {
-  // Safety net (Aug 2026): people selling US a service — marketing agencies,
-  // reels editors, SEO, web design — are not leads. One of them was tagged
-  // needs-human and woke a specialist. The system prompt now says so plainly;
-  // this is the deterministic backstop for when the model slips. It blocks the
-  // whole handoff: no needs-human, no hot-lead, no tag of any kind, no alert.
-  // Any buyer signal anywhere in the conversation disables it — see
-  // src/solicitation.js.
+  // Safety net (Aug 2026): only buyers are leads. Anyone selling US something
+  // (any trade), applying for a job, asking for sponsorship or pitching a
+  // "collab" is not, however polite the message. One such pitch was tagged
+  // needs-human and woke a specialist. The system prompt now states the test
+  // plainly; this is the deterministic backstop for when the model slips. It
+  // blocks the whole handoff: no needs-human, no hot-lead, no tag of any kind,
+  // no alert. Any buyer signal anywhere in the conversation disables it — see
+  // src/not-a-lead.js.
   const clientWords = lastClientMessages(contactId, 6).join('\n');
-  if (looksLikeSolicitation(clientWords)) {
-    console.log(`[handoff] BLOCKED as solicitation for ${contactId} — no tags, no alert:`,
+  if (looksLikeNonBuyerOutreach(clientWords)) {
+    console.log(`[handoff] BLOCKED as non-buyer outreach for ${contactId} — no tags, no alert:`,
       clientWords.replace(/\s+/g, ' ').slice(0, 120));
-    return { ok: true, alerted: false, blocked: 'solicitation' };
+    return { ok: true, alerted: false, blocked: 'not-a-lead' };
   }
 
   // Write the recent messages first - the GHL email fires off the tag below,
@@ -367,10 +387,10 @@ async function generateReply(conv, contactId) {
       if (b.type !== 'tool_use') continue;
       if (b.name === 'escalate_to_agent') {
         const r = await escalate(contactId, conv.name, b.input || {});
-        if (r.blocked === 'solicitation') {
-          // Not a lead: someone selling us a service. Nothing was tagged and no
-          // specialist was notified, so the reply must not promise one.
-          results.push({ type: 'tool_result', tool_use_id: b.id, content: 'NOT escalated. This reads as someone selling Mei a service (marketing, content, video, SEO, software) rather than a buyer. Nobody was tagged or notified. Do NOT say a specialist will contact them. Reply once, short and polite, in their language: thank them, say Mei handles this internally and is not looking right now, and point them to info@meiresidence.com.' });
+        if (r.blocked === 'not-a-lead') {
+          // Not a buyer. Nothing was tagged and no specialist was notified, so
+          // the reply must not promise one.
+          results.push({ type: 'tool_result', tool_use_id: b.id, content: 'NOT escalated. This person is approaching Mei to sell us something, apply for something, or ask us for something — not to buy. Nobody was tagged or notified. Do NOT say a specialist will contact them. Reply once, short and polite, in their language: thank them, say Mei handles this internally and is not looking right now, and point them to info@meiresidence.com.' });
         } else {
           escalated = true;
           results.push({ type: 'tool_result', tool_use_id: b.id, content: 'Tagged for a human. Now reply confirming a specialist will contact them shortly.' });
