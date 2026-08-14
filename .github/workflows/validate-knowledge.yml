@@ -1,0 +1,28 @@
+name: Validate agent knowledge
+
+# Runs the same guardrails on every push and PR that touches the knowledge files,
+# so a hand edit can't ship something the nightly robot would have been blocked for.
+
+on:
+  push:
+    paths:
+      - 'knowledge/**'
+      - 'scripts/guardrails.json'
+      - 'scripts/validate-learnings.mjs'
+  pull_request:
+    paths:
+      - 'knowledge/**'
+      - 'scripts/guardrails.json'
+      - 'scripts/validate-learnings.mjs'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Validate knowledge/learnings.md
+        run: node scripts/validate-learnings.mjs knowledge/learnings.md
