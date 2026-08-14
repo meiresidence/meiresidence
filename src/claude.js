@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import Anthropic from '@anthropic-ai/sdk';
 import { config } from './config.js';
 import { escalateToAgent } from './handoff.js';
-import { looksLikeSolicitation } from './solicitation.js';
+import { looksLikeNonBuyerOutreach } from './not-a-lead.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const KNOWLEDGE_DIR = path.join(__dirname, '..', 'knowledge');
@@ -32,9 +32,11 @@ const TOOLS = [
       'from the knowledge base. ' +
       'After calling this, ALSO reply to the client with Eglent Bici\'s direct number ' +
 '+355 67 204 9400 and a reason to contact him. ' +
-      'NEVER call this for someone selling US a service (marketing, social media, ' +
-      'video/reels, SEO, web design, ads, software, photography) or for a job ' +
-      'application, however polite or flattering the message is — they are not leads.',
+      'Only someone trying to BUY from Mei is a lead. NEVER call this for anyone ' +
+      'approaching Mei to sell us something (any trade), to apply for a job, to ask ' +
+      'for sponsorship or press, or to pitch a "collaboration" — however polite or ' +
+      'flattering the message is. If you cannot tell which side they are on, ask one ' +
+      'plain question instead of calling this.',
     input_schema: {
       type: 'object',
       properties: {
@@ -86,20 +88,21 @@ export async function generateReply(conversation, phone) {
     for (const block of resp.content) {
       if (block.type !== 'tool_use') continue;
       if (block.name === 'escalate_to_agent') {
-        // Safety net: never wake a human for someone selling US a service.
+        // Safety net: only buyers are leads — never wake a human for someone
+        // selling us something, applying for a job, or pitching a "collab".
         const clientWords = conversation.history
           .filter((m) => m.role === 'user' && typeof m.content === 'string')
           .slice(-6)
           .map((m) => m.content)
           .join('\n');
-        if (looksLikeSolicitation(clientWords)) {
-          console.log('[handoff] BLOCKED as solicitation — not forwarded');
+        if (looksLikeNonBuyerOutreach(clientWords)) {
+          console.log('[handoff] BLOCKED as non-buyer outreach — not forwarded');
           toolResults.push({
             type: 'tool_result',
             tool_use_id: block.id,
             content:
-              'NOT escalated. This reads as someone selling Mei a service (marketing, ' +
-              'content, video, SEO, software) rather than a buyer. Nobody was notified. ' +
+              'NOT escalated. This person is approaching Mei to sell us something, ' +
+              'apply for something, or ask us for something — not to buy. Nobody was notified. ' +
               'Do NOT promise a callback and do NOT give out Eglent\'s number. Reply once, ' +
               'short and polite, in their language: thank them, say Mei handles this ' +
               'internally and is not looking right now, point them to info@meiresidence.com.',
