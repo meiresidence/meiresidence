@@ -26,7 +26,7 @@ outranks it on facts; this outranks it on *how to say things*.
 
 ## What stalls a conversation
 
-- Two consecutive "the sales team will confirm that" replies kill momentum. If one answer has to be deferred, make the next one concrete.
+- Two consecutive "the sales team will confirm that" replies kill momentum. If one answer has to be deferred, make the next one concrete or do not answer at all.
 - A bare phone number with no context stalls the thread. Route with one line of substance, then the contact.
 - Generic "how can I help you?" after a specific question makes the lead repeat themselves.
 - Long messages get skimmed. Two to four lines plus one question wins.
