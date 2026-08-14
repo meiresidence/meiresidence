@@ -1,0 +1,221 @@
+name: Daily agent learning
+
+# Every day at 09:00 Europe/Tirane, reads the previous day's conversations from BOTH
+# GoHighLevel sub-accounts, has Claude update knowledge/learnings.md, runs the
+# guardrails, and commits if it passes. The commit triggers Render's auto-deploy,
+# which restarts the agent with the new knowledge.
+#
+# Runs on GitHub's infrastructure — nothing on anyone's laptop, no session open,
+# no connector. It keeps running whether or not anyone is watching.
+
+on:
+  schedule:
+    # GitHub cron is UTC only and does not follow DST, so we fire at both 07:00
+    # and 08:00 UTC and let the guard step below drop whichever one isn't 09:00
+    # local. Summer: 07:00 UTC runs, 08:00 skips. Winter: the reverse.
+    - cron: '0 7 * * *'
+    - cron: '0 8 * * *'
+  workflow_dispatch: # run on demand from the Actions tab, ignores the clock guard
+    inputs:
+      lookback_hours:
+        description: 'How many hours of chat history to read'
+        required: false
+        default: '26'
+
+concurrency:
+  group: daily-learning
+  cancel-in-progress: false
+
+permissions:
+  contents: write # to commit learnings.md
+  issues: write # to raise an alert when a guardrail trips
+
+jobs:
+  learn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Only proceed at 09:00 Europe/Tirane
+        id: clock
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Manual run — skipping the clock guard."
+            echo "go=yes" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          LOCAL_HOUR=$(TZ=Europe/Tirane date +%H)
+          echo "Local hour in Tirane: $LOCAL_HOUR"
+          if [ "$LOCAL_HOUR" = "09" ]; then
+            echo "go=yes" >> "$GITHUB_OUTPUT"
+          else
+            echo "go=no" >> "$GITHUB_OUTPUT"
+            echo "Not 09:00 locally — this is the off-season duplicate trigger. Stopping."
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.clock.outputs.go == 'yes'
+
+      - uses: actions/setup-node@v4
+        if: steps.clock.outputs.go == 'yes'
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        if: steps.clock.outputs.go == 'yes'
+        run: npm ci --omit=dev || npm install --omit=dev
+
+      - name: Run the learning pass
+        id: learn
+        if: steps.clock.outputs.go == 'yes'
+        continue-on-error: true
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GHL_API_KEY: ${{ secrets.GHL_API_KEY }}
+          GHL_API_KEY_2: ${{ secrets.GHL_API_KEY_2 }}
+          GHL_LOCATION_ID: ${{ secrets.GHL_LOCATION_ID }}
+          GHL_LOCATION_ID_2: ${{ secrets.GHL_LOCATION_ID_2 }}
+          LEARN_MODEL: ${{ vars.LEARN_MODEL || 'claude-sonnet-5' }}
+          LEARN_LOOKBACK_H: ${{ github.event.inputs.lookback_hours || '26' }}
+        run: node scripts/learn-from-chats.mjs
+
+      - name: Read the run report
+        id: report
+        if: steps.clock.outputs.go == 'yes'
+        run: |
+          if [ ! -f .learning-report.json ]; then
+            echo "status=error" >> "$GITHUB_OUTPUT"
+            echo "digest=No report file was produced." >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          STATUS=$(jq -r '.status // "error"' .learning-report.json)
+          DIGEST=$(jq -r '(.digest // "") | gsub("[\r\n]+"; " ")' .learning-report.json)
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Daily agent learning — \`$STATUS\`"
+            echo ""
+            jq -r '
+              "- conversations analysed: **\(.conversationsAnalysed)**, messages: **\(.messagesAnalysed)**",
+              "",
+              "| sub-account | seen | active 24h | analysed | messages | error |",
+              "|---|---|---|---|---|---|",
+              (.perAccount | to_entries[] | "| \(.key) | \(.value.seen) | \(.value.active) | \(.value.analysed) | \(.value.messages) | \(.value.error // "—") |"),
+              "",
+              (if (.digest // "") != "" then "**Change:** \(.digest)" else empty end),
+              (if (.problems | length) > 0 then
+                 "", "#### Guardrail violations",
+                 (.problems[] | "- `\(.rule)` \(.detail)" + (if .match then " — matched `\(.match)`" else "" end))
+               else empty end),
+              (if (.warnings | length) > 0 then
+                 "", "#### Warnings",
+                 (.warnings[] | "- `\(.rule)` \(.detail)")
+               else empty end)
+            ' .learning-report.json
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # ---- happy path: promote the candidate and commit -------------------
+      - name: Commit the new learnings
+        if: steps.report.outputs.status == 'committed-ready'
+        run: |
+          mv knowledge/learnings.candidate.md knowledge/learnings.md
+          rm -f .learning-report.json
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > .learning-heartbeat
+          git config user.name  "mei-agent-bot"
+          git config user.email "bot@meiresidence.com"
+          git add knowledge/learnings.md .learning-heartbeat
+          if git diff --staged --quiet; then
+            echo "Nothing staged after all."
+            exit 0
+          fi
+          git commit -m "chore(agent): daily learning — ${{ steps.report.outputs.digest }}" \
+                     -m "Automated by .github/workflows/daily-learning.yml. Revert this commit to roll the agent back."
+          git push
+
+      # ---- keep the schedule alive ----------------------------------------
+      # GitHub disables scheduled workflows in repos with no activity for 60 days.
+      # On a quiet Monday, push a heartbeat so a long silent stretch can't switch
+      # the whole loop off without anyone noticing.
+      - name: Heartbeat on quiet weeks
+        if: steps.report.outputs.status == 'no-change' && github.event_name == 'schedule'
+        run: |
+          if [ "$(date -u +%u)" != "1" ]; then
+            echo "Not Monday — no heartbeat needed."
+            exit 0
+          fi
+          rm -f .learning-report.json
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > .learning-heartbeat
+          git config user.name  "mei-agent-bot"
+          git config user.email "bot@meiresidence.com"
+          git add .learning-heartbeat
+          git diff --staged --quiet && exit 0
+          git commit -m "chore(agent): weekly heartbeat (no new learnings)"
+          git push
+
+      - name: Trigger Render deploy
+        if: steps.report.outputs.status == 'committed-ready'
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          # Only needed if Render's auto-deploy-on-push is off.
+          if [ -z "$RENDER_DEPLOY_HOOK" ]; then
+            echo "No RENDER_DEPLOY_HOOK set — relying on Render auto-deploy-on-push."
+            exit 0
+          fi
+          curl -fsS -X POST "$RENDER_DEPLOY_HOOK" && echo "Render deploy triggered."
+
+      # ---- guardrail tripped: do NOT ship, raise an issue ------------------
+      - name: Open an alert issue
+        if: steps.report.outputs.status == 'rejected' || steps.report.outputs.status == 'error'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let r = { problems: [], warnings: [], perAccount: {} };
+            try { r = JSON.parse(fs.readFileSync('.learning-report.json', 'utf8')); } catch (e) {}
+            let candidate = '';
+            try { candidate = fs.readFileSync('knowledge/learnings.candidate.md', 'utf8'); } catch (e) {}
+
+            const today = new Date().toISOString().slice(0, 10);
+            const problems = (r.problems || [])
+              .map(p => `- \`${p.rule}\`${p.line ? ` (line ${p.line})` : ''} — ${p.detail}${p.match ? `\n  - matched: \`${p.match}\`` : ''}`)
+              .join('\n') || '_none recorded_';
+            const accounts = Object.entries(r.perAccount || {})
+              .map(([k, s]) => `- \`${k}\`: ${s.analysed ?? 0} conversations${s.error ? ` — **error: ${s.error}**` : ''}`)
+              .join('\n') || '_none_';
+
+            const body = [
+              `The daily learning run on **${today}** was **blocked** and nothing was shipped to clients.`,
+              `The agent is still running on the last known-good \`knowledge/learnings.md\`.`,
+              ``,
+              `**Status:** \`${r.status}\``,
+              ``,
+              `### Sub-accounts`,
+              accounts,
+              ``,
+              `### Why it was blocked`,
+              problems,
+              ``,
+              candidate ? `<details><summary>The rejected draft</summary>\n\n\`\`\`markdown\n${candidate.slice(0, 8000)}\n\`\`\`\n\n</details>` : '',
+              ``,
+              `### What to do`,
+              `- If the block is correct, no action needed — tomorrow's run tries again.`,
+              `- If the block is a false positive, loosen the rule in \`scripts/guardrails.json\`.`,
+              `- To apply the draft by hand, copy it into \`knowledge/learnings.md\` and push.`,
+              ``,
+              `[View the run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`,
+            ].join('\n');
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `⚠️ Agent learning blocked — ${today}`,
+              body,
+              labels: ['agent-learning'],
+            });
+
+      - name: Fail the run if a guardrail tripped
+        if: steps.report.outputs.status == 'rejected' || steps.report.outputs.status == 'error'
+        run: |
+          echo "Learning run ended with status: ${{ steps.report.outputs.status }}"
+          exit 1
