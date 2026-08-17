@@ -9,7 +9,8 @@
 // reply possible are gone: (1) the data the agent needed is findable in the KB by
 // unit code, and (2) the prompt no longer tells the agent that availability is
 // unknown / that a handoff can replace an answer. It also locks in the facts and
-// guardrails taken from Eglent's own reply (knowledge/examples.md).
+// guardrails taken from Eglent's own reply (knowledge/examples.md), and the rule
+// that replies always come back in the client's own language.
 import fs from 'fs';
 
 const root = new URL('../', import.meta.url);
@@ -98,6 +99,23 @@ check('examples.md flags the nearby units as not-to-copy', /NEVER offers these/.
 
 // Length rule relaxed for multi-question messages.
 check('long structured answers allowed when asked a lot', /LENGTH EXCEPTION/.test(index));
+
+// --- 5. Language: always mirror the client, never the example ---------------
+check('language rule is stated first and hard', /LANGUAGE — THE FIRST THING YOU DECIDE/.test(index));
+check('language is judged by their words, not their number', /never by their phone country code/.test(index));
+check('mid-conversation language switches are followed', /switch language mid-conversation/.test(index));
+check(
+  'the English examples must not drag replies into English',
+  /Copy their STRUCTURE, ORDER and DEPTH — never their language/.test(index),
+);
+check('examples.md carries the same warning', /never the language/i.test(examples));
+check(
+  'Albanian is only the no-signal fallback, not the greeting default',
+  /Albanian is the fallback ONLY when there is genuinely no language to read/.test(index) &&
+    !/default Albanian\s*\n?for a bare greeting/.test(index),
+  'a greeting is a language signal — "Hello" must get English',
+);
+check("handoff reply is written in the client's language", /IN THE CLIENT'S OWN LANGUAGE/.test(index));
 
 console.log(failures ? `\n${failures} check(s) failed` : '\nAll checks passed');
 process.exit(failures ? 1 : 0);
