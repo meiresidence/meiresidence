@@ -31,6 +31,14 @@
 // runs a deterministic guard (src/not-a-lead.js) that aborts the whole handoff
 // — no tag of any kind, no alert — when the conversation reads as non-buyer
 // outreach and never showed buyer intent.
+//
+// Answer-first fix (2026-08-17): a client asked whether unit A212 was
+// available, its price, the completion date and the payment terms, and got
+// only "a specialist from Mei will reach out to you shortly" — three of those
+// four answers were in knowledge.md. Two causes, both fixed below: the prompt
+// claimed apartment availability was "not marked" (it is — every unit is
+// tagged FREE / SOLD / RESERVED), and nothing said a handoff must ADD to an
+// answer rather than replace it. See scripts/test-answer-first.mjs.
 
 import express from 'express';
 import fs from 'fs';
@@ -85,11 +93,38 @@ for a bare greeting. Never say you are an AI language model.
 KNOWLEDGE RULES: answer ONLY from the KNOWLEDGE BASE. Obey the "HARD RULES" section at
 the top of the KNOWLEDGE BASE above everything else in this prompt — in particular,
 PARKING POSTS ARE NOT FOR SALE and have no price: never quote, estimate, or promise to
-confirm a parking price. For apartments, prices are indicative and availability is not
-marked, so quote the price but say you'll confirm current price
-and availability with the team. Never invent numbers, guarantee terms, or a fixed
-total not listed.
+confirm a parking price. For apartments, prices are indicative, so quote the price but
+say you'll confirm today's status with the team. Never invent numbers, guarantee terms,
+or a fixed total not listed.
 No legal/tax/mortgage advice. You can share a unit's virtual-tour link if asked.
+
+UNIT LOOKUP — DO THIS, DON'T DEFER IT. The "Inventory — apartments" section lists EVERY
+unit by code with its type, m2, price and status (FREE / SOLD / RESERVED), plus a
+virtual-tour link. Unit codes look like A212, B004, A1105 — letter + floor + number,
+type after the slash. When a client names a unit code (in any spelling: "A212", "a212",
+"apartment 212", "A 212"), FIND IT IN THE LIST AND ANSWER FROM IT. Give the type, the
+m2, the price and whether it is currently free, plus the tour link. Phrase status with a
+light hedge, never as a locked promise:
+  "A212 is a 1+1, 52.2 m2, around 103,500 EUR and currently free — Eglent will confirm
+   today's status. Here's the virtual tour: <link>"
+If the unit is SOLD or RESERVED, say so plainly and immediately offer 1-2 similar FREE
+units with their price and tour link. If the code genuinely is not in the list, say you
+don't have that one in front of you and ask them to confirm the code — do not guess a
+price for it.
+
+ANSWER EVERY PART FIRST, ESCALATE ONLY THE REST. Clients often ask three or four things
+in one message (availability + price + completion date + payment terms). Answer EVERY
+part that the KNOWLEDGE BASE covers, in the same reply, before you mention a human.
+Availability, price, m2, typology, completion date (Q4 2026, opening June 2027), the 6%
+program, location, tour links — all of these you answer yourself. Handing the whole
+message to a specialist because ONE part is missing is a failure: it reads as a brush-off
+to someone who asked concrete buying questions.
+PAYMENT TERMS are the deliberate exception: the exact deposit and installment schedule is
+set per unit and only a Mei specialist gives it. So say flexible installments are
+available, that Eglent puts together the exact plan for that unit, and pass ONLY that
+part on — after you have answered everything else.
+A reply that is nothing but "a specialist will reach out" is never acceptable when the
+KNOWLEDGE BASE could answer part of the question.
 
 RETURNS — ONE FIGURE PER CONVERSATION, NEVER TWO. There are two separate, mutually
 exclusive programs and the investor picks ONE of them:
@@ -111,9 +146,11 @@ and call escalate_to_agent (no robotic disclaimer line).
 HAND OFF (call escalate_to_agent) when: they ask for a person, want a personalized
 quote/viewing/reservation, need payment-plan or exact guarantee terms, are clearly
 hot, are a real-estate agency partner who has BUYERS for our units, or you can't
-answer from the KB. After calling it, also
-reply warmly that a Mei specialist will contact them shortly. Route Polish clients to
-Ania, Czech clients to Martin, others to Eglent or Visard (see KB).
+answer from the KB. Escalating is an ADDITION to your answer, never a replacement for
+it: in the same reply, answer everything the KB covers, then close with one short line
+that a Mei specialist will follow up on the specific open item (name it — "the exact
+payment plan", "a viewing") rather than a vague "someone will reach out". Route Polish
+clients to Ania, Czech clients to Martin, others to Eglent or Visard (see KB).
 
 WHO IS A LEAD — THE TEST, APPLIED TO EVERY MESSAGE. Before you even consider
 escalate_to_agent, ask: is this person trying to BUY something from Mei, or trying to
@@ -254,7 +291,7 @@ const trim = (c) => { if (c.history.length > cfg.historyWindow) c.history = c.hi
 const anthropic = new Anthropic({ apiKey: cfg.anthropic.apiKey });
 const TOOLS = [{
   name: 'escalate_to_agent',
-  description: 'Hand this lead to a human Mei sales agent (tags the contact needs-human + hot-lead and pings a specialist). Call when they ask for a person, want a personalized quote/viewing/reservation, need payment or guarantee terms, are hot, are a real-estate agency partner with buyers for our units, or you cannot answer from the KB. After calling, also reply that a specialist will contact them. Only someone trying to BUY from Mei is a lead. NEVER call this for anyone approaching Mei to sell us something (any trade: marketing, social media, video, SEO, web, ads, software, photography, suppliers, contractors), to apply for a job or internship, to ask for sponsorship, donations or press, or to pitch a "collaboration" — however polite or flattering the message is. Those are not leads and must not be tagged. If you cannot tell which side they are on, ask one plain question instead of calling this.',
+  description: 'Hand this lead to a human Mei sales agent (tags the contact needs-human + hot-lead and pings a specialist). Call when they ask for a person, want a personalized quote/viewing/reservation, need payment or guarantee terms, are hot, are a real-estate agency partner with buyers for our units, or you cannot answer from the KB. Escalating never replaces the answer: after calling, answer every part of their message the KB covers and then name the one open item a specialist will follow up on. Only someone trying to BUY from Mei is a lead. NEVER call this for anyone approaching Mei to sell us something (any trade: marketing, social media, video, SEO, web, ads, software, photography, suppliers, contractors), to apply for a job or internship, to ask for sponsorship, donations or press, or to pitch a "collaboration" — however polite or flattering the message is. Those are not leads and must not be tagged. If you cannot tell which side they are on, ask one plain question instead of calling this.',
   input_schema: { type: 'object', properties: {
     reason: { type: 'string' }, lead_summary: { type: 'string' },
     interested_in: { type: 'string' }, buyer_type: { type: 'string' },
@@ -290,7 +327,7 @@ async function writeRecentMessages(contactId, n = 3) {
   if (!msgs.length) return { ok: false };
   const clip = (str, max) => {
     const t = String(str).replace(/\s+/g, ' ').trim();
-    return t.length > max ? `${t.slice(0, max - 1)}\u2026` : t;
+    return t.length > max ? `${t.slice(0, max - 1)}…` : t;
   };
   const value = msgs.map((m) => `- ${clip(m, 300)}`).join('\n');
   const r = await ghl(`/contacts/${contactId}`, 'PUT',
@@ -344,7 +381,7 @@ async function escalate(contactId, name, args) {
   const last = lastClientText(contactId);
   const clip = (str, n) => {
     const t = String(str).replace(/\s+/g, ' ').trim();
-    return t.length > n ? `${t.slice(0, n - 1)}\u2026` : t;
+    return t.length > n ? `${t.slice(0, n - 1)}…` : t;
   };
 
   const lines = [
@@ -393,7 +430,7 @@ async function generateReply(conv, contactId) {
           results.push({ type: 'tool_result', tool_use_id: b.id, content: 'NOT escalated. This person is approaching Mei to sell us something, apply for something, or ask us for something — not to buy. Nobody was tagged or notified. Do NOT say a specialist will contact them. Reply once, short and polite, in their language: thank them, say Mei handles this internally and is not looking right now, and point them to info@meiresidence.com.' });
         } else {
           escalated = true;
-          results.push({ type: 'tool_result', tool_use_id: b.id, content: 'Tagged for a human. Now reply confirming a specialist will contact them shortly.' });
+          results.push({ type: 'tool_result', tool_use_id: b.id, content: 'Tagged for a human. Now write the client reply. FIRST answer every part of their question that the KNOWLEDGE BASE covers — if they named a unit code, look it up and give its type, m2, price, current status and tour link; also answer completion date, price ranges, the 6% program, location, anything else covered. THEN close with one short line naming only the specific open item a Mei specialist will follow up on (e.g. the exact payment plan). Do NOT send a reply that is only "a specialist will contact you".' });
         }
       }
       else results.push({ type: 'tool_result', tool_use_id: b.id, content: 'Unknown tool.' });
