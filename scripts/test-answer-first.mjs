@@ -115,7 +115,9 @@ check(
     !/default Albanian\s*\n?for a bare greeting/.test(index),
   'a greeting is a language signal — "Hello" must get English',
 );
-check("handoff reply is written in the client's language", /IN THE CLIENT'S OWN LANGUAGE/.test(index));
+// The instruction sits inside a single-quoted JS string, so the source contains
+// CLIENT\'S with a backslash — allow it.
+check("handoff reply is written in the client's language", /IN THE CLIENT\\?'S OWN LANGUAGE/.test(index));
 
 console.log(failures ? `\n${failures} check(s) failed` : '\nAll checks passed');
 process.exit(failures ? 1 : 0);
