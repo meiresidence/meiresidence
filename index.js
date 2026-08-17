@@ -45,6 +45,13 @@
 // question makes payment terms, furnishing, both return options, the property
 // deed and the free owner stays answerable by the agent. It also contains one
 // thing the agent must NOT copy — the non-Mei apartments nearby.
+//
+// Language fix (2026-08-17): the language instruction was a clause inside
+// STYLE and defaulted a bare greeting to Albanian, so an English "Hello" could
+// come back in Albanian. With an English gold-standard reply now in the prompt
+// the opposite risk appeared too — a strong English exemplar pulling replies
+// into English. Language is now the FIRST rule: mirror the client's own words,
+// never their phone number and never the example's language.
 
 import express from 'express';
 import fs from 'fs';
@@ -103,10 +110,28 @@ GOALS: reply fast, warm and helpful like Mei's best human agent; give info from 
 KNOWLEDGE BASE; gently learn if they are an investor or agency, which unit type
 (1+1/2+1/duplex) and budget; hand off hot leads to a human.
 
+LANGUAGE — THE FIRST THING YOU DECIDE, EVERY SINGLE MESSAGE. Reply in the language the
+client wrote to you in. Always. Albanian in, Albanian out. English in, English out.
+Polish, Czech, German, Italian, Turkish, Greek, French, Spanish, Serbian, Macedonian,
+Arabic — whatever they used, you use.
+- Judge by the words THEY typed, never by their phone country code, their name, or
+  where they seem to be from. A Polish or German number writing in English gets a
+  reply in English.
+- If they switch language mid-conversation, switch with them from that message on.
+- Mixed languages in one message: answer in the one they wrote most of.
+- The GOLD-STANDARD REPLIES below happen to be in English because that client wrote in
+  English. Copy their STRUCTURE, ORDER and DEPTH — never their language. An Albanian,
+  Polish or German client must get that same answer in Albanian, Polish or German.
+- Albanian is the fallback ONLY when there is genuinely no language to read: an empty
+  message, a lone emoji, a photo with no text, just a phone number. A greeting IS a
+  language signal — "Hello" gets English, "Pershendetje" gets Albanian, "Dzien dobry"
+  gets Polish.
+- Never apologise for the language, never ask which language they prefer, never answer
+  in two languages at once.
+
 STYLE: warm, professional, chat-short (1-4 sentences, plain text, at most one
-emoji). Use their name if known. Ask ONE question at a time. ALWAYS reply in the
-language the client writes in (Albanian, English, Italian, etc.); default Albanian
-for a bare greeting. Never say you are an AI language model.
+emoji). Use their name if known. Ask ONE question at a time. Never say you are an AI
+language model.
 LENGTH EXCEPTION: when a client asks several concrete buying questions at once
 (availability, price, timeline, payment, returns), give the FULL structured answer
 even if it runs long — one short line per point, in the order they asked, exactly
@@ -234,7 +259,8 @@ ${KNOWLEDGE_BASE}
 ${EXAMPLES ? `GOLD-STANDARD REPLIES — MATCH THESE
 Real replies from Eglent, hand-approved. They are the model for tone, order and depth,
 and where a fact in them conflicts with an older line in the KNOWLEDGE BASE, the
-example wins. Read the "What NOT to copy" notes as strictly as the rest.
+example wins. Read the "What NOT to copy" notes as strictly as the rest. Match their
+structure, never their language — see the LANGUAGE rule at the top.
 
 ${EXAMPLES}` : ''}
 
@@ -470,10 +496,10 @@ async function generateReply(conv, contactId) {
         if (r.blocked === 'not-a-lead') {
           // Not a buyer. Nothing was tagged and no specialist was notified, so
           // the reply must not promise one.
-          results.push({ type: 'tool_result', tool_use_id: b.id, content: 'NOT escalated. This person is approaching Mei to sell us something, apply for something, or ask us for something — not to buy. Nobody was tagged or notified. Do NOT say a specialist will contact them. Reply once, short and polite, in their language: thank them, say Mei handles this internally and is not looking right now, and point them to info@meiresidence.com.' });
+          results.push({ type: 'tool_result', tool_use_id: b.id, content: 'NOT escalated. This person is approaching Mei to sell us something, apply for something, or ask us for something — not to buy. Nobody was tagged or notified. Do NOT say a specialist will contact them. Reply once, short and polite, in their own language: thank them, say Mei handles this internally and is not looking right now, and point them to info@meiresidence.com.' });
         } else {
           escalated = true;
-          results.push({ type: 'tool_result', tool_use_id: b.id, content: 'Tagged for a human. Now write the client reply. FIRST answer every part of their question that the KNOWLEDGE BASE covers — if they named a unit code, look it up and give its type, m2, price, current status and tour link; also answer completion date, price ranges, the 6% program, location, anything else covered. THEN close with one short line naming only the specific open item a Mei specialist will follow up on (e.g. the exact payment plan). Do NOT send a reply that is only "a specialist will contact you".' });
+          results.push({ type: 'tool_result', tool_use_id: b.id, content: 'Tagged for a human. Now write the client reply, IN THE CLIENT\'S OWN LANGUAGE — the language they typed in, not English by default. FIRST answer every part of their question that the KNOWLEDGE BASE covers — if they named a unit code, look it up and give its type, m2, price, current status and tour link; also answer completion date, price ranges, the return options, location, anything else covered. THEN close with one short line naming only the specific open item a Mei specialist will follow up on (e.g. a personalised payment schedule). Do NOT send a reply that is only "a specialist will contact you".' });
         }
       }
       else results.push({ type: 'tool_result', tool_use_id: b.id, content: 'Unknown tool.' });
