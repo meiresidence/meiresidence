@@ -235,7 +235,6 @@ async function askClaude(prompt) {
   const resp = await client.messages.create({
     model: cfg.model,
     max_tokens: 4000,
-    temperature: 0.2,
     messages: [{ role: 'user', content: prompt }],
   });
   return resp.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n').trim();
