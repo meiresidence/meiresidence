@@ -63,12 +63,18 @@ const cfg = {
   anthropic: {
     apiKey: process.env.ANTHROPIC_API_KEY,
     model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-5',
-    maxTokens: parseInt(process.env.ANTHROPIC_MAX_TOKENS || '600', 10),
+    // 600 was too tight: the answer-first handoff replies are long, and a
+    // response that spends its whole budget before the first text block comes
+    // back empty. (If ANTHROPIC_MAX_TOKENS is pinned in the Render env it
+    // overrides this default — raise it there too.)
+    maxTokens: parseInt(process.env.ANTHROPIC_MAX_TOKENS || '1024', 10),
   },
   ghl: {
     apiKey: process.env.GHL_API_KEY,
     locationId: process.env.GHL_LOCATION_ID || 'kYtT2id1lBqDXsFCeHgY',
-    base: 'https://services.leadconnectorhq.com',
+    // Overridable so the failure path can be tested against a local mock
+    // (see scripts/test-degraded-live.mjs). Production never sets this.
+    base: process.env.GHL_API_BASE || 'https://services.leadconnectorhq.com',
   },
   historyWindow: parseInt(process.env.HISTORY_WINDOW || '20', 10),
 };
@@ -475,18 +481,37 @@ async function escalate(contactId, name, args) {
   return { ok: true, alerted: sent.ok };
 }
 
+// One Claude call. maxTokens is a parameter so the empty-reply retry below can
+// raise it — a response whose whole budget went to non-text blocks (or that was
+// cut off at max_tokens before any text) is one of the ways the agent went
+// silent on 2026-08-19 (contact Borys: two real buyer messages, both answered
+// with the old canned fallback line, no tags, no alert).
+const callClaude = (messages, maxTokens) => anthropic.messages.create({
+  model: cfg.anthropic.model, max_tokens: maxTokens,
+  system: SYSTEM_PROMPT, tools: TOOLS, messages,
+});
+
+// Text actually usable as a reply: non-empty after trimming. An empty text
+// block ("") used to count as a reply and erase finalText.
+const usableText = (content) => content
+  .filter((b) => b.type === 'text')
+  .map((b) => (b.text || '').trim())
+  .filter(Boolean)
+  .join('\n')
+  .trim();
+
 async function generateReply(conv, contactId) {
   const messages = conv.history.map((m) => ({ role: m.role, content: m.content }));
   let finalText = '', escalated = false;
   for (let hop = 0; hop < 4; hop++) {
-    const resp = await anthropic.messages.create({
-      model: cfg.anthropic.model, max_tokens: cfg.anthropic.maxTokens,
-      system: SYSTEM_PROMPT, tools: TOOLS, messages,
-    });
+    const resp = await callClaude(messages, cfg.anthropic.maxTokens);
     messages.push({ role: 'assistant', content: resp.content });
     conv.history.push({ role: 'assistant', content: resp.content });
-    const parts = resp.content.filter((b) => b.type === 'text').map((b) => b.text);
-    if (parts.length) finalText = parts.join('\n').trim();
+    // Always log what came back — this line is what lets Render logs answer
+    // "why did the agent go quiet" in one glance.
+    console.log(`[claude] hop ${hop} stop:${resp.stop_reason} blocks:[${resp.content.map((b) => b.type).join(',') || 'EMPTY'}]`);
+    const text = usableText(resp.content);
+    if (text) finalText = text;
     if (resp.stop_reason !== 'tool_use') break;
     const results = [];
     for (const b of resp.content) {
@@ -507,11 +532,73 @@ async function generateReply(conv, contactId) {
     messages.push({ role: 'user', content: results });
     conv.history.push({ role: 'user', content: results });
   }
+  // Empty reply? Retry ONCE with a much bigger output budget before giving up.
+  // Covers: the whole budget consumed by non-text blocks, a response cut off at
+  // max_tokens before any text, or a bare empty text block.
+  if (!finalText) {
+    const bigger = Math.max(2048, cfg.anthropic.maxTokens * 3);
+    console.warn(`[claude] empty reply for ${contactId} — retrying once with max_tokens=${bigger}`);
+    const resp = await callClaude(messages, bigger);
+    console.log(`[claude] retry stop:${resp.stop_reason} blocks:[${resp.content.map((b) => b.type).join(',') || 'EMPTY'}]`);
+    const text = usableText(resp.content);
+    if (text) {
+      finalText = text;
+      messages.push({ role: 'assistant', content: resp.content });
+      conv.history.push({ role: 'assistant', content: resp.content });
+    }
+  }
   trim(conv);
-  if (!finalText) finalText = escalated
-    ? 'Faleminderit! Nje specialist i Mei Residence do t’ju kontaktoje shume shpejt.'
-    : 'Faleminderit per mesazhin! Si mund t’ju ndihmoj per Mei Residence?';
-  return finalText;
+  if (!finalText && escalated) {
+    // The handoff DID fire (tags + alert), so this promise is honest.
+    finalText = 'Faleminderit! Nje specialist i Mei Residence do t’ju kontaktoje shume shpejt.';
+  }
+  // NOTE (2026-08-19, the Borys failure): there is deliberately NO generic
+  // fallback line here any more. Returning '' tells the webhook handler that
+  // generation failed, and the handler alerts a human instead of sending a
+  // "Si mund t'ju ndihmoj?" greeting that looks like a normal reply, answers
+  // nothing, and lets the lead go cold with nobody ever finding out.
+  return { text: finalText, escalated };
+}
+
+// Generation failed (empty reply after retry, or the Claude call threw).
+// Never mask it as a normal reply and never go silent: put a human on it.
+//  - buyers: tag needs-human + agent-error (the GHL handoff workflow fires off
+//    the tag), ping the specialist directly, and send the client an honest
+//    holding line so they know a person is coming.
+//  - non-buyer outreach (deterministic guard, no model needed): polite
+//    redirect to info@, no tags, nobody woken.
+async function handleGenerationFailure(contactId, name, channel, errMsg) {
+  const clientWords = lastClientMessages(contactId, 6).join('\n');
+  if (looksLikeNonBuyerOutreach(clientWords)) {
+    console.warn(`[agent-error] ${contactId}: generation failed for non-buyer outreach — polite redirect, no alert. (${errMsg || 'empty reply'})`);
+    return 'Faleminderit per mesazhin! Per propozime dhe bashkepunime na shkruani ne info@meiresidence.com dhe ekipi e shikon. / Thank you for reaching out — please send proposals to info@meiresidence.com.';
+  }
+
+  console.error(`[agent-error] ${contactId}: generation failed (${errMsg || 'empty reply after retry'}) — tagging needs-human and alerting the specialist.`);
+  await writeRecentMessages(contactId, 3).catch(() => {});
+  await addTags(contactId, ['needs-human', 'agent-error']).catch(() => {});
+
+  const specialist = process.env.SPECIALIST_CONTACT_ID;
+  if (specialist && specialist !== contactId) {
+    const last = lastClientText(contactId);
+    const alert = [
+      '⚠️ AGENT ERROR - reply failed, human needed',
+      `Name: ${name || 'Unknown'}`,
+      errMsg ? `Error: ${String(errMsg).slice(0, 200)}` : 'Error: model returned no text (after one retry)',
+      last ? `\nTheir last message:\n"${String(last).replace(/\s+/g, ' ').slice(0, 400)}"` : null,
+      '',
+      'The client received a holding message and is waiting for a person.',
+      `Open: https://app.gohighlevel.com/v2/location/${cfg.ghl.locationId}/conversations/conversations/${contactId}`,
+    ].filter(Boolean).join('\n');
+    const sent = await sendReply(specialist, alert, process.env.SPECIALIST_CHANNEL || 'WhatsApp');
+    if (!sent.ok) console.error('[agent-error] specialist alert FAILED', JSON.stringify(sent.data).slice(0, 300));
+  } else if (!specialist) {
+    console.warn('[agent-error] SPECIALIST_CONTACT_ID not set - relying on the needs-human tag workflow only');
+  }
+
+  // Honest holding line, bilingual since we could not detect their language
+  // without the model. It promises exactly what just happened: a person.
+  return 'Faleminderit per mesazhin tuaj! Nje koleg nga Mei Residence do t’ju pergjigjet personalisht shume shpejt. / Thank you for your message — a Mei Residence colleague will reply to you personally very soon.';
 }
 
 // ---- server ----
@@ -546,10 +633,28 @@ app.post('/ghl-webhook', async (req, res) => {
     lastReplyAt.set(contactId, now); // claim the cooldown only now that we know we're replying
     const conv = getConv(contactId, name);
     conv.history.push({ role: 'user', content: String(text) });
-    const reply = await generateReply(conv, contactId);
+
+    // Generation is guarded separately from the rest of the handler: a Claude
+    // failure (thrown error OR empty reply) must not drop the lead silently
+    // and must not be papered over with a canned greeting. Both used to
+    // happen — silent drop for thrown errors, canned greeting for empty
+    // replies (contact Borys, 2026-08-19).
+    let reply = '', failReason = '';
+    try {
+      const out = await generateReply(conv, contactId);
+      reply = out.text;
+      if (!reply) failReason = 'model returned no text (after one retry)';
+    } catch (e) {
+      failReason = e?.message || String(e);
+      console.error('[ghl-webhook] generateReply threw:', e);
+    }
+    if (!reply) {
+      reply = await handleGenerationFailure(contactId, name, channel, failReason);
+    }
+
     const sent = await sendReply(contactId, reply, channel); // reply on the same channel it arrived on
-    console.log(`[msg] ${contactId} (${channel}) <= "${String(text).slice(0,40)}" => sent:${sent.ok} "${reply.slice(0, 60)}"`);
-    return res.status(200).json({ reply, contactId, channel });
+    console.log(`[msg] ${contactId} (${channel}) <= "${String(text).slice(0,40)}" => sent:${sent.ok}${failReason ? ' DEGRADED' : ''} "${reply.slice(0, 60)}"`);
+    return res.status(200).json({ reply, contactId, channel, degraded: !!failReason || undefined });
   } catch (e) {
     console.error('[ghl-webhook] error', e);
     return res.status(200).json({ reply: '' });
