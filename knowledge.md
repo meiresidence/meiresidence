@@ -115,9 +115,18 @@ brand, management, and build-quality difference.
 Prices are INDICATIVE; each unit is tagged **FREE / SOLD / RESERVED** from the latest
 price list, but status changes fast — confirm current price and availability with the
 sales team. Buyer names in the source sheet are confidential and never shown. Unit codes: A/B + floor + number;
-type after the slash. Each unit has a **virtual tour link** (share it when a
-client asks for photos/video/layout) and a **detailed floor-plan PDF** the
-sales team can send on request.
+type after the slash. Each unit has up to TWO links:
+- `tour:` — a **video walkthrough** (screencast)
+- `3d:` — an **interactive 3D plan** (dollhouse flythrough of the floor plan) at
+  mei-tour.netlify.app
+
+**When a client asks for a video, plan/planimetri, layout, photos, or a virtual
+tour of a unit, ALWAYS send BOTH links together** — the video tour AND the 3D
+plan — not just one. If a unit line has only one of the two, send the one it has;
+if it has neither, offer the general 3D catalogue https://mei-tour.netlify.app
+and say the team can send the detailed floor-plan PDF on request. Note for the
+3D plan: it is an illustrative model of the typology (the page says so) — real
+3D views are being prepared.
 
 Totals: 152 apartments — **63 available, 53 sold, 2 reserved, 34 not-released / price-on-request**.
 - 1+1: **37 available**, 93,200–118,000 EUR (44 sold, 1 reserved, 21 not-released/TBC)
@@ -126,169 +135,169 @@ Totals: 152 apartments — **63 available, 53 sold, 2 reserved, 34 not-released 
 - Duplex: **9 available**, 111,300–169,200 EUR (6 sold, 1 reserved, 6 not-released/TBC)
 - Parking posts: **NOT FOR SALE** — no price, not offered (see HARD RULES at the top)
 
-Per-unit (unit | total m2 | price EUR | virtual tour):
+Per-unit (unit | total m2 | price EUR | tour: video walkthrough | 3d: interactive 3D plan):
 
 **KATI PËRDHE**
-- APARTAMENT B001/Duplex — 93.3 m2 — RESERVED
-- APARTAMENT B002/Duplex — 100.9 m2 — 163,500 EUR — FREE | tour: https://app.screencast.com/E8bM8jxHz6Qkk
-- APARTAMENT B003/Duplex — 100.9 m2 — 161,300 EUR — SOLD
-- APARTAMENT B004/Duplex — 100.9 m2 — 168,600 EUR — FREE | tour: https://app.screencast.com/IYVE3a4zc0RNj
-- APARTAMENT B005/Duplex — 100.9 m2 — 169,200 EUR — FREE | tour: https://app.screencast.com/QfmVJku8WSDqa
-- APARTAMENT B006/Duplex — 104.6 m2 — 168,000 EUR — FREE | tour: https://app.screencast.com/0B5749yWfSLIP
-- APARTAMENT A007/Duplex — 102.3 m2 — 167,900 EUR — FREE | tour: https://app.screencast.com/0B5749yWfSLIP
-- APARTAMENT A008/Duplex — 93.4 m2 — price on request
-- APARTAMENT A009/Duplex — 96.4 m2 — price on request
-- APARTAMENT A010/Duplex — 95.9 m2 — SOLD
-- APARTAMENT A011/Duplex — 72.6 m2 — not yet released (price on request)
-- APARTAMENT A012/Duplex — 74.3 m2 — not yet released (price on request)
-- APARTAMENT A013/Duplex — 110.2 m2 — not yet released (price on request)
-- APARTAMENT A014/Duplex — 79.1 m2 — not yet released (price on request)
-- APARTAMENT A015/Duplex — 79.1 m2 — 117,200 EUR — SOLD
-- APARTAMENT B016/Duplex — 79.1 m2 — 120,000 EUR — FREE | tour: https://app.screencast.com/G4odvVr0Q3vxj
-- APARTAMENT B017/Duplex — 76.3 m2 — 109,500 EUR — SOLD
-- APARTAMENT B018/Duplex — 76.3 m2 — 109,500 EUR — SOLD
-- APARTAMENT B019/Duplex — 76.3 m2 — 111,300 EUR — FREE | tour: https://app.screencast.com/MPzwEy4BM3EpB
-- APARTAMENT B020/Duplex — 76.3 m2 — SOLD
-- APARTAMENT B021/Duplex — 79.1 m2 — 120,000 EUR — FREE | tour: https://app.screencast.com/IBdRkdUyyFkVd
-- APARTAMENT B022/Duplex — 98.4 m2 — 140,500 EUR — FREE | tour: https://app.screencast.com/IBdRkdUyyFkVd
+- APARTAMENT B001/Duplex — 93.3 m2 — RESERVED | 3d: https://mei-tour.netlify.app/b001/
+- APARTAMENT B002/Duplex — 100.9 m2 — 163,500 EUR — FREE | tour: https://app.screencast.com/E8bM8jxHz6Qkk | 3d: https://mei-tour.netlify.app/b002/
+- APARTAMENT B003/Duplex — 100.9 m2 — 161,300 EUR — SOLD | 3d: https://mei-tour.netlify.app/b003/
+- APARTAMENT B004/Duplex — 100.9 m2 — 168,600 EUR — FREE | tour: https://app.screencast.com/IYVE3a4zc0RNj | 3d: https://mei-tour.netlify.app/b004/
+- APARTAMENT B005/Duplex — 100.9 m2 — 169,200 EUR — FREE | tour: https://app.screencast.com/QfmVJku8WSDqa | 3d: https://mei-tour.netlify.app/b005/
+- APARTAMENT B006/Duplex — 104.6 m2 — 168,000 EUR — FREE | tour: https://app.screencast.com/0B5749yWfSLIP | 3d: https://mei-tour.netlify.app/b006/
+- APARTAMENT A007/Duplex — 102.3 m2 — 167,900 EUR — FREE | tour: https://app.screencast.com/0B5749yWfSLIP | 3d: https://mei-tour.netlify.app/a007/
+- APARTAMENT A008/Duplex — 93.4 m2 — price on request | 3d: https://mei-tour.netlify.app/a008/
+- APARTAMENT A009/Duplex — 96.4 m2 — price on request | 3d: https://mei-tour.netlify.app/a009/
+- APARTAMENT A010/Duplex — 95.9 m2 — SOLD | 3d: https://mei-tour.netlify.app/a010/
+- APARTAMENT A011/Duplex — 72.6 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a011/
+- APARTAMENT A012/Duplex — 74.3 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a012/
+- APARTAMENT A013/Duplex — 110.2 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a013/
+- APARTAMENT A014/Duplex — 79.1 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a014/
+- APARTAMENT A015/Duplex — 79.1 m2 — 117,200 EUR — SOLD | 3d: https://mei-tour.netlify.app/a015/
+- APARTAMENT B016/Duplex — 79.1 m2 — 120,000 EUR — FREE | tour: https://app.screencast.com/G4odvVr0Q3vxj | 3d: https://mei-tour.netlify.app/b016/
+- APARTAMENT B017/Duplex — 76.3 m2 — 109,500 EUR — SOLD | 3d: https://mei-tour.netlify.app/b017/
+- APARTAMENT B018/Duplex — 76.3 m2 — 109,500 EUR — SOLD | 3d: https://mei-tour.netlify.app/b018/
+- APARTAMENT B019/Duplex — 76.3 m2 — 111,300 EUR — FREE | tour: https://app.screencast.com/MPzwEy4BM3EpB | 3d: https://mei-tour.netlify.app/b019/
+- APARTAMENT B020/Duplex — 76.3 m2 — SOLD | 3d: https://mei-tour.netlify.app/b020/
+- APARTAMENT B021/Duplex — 79.1 m2 — 120,000 EUR — FREE | tour: https://app.screencast.com/IBdRkdUyyFkVd | 3d: https://mei-tour.netlify.app/b021/
+- APARTAMENT B022/Duplex — 98.4 m2 — 140,500 EUR — FREE | tour: https://app.screencast.com/IBdRkdUyyFkVd | 3d: https://mei-tour.netlify.app/b022/
 
 **KATI PARË**
-- APARTAMENT B101/1+1 — 50.6 m2 — SOLD
+- APARTAMENT B101/1+1 — 50.6 m2 — SOLD | 3d: https://mei-tour.netlify.app/b101/
 - APARTAMENT NR.2/1+1/BA — 86.6 m2 — SOLD
-- APARTAMENT B103/2+1 — 111.5 m2 — 205,000 EUR — FREE | tour: https://app.screencast.com/Fr5RoMOcwpRi9
+- APARTAMENT B103/2+1 — 111.5 m2 — 205,000 EUR — FREE | tour: https://app.screencast.com/Fr5RoMOcwpRi9 | 3d: https://mei-tour.netlify.app/b103/
 - APARTAMENT B104/1+1 — 57.1 m2 — 93,200 EUR — FREE | tour: https://app.screencast.com/Nl1DPvTiXjUpC
-- APARTAMENT B104/2+1 — 80.3 m2 — 135,000 EUR — FREE | tour: https://app.screencast.com/WwjpMvyJricRT
-- APARTAMENT NR.B105/1+1 — 54.4 m2 — SOLD
-- APARTAMENT NR.B106/1+1 — 53.6 m2 — SOLD
-- APARTAMENT NR.B107/1+1 — 53.6 m2 — SOLD
-- APARTAMENT B108/1+1 — 56.5 m2 — 99,000 EUR — SOLD
-- APARTAMENT A109/2+1 — 139.4 m2 — not yet released (price on request)
-- APARTAMENT A110/1+1 — 52.7 m2 — 99,800 EUR — FREE | tour: https://app.screencast.com/3cdIkzlvSOM1e
-- APARTAMENT A111/1+1 — 52.2 m2 — 95,000 EUR — SOLD
-- APARTAMENT A112/1+1 — 52.2 m2 — 95,000 EUR — SOLD
-- APARTAMENT A113/2+1 — 122.9 m2 — 216,000 EUR — FREE | tour: https://app.screencast.com/NSIbcrq5lhkXQ
-- APARTAMENT A114/2+1 — 95.2 m2 — 171,000 EUR — FREE | tour: https://app.screencast.com/NSIbcrq5lhkXQ
-- APARTAMENT A115/1+1 — 52.5 m2 — 91,000 EUR — SOLD
-- APARTAMENT A116/1+1 — 52.8 m2 — 96,000 EUR — FREE | tour: https://app.screencast.com/fdBigPRUVKxPX
-- APARTAMENT A117/1+1 — 55.6 m2 — not yet released (price on request)
-- APARTAMENT A118/1+1/P — 114.4 m2 — not yet released (price on request)
-- APARTAMENT A119/2+1/P — 139.2 m2 — not yet released (price on request)
-- APARTAMENT A120/1+1 — 60.3 m2 — not yet released (price on request)
-- APARTAMENT A121/1+1 — 60.3 m2 — not yet released (price on request)
-- APARTAMENT A122/1+1 — 60.3 m2 — not yet released (price on request)
-- APARTAMENT A123/1+1 — 62.4 m2 — 94,000 EUR — SOLD
-- APARTAMENT B124/1+1 — 61.7 m2 — 98,000 EUR — FREE | tour: https://app.screencast.com/62fDXoFnUvjml
-- APARTAMENT NR B125/1+1 — 62.3 m2 — SOLD
-- APARTAMENT NR B126/1+1 — 60.3 m2 — SOLD
-- APARTAMENT NR B127/1+1 — 60.3 m2 — SOLD
-- APARTAMENT NR B128/1+1 — 60.3 m2 — SOLD
-- APARTAMENT B129/1+1 — 60.3 m2 — 89,600 EUR — SOLD
-- APARTAMENT B130/1+1 — 60.3 m2 — 89,600 EUR — SOLD
-- APARTAMENT B131/1+1 — 62.3 m2 — 93,000 EUR — SOLD
+- APARTAMENT B104/2+1 — 80.3 m2 — 135,000 EUR — FREE | tour: https://app.screencast.com/WwjpMvyJricRT | 3d: https://mei-tour.netlify.app/b104/
+- APARTAMENT NR.B105/1+1 — 54.4 m2 — SOLD | 3d: https://mei-tour.netlify.app/b105/
+- APARTAMENT NR.B106/1+1 — 53.6 m2 — SOLD | 3d: https://mei-tour.netlify.app/b106/
+- APARTAMENT NR.B107/1+1 — 53.6 m2 — SOLD | 3d: https://mei-tour.netlify.app/b107/
+- APARTAMENT B108/1+1 — 56.5 m2 — 99,000 EUR — SOLD | 3d: https://mei-tour.netlify.app/b108/
+- APARTAMENT A109/2+1 — 139.4 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a109/
+- APARTAMENT A110/1+1 — 52.7 m2 — 99,800 EUR — FREE | tour: https://app.screencast.com/3cdIkzlvSOM1e | 3d: https://mei-tour.netlify.app/a110/
+- APARTAMENT A111/1+1 — 52.2 m2 — 95,000 EUR — SOLD | 3d: https://mei-tour.netlify.app/a111/
+- APARTAMENT A112/1+1 — 52.2 m2 — 95,000 EUR — SOLD | 3d: https://mei-tour.netlify.app/a112/
+- APARTAMENT A113/2+1 — 122.9 m2 — 216,000 EUR — FREE | tour: https://app.screencast.com/NSIbcrq5lhkXQ | 3d: https://mei-tour.netlify.app/a113/
+- APARTAMENT A114/2+1 — 95.2 m2 — 171,000 EUR — FREE | tour: https://app.screencast.com/NSIbcrq5lhkXQ | 3d: https://mei-tour.netlify.app/a114/
+- APARTAMENT A115/1+1 — 52.5 m2 — 91,000 EUR — SOLD | 3d: https://mei-tour.netlify.app/a115/
+- APARTAMENT A116/1+1 — 52.8 m2 — 96,000 EUR — FREE | tour: https://app.screencast.com/fdBigPRUVKxPX | 3d: https://mei-tour.netlify.app/a116/
+- APARTAMENT A117/1+1 — 55.6 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a117/
+- APARTAMENT A118/1+1/P — 114.4 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a118/
+- APARTAMENT A119/2+1/P — 139.2 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a119/
+- APARTAMENT A120/1+1 — 60.3 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a120/
+- APARTAMENT A121/1+1 — 60.3 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a121/
+- APARTAMENT A122/1+1 — 60.3 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a122/
+- APARTAMENT A123/1+1 — 62.4 m2 — 94,000 EUR — SOLD | 3d: https://mei-tour.netlify.app/a123/
+- APARTAMENT B124/1+1 — 61.7 m2 — 98,000 EUR — FREE | tour: https://app.screencast.com/62fDXoFnUvjml | 3d: https://mei-tour.netlify.app/b124/
+- APARTAMENT NR B125/1+1 — 62.3 m2 — SOLD | 3d: https://mei-tour.netlify.app/b125/
+- APARTAMENT NR B126/1+1 — 60.3 m2 — SOLD | 3d: https://mei-tour.netlify.app/b126/
+- APARTAMENT NR B127/1+1 — 60.3 m2 — SOLD | 3d: https://mei-tour.netlify.app/b127/
+- APARTAMENT NR B128/1+1 — 60.3 m2 — SOLD | 3d: https://mei-tour.netlify.app/b128/
+- APARTAMENT B129/1+1 — 60.3 m2 — 89,600 EUR — SOLD | 3d: https://mei-tour.netlify.app/b129/
+- APARTAMENT B130/1+1 — 60.3 m2 — 89,600 EUR — SOLD | 3d: https://mei-tour.netlify.app/b130/
+- APARTAMENT B131/1+1 — 62.3 m2 — 93,000 EUR — SOLD | 3d: https://mei-tour.netlify.app/b131/
 
 **KATI 2**
-- APARTAMENT B201/1+1 — 50.6 m2 — 102,000 EUR — FREE | tour: https://app.screencast.com/gwDKLDiLg8qoN
-- APARTAMENT B202/2+1 — 86.6 m2 — SOLD
-- APARTAMENT B203/2+1 — 111.5 m2 — 215,300 EUR — FREE | tour: https://app.screencast.com/ek8OHxjcEExGi
+- APARTAMENT B201/1+1 — 50.6 m2 — 102,000 EUR — FREE | tour: https://app.screencast.com/gwDKLDiLg8qoN | 3d: https://mei-tour.netlify.app/b201/
+- APARTAMENT B202/2+1 — 86.6 m2 — SOLD | 3d: https://mei-tour.netlify.app/b202/
+- APARTAMENT B203/2+1 — 111.5 m2 — 215,300 EUR — FREE | tour: https://app.screencast.com/ek8OHxjcEExGi | 3d: https://mei-tour.netlify.app/b203/
 - APARTAMENT B204/3+1 — 137.4 m2 — 224,000 EUR — FREE
 - APARTAMENT B204/1+1 — 57.1 m2 — 95,000 EUR — FREE | tour: https://app.screencast.com/epghkZH96WVxK
-- APARTAMENT B204/1/2+1 — 80.3 m2 — 129,000 EUR — FREE | tour: https://app.screencast.com/YPWsMQIOAaUJv
-- APARTAMENT B205/1+1 — 54.4 m2 — 93,600 EUR — SOLD
-- APARTAMENT B206/1+1 — 53.6 m2 — SOLD
-- APARTAMENT B207/1+1 — 53.6 m2 — SOLD
-- APARTAMENT B208/1+1 — 56.5 m2 — SOLD
-- APARTAMENT A209/2+1 — 139.4 m2 — not yet released (price on request)
-- APARTAMENT A210/1+1 — 52.7 m2 — 99,200 EUR — RESERVED
-- APARTAMENT A211/1+1 — 52.2 m2 — 103,500 EUR — FREE | tour: https://app.screencast.com/Kw74nXxm85Pgt
-- APARTAMENT A212/1+1 — 52.2 m2 — 103,500 EUR — FREE | tour: https://app.screencast.com/M4w08lIJEVLgw
-- APARTAMENT A213/2+1 — 122.9 m2 — 229,000 EUR — FREE
-- APARTAMENT A214/2+1 — 95.2 m2 — 175,000 EUR — FREE | tour: https://app.screencast.com/Axddx2HhaMUDv
-- APARTAMENT A215/1+1 — 52.5 m2 — 98,000 EUR — FREE | tour: https://app.screencast.com/hRJNNyxJCo0Ph
-- APARTAMENT A216/1+1 — 52.8 m2 — 98,000 EUR — FREE | tour: https://app.screencast.com/hRJNNyxJCo0Ph
-- APARTAMENT A217/1+1 — 55.6 m2 — not yet released (price on request)
-- APARTAMENT A218/2+1 — 114.4 m2 — not yet released (price on request)
-- APARTAMENT A219/2+1 — 139.2 m2 — not yet released (price on request)
-- APARTAMENT A220/1+1 — 60.3 m2 — not yet released (price on request)
-- APARTAMENT A221/1+1 — 60.3 m2 — not yet released (price on request)
-- APARTAMENT A222/1+1 — 60.3 m2 — 95,000 EUR — SOLD
-- APARTAMENT A223/1+1 — 62.4 m2 — 104,000 EUR — FREE | tour: https://app.screencast.com/bDdzfLaURJ9J9
-- APARTAMENT B224/1+1 — 61.7 m2 — 103,500 EUR — FREE | tour: https://app.screencast.com/yop7U5pl4jVx7
-- APARTAMENT B225/1+1 — 62.3 m2 — SOLD
-- APARTAMENT B226/1+1 — 60.3 m2 — SOLD
-- APARTAMENT B227/1+1 — 60.3 m2 — SOLD
-- APARTAMENT B228/1+1 — 60.3 m2 — 103,200 EUR — FREE | tour: https://app.screencast.com/wX9i9nXEkIeU5
-- APARTAMENT B229/1+1 — 60.3 m2 — price on request
-- APARTAMENT B230/1+1 — 60.3 m2 — 103,200 EUR — FREE | tour: https://app.screencast.com/KtNxaFgBhqUp5
-- APARTAMENT B231/1+1 — 62.3 m2 — 104,000 EUR — FREE | tour: https://app.screencast.com/cPgezfZrM0WKt
+- APARTAMENT B204/1/2+1 — 80.3 m2 — 129,000 EUR — FREE | tour: https://app.screencast.com/YPWsMQIOAaUJv | 3d: https://mei-tour.netlify.app/b204/
+- APARTAMENT B205/1+1 — 54.4 m2 — 93,600 EUR — SOLD | 3d: https://mei-tour.netlify.app/b205/
+- APARTAMENT B206/1+1 — 53.6 m2 — SOLD | 3d: https://mei-tour.netlify.app/b206/
+- APARTAMENT B207/1+1 — 53.6 m2 — SOLD | 3d: https://mei-tour.netlify.app/b207/
+- APARTAMENT B208/1+1 — 56.5 m2 — SOLD | 3d: https://mei-tour.netlify.app/b208/
+- APARTAMENT A209/2+1 — 139.4 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a209/
+- APARTAMENT A210/1+1 — 52.7 m2 — 99,200 EUR — RESERVED | 3d: https://mei-tour.netlify.app/a210/
+- APARTAMENT A211/1+1 — 52.2 m2 — 103,500 EUR — FREE | tour: https://app.screencast.com/Kw74nXxm85Pgt | 3d: https://mei-tour.netlify.app/a211/
+- APARTAMENT A212/1+1 — 52.2 m2 — 103,500 EUR — FREE | tour: https://app.screencast.com/M4w08lIJEVLgw | 3d: https://mei-tour.netlify.app/a212/
+- APARTAMENT A213/2+1 — 122.9 m2 — 229,000 EUR — FREE | 3d: https://mei-tour.netlify.app/a213/
+- APARTAMENT A214/2+1 — 95.2 m2 — 175,000 EUR — FREE | tour: https://app.screencast.com/Axddx2HhaMUDv | 3d: https://mei-tour.netlify.app/a214/
+- APARTAMENT A215/1+1 — 52.5 m2 — 98,000 EUR — FREE | tour: https://app.screencast.com/hRJNNyxJCo0Ph | 3d: https://mei-tour.netlify.app/a215/
+- APARTAMENT A216/1+1 — 52.8 m2 — 98,000 EUR — FREE | tour: https://app.screencast.com/hRJNNyxJCo0Ph | 3d: https://mei-tour.netlify.app/a216/
+- APARTAMENT A217/1+1 — 55.6 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a217/
+- APARTAMENT A218/2+1 — 114.4 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a218/
+- APARTAMENT A219/2+1 — 139.2 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a219/
+- APARTAMENT A220/1+1 — 60.3 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a220/
+- APARTAMENT A221/1+1 — 60.3 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a221/
+- APARTAMENT A222/1+1 — 60.3 m2 — 95,000 EUR — SOLD | 3d: https://mei-tour.netlify.app/a222/
+- APARTAMENT A223/1+1 — 62.4 m2 — 104,000 EUR — FREE | tour: https://app.screencast.com/bDdzfLaURJ9J9 | 3d: https://mei-tour.netlify.app/a223/
+- APARTAMENT B224/1+1 — 61.7 m2 — 103,500 EUR — FREE | tour: https://app.screencast.com/yop7U5pl4jVx7 | 3d: https://mei-tour.netlify.app/b224/
+- APARTAMENT B225/1+1 — 62.3 m2 — SOLD | 3d: https://mei-tour.netlify.app/b225/
+- APARTAMENT B226/1+1 — 60.3 m2 — SOLD | 3d: https://mei-tour.netlify.app/b226/
+- APARTAMENT B227/1+1 — 60.3 m2 — SOLD | 3d: https://mei-tour.netlify.app/b227/
+- APARTAMENT B228/1+1 — 60.3 m2 — 103,200 EUR — FREE | tour: https://app.screencast.com/wX9i9nXEkIeU5 | 3d: https://mei-tour.netlify.app/b228/
+- APARTAMENT B229/1+1 — 60.3 m2 — price on request | 3d: https://mei-tour.netlify.app/b229/
+- APARTAMENT B230/1+1 — 60.3 m2 — 103,200 EUR — FREE | tour: https://app.screencast.com/KtNxaFgBhqUp5 | 3d: https://mei-tour.netlify.app/b230/
+- APARTAMENT B231/1+1 — 62.3 m2 — 104,000 EUR — FREE | tour: https://app.screencast.com/cPgezfZrM0WKt | 3d: https://mei-tour.netlify.app/b231/
 
 **KATI  3**
-- APARTAMENT B301/1+1 — 50.6 m2 — 108,800 EUR — FREE | tour: https://app.screencast.com/iI9Ze1310NMb2
-- APARTAMENT B302/2+1 — 86.6 m2 — 178,000 EUR — FREE | tour: https://app.screencast.com/ZLKvUhKeUrUbf
-- APARTAMENT B303/2+1 — 111.5 m2 — 216,000 EUR — FREE | tour: https://app.screencast.com/ZLKvUhKeUrUbf
+- APARTAMENT B301/1+1 — 50.6 m2 — 108,800 EUR — FREE | tour: https://app.screencast.com/iI9Ze1310NMb2 | 3d: https://mei-tour.netlify.app/b301/
+- APARTAMENT B302/2+1 — 86.6 m2 — 178,000 EUR — FREE | tour: https://app.screencast.com/ZLKvUhKeUrUbf | 3d: https://mei-tour.netlify.app/b302/
+- APARTAMENT B303/2+1 — 111.5 m2 — 216,000 EUR — FREE | tour: https://app.screencast.com/ZLKvUhKeUrUbf | 3d: https://mei-tour.netlify.app/b303/
 - APARTAMENT B304/1+1 — 57.1 m2 — 102,000 EUR — FREE
-- APARTAMENT B304/1/2+1 — 80.3 m2 — 132,000 EUR — SOLD
-- APARTAMENT B305/1+1 — 54.4 m2 — SOLD
-- APARTAMENT B306/1+1 — 53.6 m2 — SOLD
-- APARTAMENT B307/1+1 — 53.6 m2 — SOLD
-- APARTAMENT B308/1+1 — 56.5 m2 — SOLD
-- APARTAMENT A309/2+1 — 139.4 m2 — not yet released (price on request)
-- APARTAMENT A310/1+1 — 52.7 m2 — SOLD
-- APARTAMENT A311/1+1 — 52.2 m2 — SOLD
-- APARTAMENT A312/1+1 — 52.2 m2 — SOLD
-- APARTAMENT A313/2+1 — 122.9 m2 — 242,000 EUR — FREE
-- APARTAMENT A314/2+1 — 95.2 m2 — 173,000 EUR — FREE | tour: https://app.screencast.com/fudk6XbuEhj5Q
-- APARTAMENT A315/1+1 — 52.5 m2 — 95,700 EUR — SOLD
-- APARTAMENT A316/1+1 — 52.8 m2 — 99,800 EUR — FREE | tour: https://app.screencast.com/RHwjMv2ROQwoT
-- APARTAMENT A317/1+1 — 55.6 m2 — not yet released (price on request)
-- APARTAMENT A318/1+1 — 114.4 m2 — not yet released (price on request)
-- APARTAMENT A319/1+1 — 139.2 m2 — not yet released (price on request)
-- APARTAMENT A320/1+1 — 60.3 m2 — not yet released (price on request)
-- APARTAMENT A321/1+1 — 60.3 m2 — not yet released (price on request)
-- APARTAMENT A322/1+1 — 60.3 m2 — not yet released (price on request)
-- APARTAMENT A323/1+1 — 62.4 m2 — 105,000 EUR — FREE | tour: https://app.screencast.com/PWkatCwC9kHkO
-- APARTAMENT B324/1+1 — 61.7 m2 — 105,200 EUR — FREE | tour: https://app.screencast.com/2AgYKOsOkYD4l
-- APARTAMENT B325/1+1 — 62.3 m2 — SOLD
-- APARTAMENT B326/1+1 — 60.3 m2 — SOLD
-- APARTAMENT B327/1+1 — 60.3 m2 — SOLD
-- APARTAMENT B328/1+1 — 60.3 m2 — SOLD
-- APARTAMENT B329/1+1 — 60.3 m2 — 105,200 EUR — SOLD
-- APARTAMENT B330/1+1 — 60.3 m2 — 105,200 EUR — SOLD
-- APARTAMENT B331/1+1 — 62.3 m2 — 107,000 EUR — FREE | tour: https://app.screencast.com/9GvEZn5urJGkE
+- APARTAMENT B304/1/2+1 — 80.3 m2 — 132,000 EUR — SOLD | 3d: https://mei-tour.netlify.app/b304/
+- APARTAMENT B305/1+1 — 54.4 m2 — SOLD | 3d: https://mei-tour.netlify.app/b305/
+- APARTAMENT B306/1+1 — 53.6 m2 — SOLD | 3d: https://mei-tour.netlify.app/b306/
+- APARTAMENT B307/1+1 — 53.6 m2 — SOLD | 3d: https://mei-tour.netlify.app/b307/
+- APARTAMENT B308/1+1 — 56.5 m2 — SOLD | 3d: https://mei-tour.netlify.app/b308/
+- APARTAMENT A309/2+1 — 139.4 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a309/
+- APARTAMENT A310/1+1 — 52.7 m2 — SOLD | 3d: https://mei-tour.netlify.app/a310/
+- APARTAMENT A311/1+1 — 52.2 m2 — SOLD | 3d: https://mei-tour.netlify.app/a311/
+- APARTAMENT A312/1+1 — 52.2 m2 — SOLD | 3d: https://mei-tour.netlify.app/a312/
+- APARTAMENT A313/2+1 — 122.9 m2 — 242,000 EUR — FREE | 3d: https://mei-tour.netlify.app/a313/
+- APARTAMENT A314/2+1 — 95.2 m2 — 173,000 EUR — FREE | tour: https://app.screencast.com/fudk6XbuEhj5Q | 3d: https://mei-tour.netlify.app/a314/
+- APARTAMENT A315/1+1 — 52.5 m2 — 95,700 EUR — SOLD | 3d: https://mei-tour.netlify.app/a315/
+- APARTAMENT A316/1+1 — 52.8 m2 — 99,800 EUR — FREE | tour: https://app.screencast.com/RHwjMv2ROQwoT | 3d: https://mei-tour.netlify.app/a316/
+- APARTAMENT A317/1+1 — 55.6 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a317/
+- APARTAMENT A318/1+1 — 114.4 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a318/
+- APARTAMENT A319/1+1 — 139.2 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a319/
+- APARTAMENT A320/1+1 — 60.3 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a320/
+- APARTAMENT A321/1+1 — 60.3 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a321/
+- APARTAMENT A322/1+1 — 60.3 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a322/
+- APARTAMENT A323/1+1 — 62.4 m2 — 105,000 EUR — FREE | tour: https://app.screencast.com/PWkatCwC9kHkO | 3d: https://mei-tour.netlify.app/a323/
+- APARTAMENT B324/1+1 — 61.7 m2 — 105,200 EUR — FREE | tour: https://app.screencast.com/2AgYKOsOkYD4l | 3d: https://mei-tour.netlify.app/b324/
+- APARTAMENT B325/1+1 — 62.3 m2 — SOLD | 3d: https://mei-tour.netlify.app/b325/
+- APARTAMENT B326/1+1 — 60.3 m2 — SOLD | 3d: https://mei-tour.netlify.app/b326/
+- APARTAMENT B327/1+1 — 60.3 m2 — SOLD | 3d: https://mei-tour.netlify.app/b327/
+- APARTAMENT B328/1+1 — 60.3 m2 — SOLD | 3d: https://mei-tour.netlify.app/b328/
+- APARTAMENT B329/1+1 — 60.3 m2 — 105,200 EUR — SOLD | 3d: https://mei-tour.netlify.app/b329/
+- APARTAMENT B330/1+1 — 60.3 m2 — 105,200 EUR — SOLD | 3d: https://mei-tour.netlify.app/b330/
+- APARTAMENT B331/1+1 — 62.3 m2 — 107,000 EUR — FREE | tour: https://app.screencast.com/9GvEZn5urJGkE | 3d: https://mei-tour.netlify.app/b331/
 
 **KATI 4**
-- APARTAMENT B401/1+1 — 50.6 m2 — 107,000 EUR — FREE | tour: https://app.screencast.com/CfmhrRFxBI9fS
-- APARTAMENT B402/2+1 — 86.6 m2 — 196,500 EUR — FREE | tour: https://app.screencast.com/CfmhrRFxBI9fS
-- APARTAMENT NR.B403/1+1 — 111.5 m2 — SOLD
+- APARTAMENT B401/1+1 — 50.6 m2 — 107,000 EUR — FREE | tour: https://app.screencast.com/CfmhrRFxBI9fS | 3d: https://mei-tour.netlify.app/b401/
+- APARTAMENT B402/2+1 — 86.6 m2 — 196,500 EUR — FREE | tour: https://app.screencast.com/CfmhrRFxBI9fS | 3d: https://mei-tour.netlify.app/b402/
+- APARTAMENT NR.B403/1+1 — 111.5 m2 — SOLD | 3d: https://mei-tour.netlify.app/b403/
 - APARTAMENT B404/3+1 — 137.4 m2 — 280,000 EUR — SOLD
 - APARTAMENT B404/1+1 — 57.1 m2 — 117,000 EUR — FREE | tour: https://app.screencast.com/Pzj8UdMMzEDeo
-- APARTAMENT B404/1/2+1 — 80.3 m2 — 163,000 EUR — FREE | tour: https://app.screencast.com/Pzj8UdMMzEDeo
-- APARTAMENT B405/1+1 — 54.4 m2 — SOLD
-- APARTAMENT B406/1+1 — 53.6 m2 — 111,000 EUR — SOLD
-- APARTAMENT B407/1+1 — 53.6 m2 — SOLD
-- APARTAMENT B408/1+1 — 56.5 m2 — 118,000 EUR — FREE | tour: https://app.screencast.com/4OykkOaY8Hyqu
-- APARTAMENT A409/2+1 — 139.4 m2 — not yet released (price on request)
-- APARTAMENT A410/1+1 — 52.7 m2 — 109,800 EUR — FREE | tour: https://app.screencast.com/pupuMGr0kzQNg
-- APARTAMENT A411/1+1 — 52.2 m2 — 105,000 EUR — FREE | tour: https://app.screencast.com/3OaudalOe1wHC
-- APARTAMENT A412/1+1 — 52.2 m2 — 105,000 EUR — SOLD
-- APARTAMENT A413/2+1 — 122.9 m2 — 280,000 EUR — FREE
-- APARTAMENT A414/2+1 — 95.2 m2 — 199,000 EUR — FREE | tour: https://app.screencast.com/D3wlfjY6RRLpm
-- APARTAMENT A415/1+1 — 52.5 m2 — 99,000 EUR — FREE | tour: https://app.screencast.com/lCGMFXHa4WR4x
-- APARTAMENT A416/1+1 — 52.8 m2 — 99,800 EUR — FREE | tour: https://app.screencast.com/NG1aLM79fFvxa
-- APARTAMENT A417/1+1 — 55.6 m2 — not yet released (price on request)
-- APARTAMENT A418/1+1 — 114.4 m2 — not yet released (price on request)
-- APARTAMENT A419/1+1 — 139.2 m2 — not yet released (price on request)
-- APARTAMENT A420/1+1 — 60.3 m2 — not yet released (price on request)
-- APARTAMENT A421/1+1 — 60.3 m2 — not yet released (price on request)
-- APARTAMENT A422/1+1 — 60.3 m2 — not yet released (price on request)
-- APARTAMENT A423/1+1 — 62.4 m2 — 115,000 EUR — FREE | tour: https://app.screencast.com/NG1aLM79fFvxa
-- APARTAMENT B424/1+1 — 61.7 m2 — 114,000 EUR — FREE | tour: https://app.screencast.com/lDBv0yfbnjBHD
-- APARTAMENT B425/1+1 — 62.3 m2 — 109,800 EUR — FREE | tour: https://app.screencast.com/xa7NmmtJ83rFh
-- APARTAMENT B426/1+1 — 60.3 m2 — 109,800 EUR — FREE | tour: https://app.screencast.com/xa7NmmtJ83rFh
-- APARTAMENT B427/1+1 — 60.3 m2 — 109,800 EUR — FREE | tour: https://app.screencast.com/wAWszzab47FuP
-- APARTAMENT B428/1+1 — 60.3 m2 — 109,800 EUR — FREE | tour: https://app.screencast.com/M4J8looA9x9w9
-- APARTAMENT B429/1+1 — 60.3 m2 — 109,800 EUR — FREE | tour: https://app.screencast.com/s6uHQ5Fcadz4n
-- APARTAMENT B430/1+1 — 60.3 m2 — 109,800 EUR — FREE | tour: https://app.screencast.com/W2lkg3szI9LZt
-- APARTAMENT B431/1+1 — 62.3 m2 — 113,500 EUR — FREE | tour: https://app.screencast.com/W2lkg3szI9LZt
+- APARTAMENT B404/1/2+1 — 80.3 m2 — 163,000 EUR — FREE | tour: https://app.screencast.com/Pzj8UdMMzEDeo | 3d: https://mei-tour.netlify.app/b404/
+- APARTAMENT B405/1+1 — 54.4 m2 — SOLD | 3d: https://mei-tour.netlify.app/b405/
+- APARTAMENT B406/1+1 — 53.6 m2 — 111,000 EUR — SOLD | 3d: https://mei-tour.netlify.app/b406/
+- APARTAMENT B407/1+1 — 53.6 m2 — SOLD | 3d: https://mei-tour.netlify.app/b407/
+- APARTAMENT B408/1+1 — 56.5 m2 — 118,000 EUR — FREE | tour: https://app.screencast.com/4OykkOaY8Hyqu | 3d: https://mei-tour.netlify.app/b408/
+- APARTAMENT A409/2+1 — 139.4 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a409/
+- APARTAMENT A410/1+1 — 52.7 m2 — 109,800 EUR — FREE | tour: https://app.screencast.com/pupuMGr0kzQNg | 3d: https://mei-tour.netlify.app/a410/
+- APARTAMENT A411/1+1 — 52.2 m2 — 105,000 EUR — FREE | tour: https://app.screencast.com/3OaudalOe1wHC | 3d: https://mei-tour.netlify.app/a411/
+- APARTAMENT A412/1+1 — 52.2 m2 — 105,000 EUR — SOLD | 3d: https://mei-tour.netlify.app/a412/
+- APARTAMENT A413/2+1 — 122.9 m2 — 280,000 EUR — FREE | 3d: https://mei-tour.netlify.app/a413/
+- APARTAMENT A414/2+1 — 95.2 m2 — 199,000 EUR — FREE | tour: https://app.screencast.com/D3wlfjY6RRLpm | 3d: https://mei-tour.netlify.app/a414/
+- APARTAMENT A415/1+1 — 52.5 m2 — 99,000 EUR — FREE | tour: https://app.screencast.com/lCGMFXHa4WR4x | 3d: https://mei-tour.netlify.app/a415/
+- APARTAMENT A416/1+1 — 52.8 m2 — 99,800 EUR — FREE | tour: https://app.screencast.com/NG1aLM79fFvxa | 3d: https://mei-tour.netlify.app/a416/
+- APARTAMENT A417/1+1 — 55.6 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a417/
+- APARTAMENT A418/1+1 — 114.4 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a418/
+- APARTAMENT A419/1+1 — 139.2 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a419/
+- APARTAMENT A420/1+1 — 60.3 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a420/
+- APARTAMENT A421/1+1 — 60.3 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a421/
+- APARTAMENT A422/1+1 — 60.3 m2 — not yet released (price on request) | 3d: https://mei-tour.netlify.app/a422/
+- APARTAMENT A423/1+1 — 62.4 m2 — 115,000 EUR — FREE | tour: https://app.screencast.com/NG1aLM79fFvxa | 3d: https://mei-tour.netlify.app/a423/
+- APARTAMENT B424/1+1 — 61.7 m2 — 114,000 EUR — FREE | tour: https://app.screencast.com/lDBv0yfbnjBHD | 3d: https://mei-tour.netlify.app/b424/
+- APARTAMENT B425/1+1 — 62.3 m2 — 109,800 EUR — FREE | tour: https://app.screencast.com/xa7NmmtJ83rFh | 3d: https://mei-tour.netlify.app/b425/
+- APARTAMENT B426/1+1 — 60.3 m2 — 109,800 EUR — FREE | tour: https://app.screencast.com/xa7NmmtJ83rFh | 3d: https://mei-tour.netlify.app/b426/
+- APARTAMENT B427/1+1 — 60.3 m2 — 109,800 EUR — FREE | tour: https://app.screencast.com/wAWszzab47FuP | 3d: https://mei-tour.netlify.app/b427/
+- APARTAMENT B428/1+1 — 60.3 m2 — 109,800 EUR — FREE | tour: https://app.screencast.com/M4J8looA9x9w9 | 3d: https://mei-tour.netlify.app/b428/
+- APARTAMENT B429/1+1 — 60.3 m2 — 109,800 EUR — FREE | tour: https://app.screencast.com/s6uHQ5Fcadz4n | 3d: https://mei-tour.netlify.app/b429/
+- APARTAMENT B430/1+1 — 60.3 m2 — 109,800 EUR — FREE | tour: https://app.screencast.com/W2lkg3szI9LZt | 3d: https://mei-tour.netlify.app/b430/
+- APARTAMENT B431/1+1 — 62.3 m2 — 113,500 EUR — FREE | tour: https://app.screencast.com/W2lkg3szI9LZt | 3d: https://mei-tour.netlify.app/b431/
 
 
 
