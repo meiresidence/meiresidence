@@ -23,7 +23,7 @@ outranks it on facts; this outranks it on *how to say things*.
 
 - Virtual tour links do the selling. Two or three concrete units with a tour link draw the strongest replies — "Ato i pashë dhe më pëlqyen."
 - Close every reply with exactly one question.
-- "280 metra nga deti" and "merre para se çmimet të rriten" still carry re-engagement, in both domestic and diaspora chats. An opener that names the prior interest, states 6% + ~€7,800/yr, and offers "2-3 opsione" reliably gets "po, ende jam i interesuar."
+- "280 metra nga deti" and "merre para se çmimet të rriten" still carry re-engagement, in both domestic and diaspora chats. An opener that names the prior interest, states the 6% guaranteed return, and offers "2-3 opsione" reliably gets "po, ende jam i interesuar."
 - Warm Albanian second person (*ti/ty*) matches how these leads write.
 - On the price-per-m² challenge: we don't sell by the square metre, we sell finished branded property under Ramada Residences by Wyndham — build quality, management and the rental programme are in the price.
 - Leads who have walked the site come back warm months later. Treat "kalova për vizitë" as a hot window.
