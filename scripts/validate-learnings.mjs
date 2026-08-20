@@ -118,14 +118,36 @@ export function validate(candidate, current = '') {
   const prose = stripCodeFences(candidate);
   for (const rule of GUARDRAILS.bannedPatterns) {
     const re = new RegExp(rule.regex, 'gi');
+    // Optional escape hatch: if the text NEAR the match (±30 chars, clamped to
+    // the same line) also matches this pattern, the mention is allowed
+    // (downgraded to a warning). Used for rules like banned/studio, where
+    // DENYING the thing ("no studios, no garsoniere", "garsoniere nuk
+    // dispononi") is the correct behaviour and must not be blocked. The window
+    // is deliberately narrow so an affirmative claim elsewhere on a line that
+    // merely quotes a negation still gets blocked.
+    const unless = rule.unlessNearby ? new RegExp(rule.unlessNearby, 'i') : null;
     let m;
     while ((m = re.exec(prose)) !== null) {
-      problems.push({
-        rule: `banned/${rule.id}`,
-        detail: rule.why,
-        line: lineOf(prose, m.index),
-        match: m[0].slice(0, 60),
-      });
+      const lineStart = prose.lastIndexOf('\n', m.index) + 1;
+      const lineEnd = prose.indexOf('\n', m.index);
+      const windowStart = Math.max(lineStart, m.index - 30);
+      const windowEnd = Math.min(lineEnd === -1 ? prose.length : lineEnd, m.index + m[0].length + 30);
+      const nearby = prose.slice(windowStart, windowEnd);
+      if (unless && unless.test(nearby)) {
+        warnings.push({
+          rule: `banned/${rule.id}`,
+          detail: `Allowed: the line reads as a denial/correction, not an offer. (${rule.why})`,
+          line: lineOf(prose, m.index),
+          match: m[0].slice(0, 60),
+        });
+      } else {
+        problems.push({
+          rule: `banned/${rule.id}`,
+          detail: rule.why,
+          line: lineOf(prose, m.index),
+          match: m[0].slice(0, 60),
+        });
+      }
       if (m.index === re.lastIndex) re.lastIndex++;
     }
   }
