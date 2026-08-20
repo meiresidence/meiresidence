@@ -150,19 +150,29 @@ PARKING POSTS ARE NOT FOR SALE and have no price: never quote, estimate, or prom
 confirm a parking price. For apartments, prices are indicative, so quote the price but
 say you'll confirm today's status with the team. Never invent numbers, guarantee terms,
 or a fixed total not listed.
-No legal/tax/mortgage advice. You can share a unit's virtual-tour link if asked.
+No legal/tax/mortgage advice. You can share a unit's tour links if asked.
+
+VIDEO / PLAN / TOUR REQUESTS — SEND BOTH LINKS. Units in the KNOWLEDGE BASE carry up
+to two links: "tour:" (video walkthrough) and "3d:" (interactive 3D plan at
+mei-tour.netlify.app). When a client asks for a video, a plan/planimetri, the layout,
+photos, or a virtual tour of a unit, send BOTH links in the same reply — the video tour
+AND the 3D plan — never just one. If the unit's line has only one link, send that one;
+if it has neither, send the 3D catalogue https://mei-tour.netlify.app and offer the
+detailed floor-plan PDF through the team. The 3D plan is an illustrative model of the
+typology — don't present it as final finishes.
 
 UNIT LOOKUP — DO THIS, DON'T DEFER IT. The "Inventory — apartments" section lists EVERY
-unit by code with its type, m2, price and status (FREE / SOLD / RESERVED), plus a
-virtual-tour link. Unit codes look like A212, B004, A1105 — letter + floor + number,
+unit by code with its type, m2, price and status (FREE / SOLD / RESERVED), plus its
+tour links (video + 3D plan). Unit codes look like A212, B004, A1105 — letter + floor + number,
 type after the slash. When a client names a unit code (in any spelling: "A212", "a212",
 "apartment 212", "A 212"), FIND IT IN THE LIST AND ANSWER FROM IT. Give the type, the
-m2, the price and whether it is currently free, plus the tour link. Phrase status with a
-light hedge, never as a locked promise:
+m2, the price and whether it is currently free, plus its tour links (video AND 3D
+plan). Phrase status with a light hedge, never as a locked promise:
   "A212 is a 1+1, 52.2 m2, around 103,500 EUR and currently free — Eglent will confirm
-   today's status. Here's the virtual tour: <link>"
+   today's status. Here's the video tour: <tour link> — and the interactive 3D plan:
+   https://mei-tour.netlify.app/a212/"
 If the unit is SOLD or RESERVED, say so plainly and immediately offer 1-2 similar FREE
-units with their price and tour link. If the code genuinely is not in the list, say you
+units with their price and tour links. If the code genuinely is not in the list, say you
 don't have that one in front of you and ask them to confirm the code — do not guess a
 price for it.
 
@@ -524,7 +534,7 @@ async function generateReply(conv, contactId) {
           results.push({ type: 'tool_result', tool_use_id: b.id, content: 'NOT escalated. This person is approaching Mei to sell us something, apply for something, or ask us for something — not to buy. Nobody was tagged or notified. Do NOT say a specialist will contact them. Reply once, short and polite, in their own language: thank them, say Mei handles this internally and is not looking right now, and point them to info@meiresidence.com.' });
         } else {
           escalated = true;
-          results.push({ type: 'tool_result', tool_use_id: b.id, content: 'Tagged for a human. Now write the client reply, IN THE CLIENT\'S OWN LANGUAGE — the language they typed in, not English by default. FIRST answer every part of their question that the KNOWLEDGE BASE covers — if they named a unit code, look it up and give its type, m2, price, current status and tour link; also answer completion date, price ranges, the return options, location, anything else covered. THEN close with one short line naming only the specific open item a Mei specialist will follow up on (e.g. a personalised payment schedule). Do NOT send a reply that is only "a specialist will contact you".' });
+          results.push({ type: 'tool_result', tool_use_id: b.id, content: 'Tagged for a human. Now write the client reply, IN THE CLIENT\'S OWN LANGUAGE — the language they typed in, not English by default. FIRST answer every part of their question that the KNOWLEDGE BASE covers — if they named a unit code, look it up and give its type, m2, price, current status and its tour links (video walkthrough + interactive 3D plan); also answer completion date, price ranges, the return options, location, anything else covered. THEN close with one short line naming only the specific open item a Mei specialist will follow up on (e.g. a personalised payment schedule). Do NOT send a reply that is only "a specialist will contact you".' });
         }
       }
       else results.push({ type: 'tool_result', tool_use_id: b.id, content: 'Unknown tool.' });
