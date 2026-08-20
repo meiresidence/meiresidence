@@ -44,13 +44,20 @@ jobs:
             echo "go=yes" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          LOCAL_HOUR=$(TZ=Europe/Tirane date +%H)
-          echo "Local hour in Tirane: $LOCAL_HOUR"
-          if [ "$LOCAL_HOUR" = "09" ]; then
+          # GitHub delays cron starts by 10-60+ min, so checking the wall clock
+          # ("is it 09 locally right now?") silently lost whole days when the run
+          # started after the hour (08-17, 08-18, 08-20). Decide by DST offset
+          # instead: each cron is the right one for exactly one season, no matter
+          # how late the runner actually starts.
+          OFFSET=$(TZ=Europe/Tirane date +%z)
+          SCHED="${{ github.event.schedule }}"
+          echo "Tirane UTC offset: $OFFSET, triggering cron: '$SCHED'"
+          if { [ "$OFFSET" = "+0200" ] && [ "$SCHED" = "0 7 * * *" ]; } || \
+             { [ "$OFFSET" = "+0100" ] && [ "$SCHED" = "0 8 * * *" ]; }; then
             echo "go=yes" >> "$GITHUB_OUTPUT"
           else
             echo "go=no" >> "$GITHUB_OUTPUT"
-            echo "Not 09:00 locally — this is the off-season duplicate trigger. Stopping."
+            echo "This cron is the off-season duplicate — the other one owns 09:00 local. Stopping."
           fi
 
       - uses: actions/checkout@v4
