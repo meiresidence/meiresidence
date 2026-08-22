@@ -46,6 +46,29 @@
 // deed and the free owner stays answerable by the agent. It also contains one
 // thing the agent must NOT copy — the non-Mei apartments nearby.
 //
+// Concrete-questions fix (2026-08-22): a serious buyer sent ~20 real questions
+// — send me the sales and management contracts, what do I actually receive on
+// 171,000 EUR at 6%, when do I legally become the owner, what is 5% of that,
+// what is B103's current price, which 2+1 are free, why does it open in June
+// 2027 — and got only "Nje koleg nga Mei Residence do t'ju pergjigjet
+// personalisht shume shpejt." That line comes from ONE place,
+// handleGenerationFailure, so generation was failing, not the knowledge.
+// Root cause: with ANTHROPIC_MAX_TOKENS=600 a reply could be cut off mid
+// tool_use; the loop broke out without ever writing the matching tool_result,
+// stored that fragment in the contact's history, and every later message from
+// that contact was then rejected by the API with "tool_use ids were found
+// without tool_result blocks" — the holding line forever. Four fixes below:
+// a token FLOOR of 2048, a bigger-budget retry when a tool call is truncated,
+// src/conversation.js (never store and never send a dangling tool_use), and one
+// clean tool-free retry before a human is woken. Plus the answers themselves:
+// knowledge/contract-questions.md, and an explicit "do the arithmetic yourself"
+// rule. See scripts/test-concrete-questions.mjs.
+//
+// Nearby places (2026-08-22): "Ku ka markete afer Mei Residence?" is now a real
+// lookup — src/places.js queries Google Places around the residence's own
+// coordinates and Claude phrases the answer. Off unless GOOGLE_MAPS_API_KEY is
+// set, so the model can never invent a supermarket. See scripts/test-places.mjs.
+//
 // Language fix (2026-08-17): the language instruction was a clause inside
 // STYLE and defaulted a bare greeting to Albanian, so an English "Hello" could
 // come back in Albanian. With an English gold-standard reply now in the prompt
@@ -57,6 +80,8 @@ import express from 'express';
 import fs from 'fs';
 import Anthropic from '@anthropic-ai/sdk';
 import { looksLikeNonBuyerOutreach } from './src/not-a-lead.js';
+import { sanitizeHistory, dropIncompleteToolUse } from './src/conversation.js';
+import { PLACES_TOOL, findPlaces, isConfigured as placesConfigured } from './src/places.js';
 
 const cfg = {
   port: parseInt(process.env.PORT || '3000', 10),
@@ -65,9 +90,15 @@ const cfg = {
     model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-5',
     // 600 was too tight: the answer-first handoff replies are long, and a
     // response that spends its whole budget before the first text block comes
-    // back empty. (If ANTHROPIC_MAX_TOKENS is pinned in the Render env it
-    // overrides this default — raise it there too.)
-    maxTokens: parseInt(process.env.ANTHROPIC_MAX_TOKENS || '1024', 10),
+    // back empty.
+    // FLOOR, not just a default (2026-08-22): .env.example and the Render env
+    // still carried ANTHROPIC_MAX_TOKENS=600, which is far too small for the
+    // structured multi-question answers this agent is told to give. A reply cut
+    // off mid tool_use is what poisoned a contact's history and turned every
+    // later concrete question into the "a colleague will reply" holding line.
+    // An env value below the floor is raised here so nobody has to remember to
+    // change it in Render.
+    maxTokens: Math.max(2048, parseInt(process.env.ANTHROPIC_MAX_TOKENS || '2048', 10) || 2048),
   },
   ghl: {
     apiKey: process.env.GHL_API_KEY,
@@ -81,6 +112,10 @@ const cfg = {
 for (const k of ['ANTHROPIC_API_KEY', 'GHL_API_KEY']) {
   if (!process.env[k]) console.warn(`[config] Missing env var: ${k}`);
 }
+if (parseInt(process.env.ANTHROPIC_MAX_TOKENS || '0', 10) && parseInt(process.env.ANTHROPIC_MAX_TOKENS, 10) < 2048) {
+  console.warn(`[config] ANTHROPIC_MAX_TOKENS=${process.env.ANTHROPIC_MAX_TOKENS} is too small for full answers — using ${cfg.anthropic.maxTokens}.`);
+}
+console.log(`[config] places lookup: ${placesConfigured() ? 'ON (Google Places)' : 'OFF (no GOOGLE_MAPS_API_KEY)'}`);
 
 const KNOWLEDGE_BASE = fs.readFileSync(new URL('./knowledge.md', import.meta.url), 'utf8');
 // --- Learnings from real client chats -------------------------------------
@@ -105,6 +140,18 @@ try {
   console.log(`[knowledge] examples.md loaded (${EXAMPLES.length} chars)`);
 } catch {
   console.warn('[knowledge] no knowledge/examples.md — running without gold-standard replies.');
+}
+
+// --- Contract / money / ownership answers ---------------------------------
+// knowledge/contract-questions.md. Hand-written and approved, like examples.md:
+// it turns the questions that used to produce "a colleague will reply" into
+// answers, and gives an honest named next step for the terms not settled yet.
+let CONTRACT_QA = '';
+try {
+  CONTRACT_QA = fs.readFileSync(new URL('./knowledge/contract-questions.md', import.meta.url), 'utf8').trim();
+  console.log(`[knowledge] contract-questions.md loaded (${CONTRACT_QA.length} chars)`);
+} catch {
+  console.warn('[knowledge] no knowledge/contract-questions.md — contract answers fall back to the base KB.');
 }
 
 const SYSTEM_PROMPT = `You are the official assistant for Mei Residence, a
@@ -215,6 +262,32 @@ will confirm the terms' — just answer warmly and ask what they need. Only if t
 explicitly ask for the precise legal terms, warmly offer to connect them with the team
 and call escalate_to_agent (no robotic disclaimer line).
 
+DO THE ARITHMETIC — NEVER HAND A SUM TO A HUMAN. If a client gives you a price and
+asks what 5% of it is, what 6% a year comes to, what that is per month, or what it
+adds up to over 5 years, WORK IT OUT and give the number. "171,000 EUR -> 6% = 10,260
+EUR per year, about 855 EUR a month, 51,300 EUR over five years." The 6% is calculated
+on the investment amount — the price of the apartment the client pays. Passing a
+multiplication to a specialist is a brush-off and reads as if we are hiding something.
+
+CONTRACTS, OWNERSHIP, COSTS, TAXES, GUARANTEE TERMS — see the CONTRACT & MONEY
+ANSWERS section below and follow it exactly. Answer what is settled there yourself,
+with numbers. Where a term genuinely is not settled, give the honest line and name
+the specific open item and the person who closes it (Eglent sends the sales contract,
+the management contract and the guarantee document by email before signing) — never
+"someone will contact you". A client asking about contracts is the most serious lead
+we get; never invent a clause, a tax, a fee or a penalty to sound complete.
+
+WHAT'S NEARBY — LOOK IT UP, DON'T IMAGINE IT. If the find_places tool is available and
+a client asks what is around the residence — supermarkets, pharmacies, restaurants,
+cafes, ATMs, hospitals, schools, petrol stations, beaches, shops — CALL find_places
+and answer from what it returns: name, distance from the residence, address. Pass the
+client's language code so the names come back in their language, and set include_hours
+ONLY if they asked whether somewhere is open or what its hours are.
+Give 2-3 of the closest, not a list of ten. If the tool is not available or fails,
+say what you do know (Qerret, Durres, ~280 m from the beach, ~45 min from Tirana) and
+offer to have the team send details — NEVER name a shop, a distance or an opening time
+you have not been given.
+
 HAND OFF (call escalate_to_agent) when: they ask for a person, want a personalized
 quote/viewing/reservation, need payment-plan or exact guarantee terms, are clearly
 hot, are a real-estate agency partner who has BUYERS for our units, or you can't
@@ -271,6 +344,14 @@ anything.
 
 KNOWLEDGE BASE:
 ${KNOWLEDGE_BASE}
+
+${CONTRACT_QA ? `CONTRACT & MONEY ANSWERS — AUTHORITATIVE, FOLLOW EXACTLY
+Approved answers for contract, ownership, cost, tax, timeline and guarantee
+questions. Where this section and an older KNOWLEDGE BASE line disagree, THIS WINS.
+Do the sums it tells you to do; use the exact named next step for anything it marks
+as not settled, and never fill a gap it leaves with a clause of your own.
+
+${CONTRACT_QA}` : ''}
 
 ${EXAMPLES ? `GOLD-STANDARD REPLIES — MATCH THESE
 Real replies from Eglent, hand-approved. They are the model for tone, order and depth,
@@ -384,6 +465,12 @@ const TOOLS = [{
   }, required: ['reason', 'lead_summary'] },
 }];
 
+// "Ku ka markete afer Mei Residence?" — real Google Places data, never guessed.
+// Only offered to the model when GOOGLE_MAPS_API_KEY is set: with no key the
+// model never sees the tool and falls back to the honest "I'll check with the
+// team" line instead of inventing a supermarket that isn't there.
+if (placesConfigured()) TOOLS.push(PLACES_TOOL);
+
 // Pull the client's own last words out of the in-memory conversation.
 // Tool-result turns are also role:'user' but carry an array, so require a string.
 // Custom field "Last Client Message" (LARGE_TEXT) - the handoff email renders it.
@@ -496,9 +583,10 @@ async function escalate(contactId, name, args) {
 // cut off at max_tokens before any text) is one of the ways the agent went
 // silent on 2026-08-19 (contact Borys: two real buyer messages, both answered
 // with the old canned fallback line, no tags, no alert).
-const callClaude = (messages, maxTokens) => anthropic.messages.create({
+const callClaude = (messages, maxTokens, { withTools = true } = {}) => anthropic.messages.create({
   model: cfg.anthropic.model, max_tokens: maxTokens,
-  system: SYSTEM_PROMPT, tools: TOOLS, messages,
+  system: SYSTEM_PROMPT, messages,
+  ...(withTools ? { tools: TOOLS } : {}),
 });
 
 // Text actually usable as a reply: non-empty after trimming. An empty text
@@ -510,22 +598,51 @@ const usableText = (content) => content
   .join('\n')
   .trim();
 
-async function generateReply(conv, contactId) {
-  const messages = conv.history.map((m) => ({ role: m.role, content: m.content }));
+// The tool-use loop. Kept separate from generateReply so that ANY failure in
+// here (a 400 from a malformed history, a transient API error) gets one clean
+// recovery attempt before a human is woken up.
+async function runToolLoop(conv, contactId) {
+  // Never SEND a half-written tool call: sanitizeHistory drops any tool_use
+  // left without a tool_result (and any orphan tool_result), so a history that
+  // an earlier truncation poisoned heals itself on the very next message.
+  const messages = sanitizeHistory(conv.history);
   let finalText = '', escalated = false;
   for (let hop = 0; hop < 4; hop++) {
-    const resp = await callClaude(messages, cfg.anthropic.maxTokens);
-    messages.push({ role: 'assistant', content: resp.content });
-    conv.history.push({ role: 'assistant', content: resp.content });
+    let resp = await callClaude(messages, cfg.anthropic.maxTokens);
+
+    // A reply cut off at max_tokens can carry a HALF-WRITTEN tool_use block: no
+    // usable arguments, impossible to answer with a tool_result, and fatal to
+    // every later call for this contact if it is stored. Give the model one
+    // bigger budget to finish the thought properly.
+    if (resp.stop_reason === 'max_tokens' && resp.content.some((b) => b.type === 'tool_use')) {
+      const bigger = Math.max(4096, cfg.anthropic.maxTokens * 3);
+      console.warn(`[claude] hop ${hop} truncated mid tool_use — retrying with max_tokens=${bigger}`);
+      resp = await callClaude(messages, bigger);
+    }
+    let content = resp.content;
+    if (resp.stop_reason === 'max_tokens') {
+      const trimmed = dropIncompleteToolUse(content);
+      if (trimmed.length !== content.length) {
+        console.warn(`[claude] dropped ${content.length - trimmed.length} incomplete tool_use block(s) — never storing a dangling tool call`);
+      }
+      content = trimmed;
+    }
+
     // Always log what came back — this line is what lets Render logs answer
     // "why did the agent go quiet" in one glance.
-    console.log(`[claude] hop ${hop} stop:${resp.stop_reason} blocks:[${resp.content.map((b) => b.type).join(',') || 'EMPTY'}]`);
-    const text = usableText(resp.content);
+    console.log(`[claude] hop ${hop} stop:${resp.stop_reason} blocks:[${content.map((b) => b.type).join(',') || 'EMPTY'}]`);
+    if (!content.length) break;
+
+    messages.push({ role: 'assistant', content });
+    conv.history.push({ role: 'assistant', content });
+    const text = usableText(content);
     if (text) finalText = text;
-    if (resp.stop_reason !== 'tool_use') break;
+
+    const toolUses = content.filter((b) => b.type === 'tool_use');
+    if (!toolUses.length) break;   // includes the truncated case above: nothing left to answer
+
     const results = [];
-    for (const b of resp.content) {
-      if (b.type !== 'tool_use') continue;
+    for (const b of toolUses) {
       if (b.name === 'escalate_to_agent') {
         const r = await escalate(contactId, conv.name, b.input || {});
         if (r.blocked === 'not-a-lead') {
@@ -534,7 +651,17 @@ async function generateReply(conv, contactId) {
           results.push({ type: 'tool_result', tool_use_id: b.id, content: 'NOT escalated. This person is approaching Mei to sell us something, apply for something, or ask us for something — not to buy. Nobody was tagged or notified. Do NOT say a specialist will contact them. Reply once, short and polite, in their own language: thank them, say Mei handles this internally and is not looking right now, and point them to info@meiresidence.com.' });
         } else {
           escalated = true;
-          results.push({ type: 'tool_result', tool_use_id: b.id, content: 'Tagged for a human. Now write the client reply, IN THE CLIENT\'S OWN LANGUAGE — the language they typed in, not English by default. FIRST answer every part of their question that the KNOWLEDGE BASE covers — if they named a unit code, look it up and give its type, m2, price, current status and its tour links (video walkthrough + interactive 3D plan); also answer completion date, price ranges, the return options, location, anything else covered. THEN close with one short line naming only the specific open item a Mei specialist will follow up on (e.g. a personalised payment schedule). Do NOT send a reply that is only "a specialist will contact you".' });
+          results.push({ type: 'tool_result', tool_use_id: b.id, content: 'Tagged for a human. Now write the client reply, IN THE CLIENT\'S OWN LANGUAGE — the language they typed in, not English by default. FIRST answer every part of their question that the KNOWLEDGE BASE covers — if they named a unit code, look it up and give its type, m2, price, current status and its tour links (video walkthrough + interactive 3D plan); also answer completion date, price ranges, the return options, location, the money arithmetic (5% of the price, 6% per year), anything else covered. THEN close with one short line naming only the specific open item a Mei specialist will follow up on (e.g. the signed contract wording). Do NOT send a reply that is only "a specialist will contact you".' });
+        }
+      }
+      else if (b.name === 'find_places') {
+        try {
+          const found = await findPlaces(b.input || {});
+          console.log(`[places] ${found.searched} r=${found.radius_m}m -> ${found.count} result(s)`);
+          results.push({ type: 'tool_result', tool_use_id: b.id, content: JSON.stringify(found) });
+        } catch (e) {
+          console.error('[places] lookup failed:', e?.message || e);
+          results.push({ type: 'tool_result', tool_use_id: b.id, content: 'Place lookup unavailable right now. Do NOT invent nearby businesses, distances or opening hours. Answer what you do know about the location from the KNOWLEDGE BASE (Qerret, Durres, ~280 m from the beach, ~45 min from Tirana) and offer to have the team send the details.' });
         }
       }
       else results.push({ type: 'tool_result', tool_use_id: b.id, content: 'Unknown tool.' });
@@ -542,19 +669,21 @@ async function generateReply(conv, contactId) {
     messages.push({ role: 'user', content: results });
     conv.history.push({ role: 'user', content: results });
   }
+
   // Empty reply? Retry ONCE with a much bigger output budget before giving up.
   // Covers: the whole budget consumed by non-text blocks, a response cut off at
   // max_tokens before any text, or a bare empty text block.
   if (!finalText) {
-    const bigger = Math.max(2048, cfg.anthropic.maxTokens * 3);
+    const bigger = Math.max(4096, cfg.anthropic.maxTokens * 3);
     console.warn(`[claude] empty reply for ${contactId} — retrying once with max_tokens=${bigger}`);
     const resp = await callClaude(messages, bigger);
     console.log(`[claude] retry stop:${resp.stop_reason} blocks:[${resp.content.map((b) => b.type).join(',') || 'EMPTY'}]`);
-    const text = usableText(resp.content);
+    const content = resp.stop_reason === 'max_tokens' ? dropIncompleteToolUse(resp.content) : resp.content;
+    const text = usableText(content);
     if (text) {
       finalText = text;
-      messages.push({ role: 'assistant', content: resp.content });
-      conv.history.push({ role: 'assistant', content: resp.content });
+      messages.push({ role: 'assistant', content });
+      conv.history.push({ role: 'assistant', content });
     }
   }
   trim(conv);
@@ -568,6 +697,35 @@ async function generateReply(conv, contactId) {
   // "Si mund t'ju ndihmoj?" greeting that looks like a normal reply, answers
   // nothing, and lets the lead go cold with nobody ever finding out.
   return { text: finalText, escalated };
+}
+
+async function generateReply(conv, contactId) {
+  try {
+    return await runToolLoop(conv, contactId);
+  } catch (e) {
+    // One clean retry before a human is woken (2026-08-22). The failure that
+    // sent us here was almost always the stored history, not the question: a
+    // dangling tool_use makes the API reject EVERY later message from that
+    // contact with a 400, so a client asking real buying questions got the
+    // "a colleague will reply" holding line again and again. Ask once more with
+    // nothing but their latest message and no tools, then throw the broken
+    // history away so the contact is not stuck in that state.
+    console.error('[claude] tool loop failed:', e?.message || e);
+    const last = lastClientText(contactId);
+    if (!last) throw e;
+    const resp = await callClaude(
+      [{ role: 'user', content: last }],
+      Math.max(2048, cfg.anthropic.maxTokens),
+      { withTools: false },
+    );
+    const text = usableText(resp.content);
+    if (!text) throw e;
+    console.warn(`[claude] recovered ${contactId} on a clean single-message retry — resetting its history`);
+    conv.history.length = 0;
+    conv.history.push({ role: 'user', content: last });
+    conv.history.push({ role: 'assistant', content: resp.content });
+    return { text, escalated: false };
+  }
 }
 
 // Generation failed (empty reply after retry, or the Claude call threw).

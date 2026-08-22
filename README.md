@@ -147,14 +147,59 @@ messages**.
 
 ---
 
-## Open questions to finish the knowledge base
-Fill these so the bot stops saying "a specialist will confirm":
-1. **Personal use allowed?** Materials conflict (investment-only vs personal/
-   commercial use). Which is correct?
-2. **6% guaranteed return — exact terms** (on what amount, start, conditions,
-   after 5 years). High priority — it's a financial promise.
-3. **Price list per typology** (studio / 1+1 / 2+1 / duplex) and any discount.
-4. **Delivery/handover date** and construction status; total units/floors.
-5. **Payment plan** (deposit %, installments, financing, foreign-buyer process).
-6. **Rental-management program** details (furnishing, revenue split, owner nights).
-7. **Current availability** per unit type.
+## "What's near Mei Residence?" — Google Places (optional)
+
+The agent can answer *"Ku ka markete afër Mei Residence?"*, *"a ka farmaci
+afër?"*, *"ku mund të ha darkë?"* with real data instead of a guess:
+
+```
+client on WhatsApp  ->  GHL webhook  ->  index.js  ->  Claude decides it needs a place
+                    ->  find_places tool  ->  Google Places API around the residence
+                    ->  name / distance / address / open-now / hours
+                    ->  Claude writes the reply in the client's language  ->  WhatsApp
+```
+
+To switch it on: Google Cloud console → enable **Places API (New)** → create an API
+key → restrict it to that API → set `GOOGLE_MAPS_API_KEY` in Render. Nothing else
+changes. Leave it empty and the tool is never offered to the model, so the agent
+keeps answering location questions from the knowledge base alone — it can never
+invent a shop, a distance or an opening time. Results are cached for 6 hours per
+query, so a busy day is a handful of API calls. Opening hours and ratings sit in
+Google's Enterprise pricing tier (1,000 free calls/month instead of 5,000), so the
+agent only requests them when a client actually asks about opening times.
+
+The residence's coordinates live in `src/places.js` (`MEI_COORDS`), taken from the
+project's own Google Maps pin.
+
+## Open questions — the answers that are still missing
+
+The agent now gives a specific, named next step for each of these instead of "a
+colleague will reply" (see `knowledge/contract-questions.md`), but every one of
+them is a real buyer question that we would close faster with a written answer:
+
+1. **The three documents** — sales contract, management contract, and the document
+   that sets the 6%. Can they be sent to a serious buyer before signing, by whom,
+   and at what stage?
+2. **Which legal entity is the seller** named in the sales contract.
+3. **When ownership passes legally** — at the notary signature, or at registration
+   in the kadastra.
+4. **Is the 6% gross or net**, and what (if anything) is deducted from it.
+5. **What the owner pays each year** — utilities, property tax, common/admin fees.
+   Does the old *~0.6 EUR/m² monthly administration fee* still apply? It is
+   currently quarantined from client replies because it contradicts "the owner
+   pays nothing else for at least 10 years."
+6. **Is there a management fee** on top, in either program.
+7. **What can void the 6% guarantee**, and what the remedy is if it is not paid.
+8. **Late instalment** — what the contract says.
+9. **Taxes and fees not included in the price** — notary, registration, transfer,
+   VAT, infrastructure.
+10. **Why the opening is June 2027** when construction completes Q4 2026 — the
+    agent currently says "finished, then fitted out to Ramada standards, opens for
+    the season". Confirm that is the line you want.
+11. **Ramada / Wyndham after 2027** — contract length, renewal, and what happens to
+    an owner if the brand ever leaves.
+12. **Orientation / view per unit** — there is still no orientation column in the
+    price list. It is asked constantly.
+13. **The price list date** — what date should the agent quote as "last updated"?
+14. **Personal use** — still worth settling in writing (owner nights are answered,
+    but "can I live in it later" is not).
