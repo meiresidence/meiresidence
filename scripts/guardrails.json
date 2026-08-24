@@ -42,7 +42,7 @@
   ],
 
   "limits": {
-    "maxChars": 9000,
+    "maxChars": 12000,
     "minChars": 400,
     "maxSections": 12,
     "maxNewCharsPerRun": 3000,
