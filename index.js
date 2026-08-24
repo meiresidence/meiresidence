@@ -155,7 +155,13 @@ try {
 } catch {
   console.warn('[knowledge] no knowledge/contract-questions.md — contract answers fall back to the base KB.');
 }
-
+let SEA_VIEW = '';
+try {
+  SEA_VIEW = fs.readFileSync(new URL('./knowledge/sea-view.md', import.meta.url), 'utf8').trim();
+  console.log(`[knowledge] sea-view.md loaded (${SEA_VIEW.length} chars)`);
+} catch {
+  console.warn('[knowledge] no knowledge/sea-view.md — sea-view answers fall back to the base KB.');
+}
 const SYSTEM_PROMPT = `You are the official assistant for Mei Residence, a
 premium branded seaside residence (Ramada Residences by Wyndham) in Qerret, Durres,
 Albania, sold by Mei Realty. You reply to people messaging Mei on WhatsApp, Facebook
