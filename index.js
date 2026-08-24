@@ -69,6 +69,24 @@
 // coordinates and Claude phrases the answer. Off unless GOOGLE_MAPS_API_KEY is
 // set, so the model can never invent a supermarket. See scripts/test-places.mjs.
 //
+// Template-reply blindness fix (2026-08-24): Eglent sent the Albanian
+// re-engagement follow-up as a bulk WhatsApp template. Contact Mimoza replied
+// three times in six seconds — an Instagram post quote, then "Qa eshte", then
+// "Kjo" — and got back, in English, "I can see you're referencing a Mei
+// Residence post, but I can't view the image/content itself — could you tell me
+// what you'd like to know?". The agent answered as if the conversation had
+// never happened, because it effectively had not: it fetched ONLY the last
+// inbound message and kept history in a process-local Map that knows nothing
+// about a template GHL sent, and that empties on every Render restart. Two of
+// the three messages were then thrown away by the reply cooldown, and the
+// language was read off the English quoted-post boilerplate.
+// The thread is now rebuilt from the CRM on every webhook (src/thread.js):
+// their messages AND ours, oldest first, template included, with every
+// unanswered inbound message answered in one reply. The time-based cooldown is
+// replaced by an in-flight lock plus a last-answered-message-id check, so a
+// burst is merged instead of dropped and a duplicate webhook is still ignored.
+// See scripts/test-template-context.mjs.
+//
 // Language fix (2026-08-17): the language instruction was a clause inside
 // STYLE and defaulted a bare greeting to Albanian, so an English "Hello" could
 // come back in Albanian. With an English gold-standard reply now in the prompt
@@ -81,6 +99,7 @@ import fs from 'fs';
 import Anthropic from '@anthropic-ai/sdk';
 import { looksLikeNonBuyerOutreach } from './src/not-a-lead.js';
 import { sanitizeHistory, dropIncompleteToolUse } from './src/conversation.js';
+import { buildThread } from './src/thread.js';
 import { PLACES_TOOL, findPlaces, isConfigured as placesConfigured } from './src/places.js';
 
 const MAX_OUTPUT_TOKENS = 8192;
@@ -216,14 +235,10 @@ tour links (video + 3D plan). Unit codes look like A212, B004, A1105 — letter 
 type after the slash. When a client names a unit code (in any spelling: "A212", "a212",
 "apartment 212", "A 212"), FIND IT IN THE LIST AND ANSWER FROM IT. Give the type, the
 m2, the price and whether it is currently free, plus its tour links (video AND 3D
-plan). Every unit line also carries a "view: sea" or "view: no sea" tag — ALWAYS say
-which one it is when you describe a unit, and answer a direct sea-view question from
-that tag only, never from a guess. See "Sea view" in the Inventory section of the KB
-for how to phrase it and what to offer when a unit is on the road side.
-Phrase status with a light hedge, never as a locked promise:
-  "A212 is a 1+1, 52.2 m2, around 103,500 EUR, with sea view, and currently free —
-   Eglent will confirm today's status. Here's the video tour: <tour link> — and the
-   interactive 3D plan: https://mei-tour.netlify.app/a212/"
+plan). Phrase status with a light hedge, never as a locked promise:
+  "A212 is a 1+1, 52.2 m2, around 103,500 EUR and currently free — Eglent will confirm
+   today's status. Here's the video tour: <tour link> — and the interactive 3D plan:
+   https://mei-tour.netlify.app/a212/"
 If the unit is SOLD or RESERVED, say so plainly and immediately offer 1-2 similar FREE
 units with their price and tour links. If the code genuinely is not in the list, say you
 don't have that one in front of you and ask them to confirm the code — do not guess a
@@ -348,6 +363,32 @@ Residence — including other units nearby that are not under Ramada management.
 raises those himself when he takes the lead over. Never quote a EUR/m2 figure for
 anything.
 
+CONTEXT - YOU ARE GIVEN THE WHOLE THREAD, USE IT. Every message arrives with the recent
+conversation from the CRM: what the client wrote and what Mei sent (including automated
+follow-up templates and messages Eglent typed himself), oldest first. The chat NEVER
+starts fresh. Read what we sent last before you reply - the client is almost always
+answering THAT.
+- A short or vague reply ("po", "kjo", "qa eshte?", "cfare eshte kjo?", "on this?", "?",
+  "sa?") is an answer to OUR last message, not a new topic. Pick the thread up: say in
+  2-3 lines what Mei Residence is (Ramada Residences by Wyndham, 280 m from the sea in
+  Qerret, fully managed, the return options), then offer 2-3 concrete units or ask which
+  typology they want. NEVER reply "which post do you mean", "could you tell me what you'd
+  like to know", or anything that reads as if you had no information at all.
+- A message containing "*Headline:*" / "*Source URL:*" with an Instagram or Facebook link
+  is WhatsApp quoting OUR OWN ad or post. It means "I am asking about this Mei post".
+  Answer about Mei Residence. NEVER say you cannot view an image, a video or a link - to
+  the client that reads as a broken agent.
+- Several messages often arrive together as one turn (people type in bursts). Answer all
+  of them in ONE reply, in the order they asked.
+- NEVER mention the CRM, tags, templates, automation, or that a follow-up "was sent to
+  you". For the client this is one continuous conversation with Mei.
+
+LANGUAGE WITH CONTEXT (extends the LANGUAGE rule above): judge the language from the words
+the CLIENT typed across the recent thread, ignoring quoted-post boilerplate ("*Headline:*",
+"*Source URL:*", URLs, our own template text). "Qa eshte" / "Kjo" is Albanian and gets
+Albanian. If their own words are genuinely too few to read, reply in the language of the
+last message Mei sent them - never default to English.
+
 KNOWLEDGE BASE:
 ${KNOWLEDGE_BASE}
 
@@ -409,8 +450,30 @@ const sendReply = (contactId, message, channel = 'WhatsApp') =>
 const addTags = (contactId, tags) =>
   ghl(`/contacts/${contactId}/tags`, 'POST', { tags }, '2021-07-28');
 
-// Pull the customer's most recent inbound message (text + channel) straight from the CRM.
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const HISTORY_MESSAGE_LIMIT = parseInt(process.env.CRM_HISTORY_LIMIT || '30', 10);
+
+// Read the contact's conversation straight out of the CRM and turn it into
+// Claude turns. This replaces the old fetchLastInbound, which returned ONLY the
+// client's last inbound line: everything else the agent needed — the follow-up
+// template we had just sent, Eglent's own earlier messages, the client's other
+// messages in the same burst — lived in the CRM and was never read. See the
+// "Template-reply blindness" note at the top and src/thread.js.
+async function fetchThreadOnce(contactId) {
+  const s = await ghl(`/conversations/search?locationId=${cfg.ghl.locationId}&contactId=${contactId}`, 'GET', null, '2021-04-15');
+  const conversation = s.data?.conversations?.[0];
+  if (!conversation?.id) return null;
+  const m = await ghl(`/conversations/${conversation.id}/messages?limit=${HISTORY_MESSAGE_LIMIT}`, 'GET', null, '2021-04-15');
+  const msgs = m.data?.messages?.messages || m.data?.messages || [];
+  const thread = buildThread(msgs, { historyTurns: cfg.historyWindow });
+  if (!thread) return null;
+  return {
+    ...thread,
+    name: conversation.fullName || conversation.contactName || '',
+    tags: Array.isArray(conversation.tags) ? conversation.tags : [],
+  };
+}
 
 // A brand-new contact's very first message can trigger this webhook before
 // GHL's own conversation-search/messages API has indexed that message yet
@@ -419,45 +482,61 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 // after the message arrived but the CRM read still came back empty, and since
 // that contact never messaged again there was no second chance to reply).
 // Retry a couple of times with a short delay before giving up.
-async function fetchLastInboundOnce(contactId) {
-  const s = await ghl(`/conversations/search?locationId=${cfg.ghl.locationId}&contactId=${contactId}`, 'GET', null, '2021-04-15');
-  const convId = s.data?.conversations?.[0]?.id;
-  if (!convId) return null;
-  const m = await ghl(`/conversations/${convId}/messages`, 'GET', null, '2021-04-15');
-  const msgs = m.data?.messages?.messages || m.data?.messages || [];
-  for (const msg of msgs) {
-    if (msg.direction === 'inbound' && msg.body && String(msg.body).trim()) {
-      const rawType = msg.messageType || msg.type || 'TYPE_WHATSAPP';
-      const channel = CHANNEL_TYPE_MAP[rawType] || 'WhatsApp';
-      return { text: String(msg.body).trim(), channel };
+async function fetchThread(contactId, retries = 2, delayMs = 1500) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const found = await fetchThreadOnce(contactId);
+      if (found) return found;
+    } catch (e) { console.error('[fetchThread]', e.message); }
+    if (attempt < retries) {
+      console.log(`[fetchThread] nothing to answer yet for ${contactId}, retrying (${attempt + 1}/${retries})`);
+      await sleep(delayMs);
     }
   }
   return null;
 }
 
-async function fetchLastInbound(contactId, retries = 2, delayMs = 1500) {
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-      const found = await fetchLastInboundOnce(contactId);
-      if (found) return found;
-    } catch (e) { console.error('[fetchLastInbound]', e.message); }
-    if (attempt < retries) {
-      console.log(`[fetchLastInbound] no text yet for ${contactId}, retrying (${attempt + 1}/${retries})`);
-      await sleep(delayMs);
-    }
+// What the model is told about THIS contact, on top of the static system prompt.
+// It is the difference between "a stranger said 'Kjo'" and "the person we sent a
+// follow-up to three minutes ago said 'Kjo'".
+function buildContextNote({ name, tags, thread }) {
+  const lines = ['CONVERSATION CONTEXT — THIS CONTACT. Internal: never quote or mention it to the client.'];
+  if (name) lines.push(`- Client name: ${name}`);
+  if (tags?.length) lines.push(`- CRM tags (internal only): ${tags.join(', ')}`);
+  if (thread.pendingCount > 1) {
+    lines.push(`- They sent ${thread.pendingCount} messages in a row and none has been answered yet. Answer ALL of them in one reply.`);
   }
-  return { text: '', channel: 'WhatsApp' };
+  if (thread.lastOutboundBody) {
+    lines.push(thread.afterTemplate
+      ? '- The last message Mei sent them was an automated re-engagement follow-up. They are replying TO IT. Never call it a template or an automated message — carry the conversation on naturally. Its text was:'
+      : '- The last message Mei sent them was:');
+    lines.push(`"""\n${thread.lastOutboundBody.slice(0, 1200)}\n"""`);
+  }
+  return lines.join('\n');
 }
 
-// ---- memory + per-contact reply cooldown (prevents duplicate/rapid replies) ----
+// ---- per-contact state ----------------------------------------------------
+// History itself is NOT kept here any more — it is rebuilt from the CRM on every
+// message (fetchThread above), so a Render restart, a redeploy or a message sent
+// from GHL's own inbox can no longer wipe what the agent knows.
+// What is kept is the guard against answering the same thing twice:
+//   inFlight        — this contact is being answered right now
+//   lastAnswered    — id of the newest client message we have already answered
+// This replaces the old 12-second time cooldown, which silently DROPPED the
+// second and third message of a burst (Mimoza, 2026-08-24) instead of merging
+// them into the answer.
 const store = new Map();
-const lastReplyAt = new Map();
-const COOLDOWN_MS = parseInt(process.env.REPLY_COOLDOWN_MS || '12000', 10);
+const inFlight = new Set();
+const lastAnswered = new Map();
 const getConv = (id, name = '') => {
   if (!store.has(id)) store.set(id, { name, history: [] });
   const c = store.get(id); if (name && !c.name) c.name = name; return c;
 };
 const trim = (c) => { if (c.history.length > cfg.historyWindow) c.history = c.history.slice(-cfg.historyWindow); };
+
+// People type in bursts. Wait a moment before reading the CRM so "Qa eshte" and
+// "Kjo" are in the thread by the time we build it, and get answered together.
+const INBOUND_DEBOUNCE_MS = parseInt(process.env.INBOUND_DEBOUNCE_MS || '5000', 10);
 
 // ---- Claude brain ----
 const anthropic = new Anthropic({ apiKey: cfg.anthropic.apiKey });
@@ -589,9 +668,10 @@ async function escalate(contactId, name, args) {
 // cut off at max_tokens before any text) is one of the ways the agent went
 // silent on 2026-08-19 (contact Borys: two real buyer messages, both answered
 // with the old canned fallback line, no tags, no alert).
-const callClaude = (messages, maxTokens, { withTools = true } = {}) => anthropic.messages.create({
+const callClaude = (messages, maxTokens, { withTools = true, contextNote = '' } = {}) => anthropic.messages.create({
   model: cfg.anthropic.model, max_tokens: maxTokens,
-  system: SYSTEM_PROMPT, messages,
+  system: contextNote ? `${SYSTEM_PROMPT}\n\n${contextNote}` : SYSTEM_PROMPT,
+  messages,
   ...(withTools ? { tools: TOOLS } : {}),
 });
 
@@ -614,7 +694,7 @@ async function runToolLoop(conv, contactId) {
   const messages = sanitizeHistory(conv.history);
   let finalText = '', escalated = false;
   for (let hop = 0; hop < 4; hop++) {
-    const resp = await callClaude(messages, cfg.anthropic.maxTokens);
+    const resp = await callClaude(messages, cfg.anthropic.maxTokens, { contextNote: conv.contextNote });
 
     // Every call already runs at the ceiling, so there is no bigger budget to
     // retry with — but the guard stays: a reply cut off at max_tokens can carry a
@@ -679,7 +759,7 @@ async function runToolLoop(conv, contactId) {
   // text block.
   if (!finalText) {
     console.warn(`[claude] empty reply for ${contactId} — retrying once`);
-    const resp = await callClaude(messages, MAX_OUTPUT_TOKENS);
+    const resp = await callClaude(messages, MAX_OUTPUT_TOKENS, { contextNote: conv.contextNote });
     console.log(`[claude] retry stop:${resp.stop_reason} blocks:[${resp.content.map((b) => b.type).join(',') || 'EMPTY'}]`);
     const content = resp.stop_reason === 'max_tokens' ? dropIncompleteToolUse(resp.content) : resp.content;
     const text = usableText(content);
@@ -719,7 +799,7 @@ async function generateReply(conv, contactId) {
     const resp = await callClaude(
       [{ role: 'user', content: last }],
       MAX_OUTPUT_TOKENS,
-      { withTools: false },
+      { withTools: false, contextNote: conv.contextNote },
     );
     const text = usableText(resp.content);
     if (!text) throw e;
@@ -778,32 +858,47 @@ app.use(express.json());
 app.get('/', (_q, r) => r.send('Mei Residence GHL agent is running.'));
 
 app.post('/ghl-webhook', async (req, res) => {
-  try {
-    const b = req.body || {};
-    const contactId = b.contactId || b.contact_id || b.id || b.contact?.id;
-    if (!contactId) { console.warn('[ghl-webhook] no contactId'); return res.status(200).json({ reply: '' }); }
+  const b = req.body || {};
+  const contactId = b.contactId || b.contact_id || b.id || b.contact?.id;
+  if (!contactId) { console.warn('[ghl-webhook] no contactId'); return res.status(200).json({ reply: '' }); }
 
-    // Cooldown check first, but we only CLAIM the cooldown window further
-    // below once we've confirmed there's real text to reply to. This stops
-    // an empty/no-op trigger (e.g. Instagram's echo event with no body) from
-    // consuming the window and silently dropping the real message that
-    // follows a few seconds later.
-    const now = Date.now();
-    if (now - (lastReplyAt.get(contactId) || 0) < COOLDOWN_MS) {
-      console.log(`[skip] cooldown for ${contactId}`);
+  // One answer at a time per contact. GHL fires this webhook once per inbound
+  // message, so a three-message burst arrives as three near-simultaneous calls;
+  // without this lock they would race and send three replies to the same burst.
+  if (inFlight.has(contactId)) {
+    console.log(`[skip] ${contactId} is already being answered`);
+    return res.status(200).json({ reply: '' });
+  }
+  inFlight.add(contactId);
+
+  try {
+    // Let the burst land before reading the thread (see INBOUND_DEBOUNCE_MS).
+    if (INBOUND_DEBOUNCE_MS > 0) await sleep(INBOUND_DEBOUNCE_MS);
+
+    // The whole conversation, from the CRM: their messages and ours, oldest
+    // first, plus every client message we have not answered yet merged into one
+    // turn. Returns null when there is genuinely nothing new to answer.
+    const thread = await fetchThread(contactId);
+    if (!thread) { console.warn(`[ghl-webhook] nothing new to answer for ${contactId}`); return res.status(200).json({ reply: '' }); }
+
+    if (thread.lastInboundId && lastAnswered.get(contactId) === thread.lastInboundId) {
+      console.log(`[skip] ${contactId}: already answered message ${thread.lastInboundId}`);
       return res.status(200).json({ reply: '' });
     }
+    lastAnswered.set(contactId, thread.lastInboundId);
 
-    const name = b.full_name || b.first_name || b.name || b.contact?.name || '';
-    // Always read the customer's latest message straight from the CRM (the webhook
-    // body can send the message as an object, so we never rely on it), along with
-    // which channel (WhatsApp/IG/FB) it came in on.
-    const { text, channel } = await fetchLastInbound(contactId);
-    if (!text) { console.warn('[ghl-webhook] no message text in CRM'); return res.status(200).json({ reply: '' }); }
+    const name = thread.name || b.full_name || b.first_name || b.name || b.contact?.name || '';
+    const { text, channel } = thread;
 
-    lastReplyAt.set(contactId, now); // claim the cooldown only now that we know we're replying
+    // History is REBUILT from the CRM every time rather than appended to a
+    // process-local Map: it survives restarts, it includes messages sent from
+    // GHL's inbox or by a bulk template, and it can never drift from what the
+    // client actually sees in WhatsApp.
     const conv = getConv(contactId, name);
-    conv.history.push({ role: 'user', content: String(text) });
+    conv.name = name || conv.name;
+    conv.history = [...thread.history, { role: 'user', content: String(text) }];
+    conv.contextNote = buildContextNote({ name, tags: thread.tags, thread });
+    trim(conv);
 
     // Generation is guarded separately from the rest of the handler: a Claude
     // failure (thrown error OR empty reply) must not drop the lead silently
@@ -824,11 +919,13 @@ app.post('/ghl-webhook', async (req, res) => {
     }
 
     const sent = await sendReply(contactId, reply, channel); // reply on the same channel it arrived on
-    console.log(`[msg] ${contactId} (${channel}) <= "${String(text).slice(0,40)}" => sent:${sent.ok}${failReason ? ' DEGRADED' : ''} "${reply.slice(0, 60)}"`);
+    console.log(`[msg] ${contactId} (${channel}) <= ${thread.pendingCount} msg(s)${thread.afterTemplate ? ' after-template' : ''} history:${thread.history.length} "${String(text).replace(/\s+/g, ' ').slice(0, 40)}" => sent:${sent.ok}${failReason ? ' DEGRADED' : ''} "${reply.slice(0, 60)}"`);
     return res.status(200).json({ reply, contactId, channel, degraded: !!failReason || undefined });
   } catch (e) {
     console.error('[ghl-webhook] error', e);
     return res.status(200).json({ reply: '' });
+  } finally {
+    inFlight.delete(contactId);
   }
 });
 
