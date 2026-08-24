@@ -26,7 +26,7 @@ const state = { sent: [], tagged: [] };
 
 const inboundText = {
   [BUYER_ID]: 'Po kërkoj një apartament me pamje nga deti për veten time dhe klientin tim.',
-  [VENDOR_ID]: 'Përshëndetje! Ofrojmë shërbime marketing dhe video për biznese si juaji. A do të ishit të hapur t\'jua tregoja portfolion tonë?',
+  [VENDOR_ID]: 'Përshendetje! Ofrojmë shërbime marketing dhe video për biznese si juaji. A do të ishit të hapur t\'jua tregoja portfolion tonë?',
 };
 
 // ---- mock GHL ----
@@ -42,7 +42,7 @@ const mock = http.createServer((req, res) => {
     }
     if (/^\/conversations\/conv-([A-Za-z0-9]+)\/messages/.test(url)) {
       const contactId = url.match(/^\/conversations\/conv-([A-Za-z0-9]+)\/messages/)[1];
-      return json({ messages: { messages: [{ direction: 'inbound', body: inboundText[contactId] || 'hi', messageType: 'TYPE_WHATSAPP' }] } });
+      return json({ messages: { messages: [{ id: `msg-${contactId}`, direction: 'inbound', body: inboundText[contactId] || 'hi', messageType: 'TYPE_WHATSAPP', dateAdded: '2026-08-24T10:00:00.000Z' }] } });
     }
     if (url === '/conversations/messages' && req.method === 'POST') {
       const b = JSON.parse(body);
@@ -80,7 +80,7 @@ const agent = spawn(process.execPath, ['index.js'], {
     ANTHROPIC_API_KEY: 'sk-ant-invalid-on-purpose',
     ANTHROPIC_MODEL: 'claude-sonnet-5',
     SPECIALIST_CONTACT_ID: SPECIALIST_ID,
-    REPLY_COOLDOWN_MS: '1',
+    INBOUND_DEBOUNCE_MS: '1',
   },
   stdio: ['ignore', 'pipe', 'pipe'],
 });

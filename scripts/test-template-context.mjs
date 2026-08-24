@@ -19,7 +19,7 @@ const MIMOZA = [
   { id: 'qXPIKerEATfCri0rmPVQ', direction: 'inbound', body: 'Kjo', messageType: 'TYPE_WHATSAPP', dateAdded: '2026-08-24T11:26:15.984Z' },
   { id: 'TOsJjZeojlefUV2oq5nH', direction: 'inbound', body: 'Qa eshte', messageType: 'TYPE_WHATSAPP', dateAdded: '2026-08-24T11:26:13.754Z' },
   { id: 'AWZ8RLmnH4lEhPH6IDhn', direction: 'inbound', body: '*Headline:* Mei Residence\n*Source URL:* https://www.instagram.com/p/DaxaAxcgrFb/\n\non this?', messageType: 'TYPE_WHATSAPP', dateAdded: '2026-08-24T11:26:10.439Z' },
-  { id: 'vxKmXtLZheK0VJ3YvRzk', direction: 'outbound', source: 'bulk_actions', body: 'Një investim që të paguan çdo vit\n\nPërshendetje Mimoza, jam Eglenti nga Mei Residence 👋 Ka kaluar pak kohë... a je ende i interesuar?', messageType: 'TYPE_WHATSAPP', dateAdded: '2026-08-24T11:23:09.247Z' },
+  { id: 'vxKmXtLZheK0VJ3YvRzk', direction: 'outbound', source: 'bulk_actions', body: 'Një investim që të paguan çdo vit\n\nPërshëndetje Mimoza, jam Eglenti nga Mei Residence 👋 Ka kaluar pak kohë... a je ende i interesuar?', messageType: 'TYPE_WHATSAPP', dateAdded: '2026-08-24T11:23:09.247Z' },
   { id: 'uJmZeI5MtKfvawHKfOMf', direction: 'inbound', body: 'This message is currently unavailable.', messageType: 'TYPE_WHATSAPP', dateAdded: '2026-07-15T10:57:58.778Z' },
 ];
 
