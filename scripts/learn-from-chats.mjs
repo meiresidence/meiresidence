@@ -21,6 +21,10 @@
 //   LEARN_MODEL         defaults to claude-sonnet-5
 //   LEARN_LOOKBACK_H    hours of history to read, default 26
 //   LEARN_MAX_CONV      max conversations per sub-account, default 40
+//   LEARN_MAX_ATTEMPTS  tries allowed when the draft trips a SOFT guardrail
+//                       (too long / wrong shape). Default 3. Hard violations
+//                       — PII, banned figures, injection — never retry.
+//   GHL_BASE            override the GoHighLevel host (tests point it at a stub)
 //   DRY_RUN=1           skip GHL + Claude, exercise the plumbing only
 
 import fs from 'node:fs';
@@ -28,6 +32,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Anthropic from '@anthropic-ai/sdk';
 import { validate } from './validate-learnings.mjs';
+import { classify } from './guardrail-severity.mjs';
+import { buildRetryPrompt } from './learning-retry.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
@@ -39,9 +45,10 @@ const GUARDRAILS = JSON.parse(fs.readFileSync(path.join(__dirname, 'guardrails.j
 const cfg = {
   anthropicKey: process.env.ANTHROPIC_API_KEY,
   model: process.env.LEARN_MODEL || 'claude-sonnet-5',
-  base: 'https://services.leadconnectorhq.com',
+  base: process.env.GHL_BASE || 'https://services.leadconnectorhq.com',
   lookbackHours: parseInt(process.env.LEARN_LOOKBACK_H || '26', 10),
   maxPerAccount: parseInt(process.env.LEARN_MAX_CONV || '40', 10),
+  maxAttempts: Math.max(1, parseInt(process.env.LEARN_MAX_ATTEMPTS || '3', 10)),
   dryRun: process.env.DRY_RUN === '1',
 };
 
@@ -74,6 +81,7 @@ const report = {
   problems: [],
   warnings: [],
   digest: '',
+  attempts: [],
 };
 
 function finish(status, extra = {}) {
@@ -258,7 +266,7 @@ async function main() {
 
   if (cfg.dryRun) {
     console.log('[learn] DRY_RUN — validating the existing file only.');
-    const r = validate(current, current);
+    const r = classify(validate(current, current));
     finish(r.ok ? 'no-change' : 'rejected', { problems: r.problems, warnings: r.warnings });
   }
 
@@ -288,36 +296,76 @@ async function main() {
     finish('no-change');
   }
 
-  // 2. Ask Claude for the updated file.
-  let raw;
-  try {
-    raw = await askClaude(buildPrompt(current, sections.join('\n\n')));
-  } catch (e) {
-    finish('error', { problems: [{ rule: 'claude', detail: e.message }] });
-  }
-  const { content, digest } = splitDigest(raw);
-  report.digest = digest;
+  // 2 + 3. Ask Claude for the updated file, then run the guardrails.
+  //
+  // Soft violations (too long, wrong shape, moved too far) get the draft handed
+  // back with the specific complaint attached. Hard ones (PII, a banned figure,
+  // an injected instruction) still stop dead on the first attempt — retrying
+  // those only teaches the model to rephrase past the regex. See
+  // guardrail-severity.mjs.
+  let content = '';
+  let digest = '';
+  let result = null;
+  let prompt = buildPrompt(current, sections.join('\n\n'));
 
-  if (content.trim() === current.trim()) {
-    console.log('[learn] Model returned an identical file — nothing learned today.');
-    finish('no-change');
-  }
+  for (let attempt = 1; attempt <= cfg.maxAttempts; attempt++) {
+    let raw;
+    try {
+      raw = await askClaude(prompt);
+    } catch (e) {
+      finish('error', { problems: [{ rule: 'claude', detail: e.message }], attempts: report.attempts });
+    }
+    ({ content, digest } = splitDigest(raw));
+    report.digest = digest;
 
-  // 3. Guardrails. Fails closed.
-  const result = validate(content, current);
-  report.problems = result.problems;
-  report.warnings = result.warnings;
+    if (content.trim() === current.trim()) {
+      console.log('[learn] Model returned an identical file — nothing learned today.');
+      finish('no-change', { attempts: report.attempts });
+    }
+
+    result = classify(validate(content, current));
+    report.problems = result.problems;
+    report.warnings = result.warnings;
+    report.attempts.push({
+      attempt,
+      chars: content.length,
+      ok: result.ok,
+      hard: result.hard.map((p) => p.rule),
+      soft: result.soft.map((p) => p.rule),
+    });
+
+    if (result.ok) break;
+
+    if (result.hard.length > 0) {
+      console.error(`[learn] HARD violation on attempt ${attempt} — not retrying:`);
+      for (const p of result.hard) console.error(`  • [${p.rule}] ${p.detail}`);
+      break;
+    }
+
+    if (attempt === cfg.maxAttempts) {
+      console.error(`[learn] Still failing after ${attempt} attempt(s):`);
+      for (const p of result.soft) console.error(`  • [${p.rule}] ${p.detail}`);
+      break;
+    }
+
+    console.warn(
+      `[learn] Attempt ${attempt} tripped ${result.soft.map((p) => p.rule).join(', ')} — ` +
+        `asking for a correction (attempt ${attempt + 1} of ${cfg.maxAttempts}).`,
+    );
+    prompt = buildRetryPrompt(current, content, result.soft);
+  }
 
   if (!result.ok) {
     fs.writeFileSync(CANDIDATE, content); // kept for the alert issue
     console.error(`[learn] REJECTED — ${result.problems.length} violation(s):`);
     for (const p of result.problems) console.error(`  • [${p.rule}] ${p.detail}`);
-    finish('rejected');
+    finish('rejected', { attempts: report.attempts });
   }
 
   fs.writeFileSync(CANDIDATE, content);
-  console.log(`[learn] Candidate passed all guardrails. ${digest}`);
-  finish('committed-ready', { changed: true });
+  const suffix = report.attempts.length > 1 ? ` (after ${report.attempts.length} attempts)` : '';
+  console.log(`[learn] Candidate passed all guardrails${suffix}. ${digest}`);
+  finish('committed-ready', { changed: true, attempts: report.attempts });
 }
 
 main().catch((e) => {
