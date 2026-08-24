@@ -175,31 +175,22 @@ project's own Google Maps pin.
 
 The agent now gives a specific, named next step for each of these instead of "a
 colleague will reply" (see `knowledge/contract-questions.md`), but every one of
-them is a real buyer question that we would close faster with a written answer:
+them is a real buyer question that we would close faster with a written answer.
+Answered 24 Aug 2026 and now live: the three contracts and when they are shared, the
+seller entity (Mei Residence SHPK), when ownership passes, 6% net and paid yearly,
+the owner's yearly cost, and the 0.1%/day late-payment penalty.
 
-1. **The three documents** — sales contract, management contract, and the document
-   that sets the 6%. Can they be sent to a serious buyer before signing, by whom,
-   and at what stage?
-2. **Which legal entity is the seller** named in the sales contract.
-3. **When ownership passes legally** — at the notary signature, or at registration
-   in the kadastra.
-4. **Is the 6% gross or net**, and what (if anything) is deducted from it.
-5. **What the owner pays each year** — utilities, property tax, common/admin fees.
-   Does the old *~0.6 EUR/m² monthly administration fee* still apply? It is
-   currently quarantined from client replies because it contradicts "the owner
-   pays nothing else for at least 10 years."
-6. **Is there a management fee** on top, in either program.
-7. **What can void the 6% guarantee**, and what the remedy is if it is not paid.
-8. **Late instalment** — what the contract says.
-9. **Taxes and fees not included in the price** — notary, registration, transfer,
+1. **Is there a management fee** on top, in either program.
+2. **What can void the 6% guarantee**, and what the remedy is if it is not paid.
+3. **Taxes and fees not included in the price** — notary, registration, transfer,
    VAT, infrastructure.
-10. **Why the opening is June 2027** when construction completes Q4 2026 — the
+4. **Why the opening is June 2027** when construction completes Q4 2026 — the
     agent currently says "finished, then fitted out to Ramada standards, opens for
     the season". Confirm that is the line you want.
-11. **Ramada / Wyndham after 2027** — contract length, renewal, and what happens to
+5. **Ramada / Wyndham after 2027** — contract length, renewal, and what happens to
     an owner if the brand ever leaves.
-12. **Orientation / view per unit** — there is still no orientation column in the
+6. **Orientation / view per unit** — there is still no orientation column in the
     price list. It is asked constantly.
-13. **The price list date** — what date should the agent quote as "last updated"?
-14. **Personal use** — still worth settling in writing (owner nights are answered,
+7. **The price list date** — what date should the agent quote as "last updated"?
+8. **Personal use** — still worth settling in writing (owner nights are answered,
     but "can I live in it later" is not).

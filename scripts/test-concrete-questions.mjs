@@ -97,8 +97,28 @@ check('the Q4 2026 vs June 2027 question has an answer',
   /opens June 2027/.test(qa) && /not a contradiction/.test(qa));
 check('nothing invents a clause: the not-settled list names Eglent as the step',
   /Not settled yet/.test(qa) && /never "someone will contact you"|never "dikush do të të kontaktojë"|never "dikush do të kontaktojë"/i.test(qa));
-check('the stale 0.6 EUR/m2 fee is quarantined until confirmed',
-  /Do not quote the old\s*\n?\s*"~0\.6 EUR\/m2 monthly administration fee"/.test(qa.replace(/\*\*/g, '')));
+// --- 4b. The facts Eglent confirmed on 24 Aug 2026 --------------------------
+const plain = qa.replace(/\*\*/g, '').replace(/\s+/g, ' ');
+check('the seller entity is named', /The seller is Mei Residence SHPK/.test(plain));
+check('the three documents are named, with the 6% inside the management contract',
+  /sales \/ ownership contract, the management contract, and the administration contract/.test(plain) &&
+  /6% guarantee lives inside the management contract/.test(plain));
+check('documents are shared only after the 5% reservation',
+  /after the 5% reservation payment, not before/.test(plain) &&
+  /Never promise to email contracts to someone who has not reserved/.test(plain));
+check('ownership passes at the Property Certificate registration',
+  /Property Certificate \(Certifikata e Pronësisë\) is registered in their name/.test(plain));
+check('6% is net from Mei and paid yearly, with no tax advice',
+  /net from Mei Residence's side/.test(plain) && /Paid once a year/.test(plain) &&
+  /we do not advise on it/.test(plain));
+check('the yearly owner cost is the property tax only',
+  /only the annual property tax/.test(plain));
+check('the 0.6 EUR/m2 fee is retired, not merely quarantined',
+  /~0\.6 EUR\/m2 monthly administration fee no longer applies/.test(plain) &&
+  !/until Eglent confirms whether it still applies/.test(plain));
+check('late instalment is 0.1% per day', /penalty of 0\.1% per day of delay/.test(plain));
+check('no document is promised before a reservation anywhere in the file',
+  !/Eglent sends all of\s+them by email/.test(qa) && !/dërgon të dyja kontratat me/.test(qa));
 
 // --- 5. The holding line stays for real failures only -----------------------
 check('the holding line still exists for genuine generation failures',

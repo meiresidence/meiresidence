@@ -80,7 +80,9 @@ fire safety).
   only two figures that exist, and only one appears per conversation.
 - Area appreciation: company cites property values rising (marketing claim) — do not
   attach a percentage to it.
-- Monthly administration fee ~0.6 EUR/m².
+- **RETIRED (24 Aug 2026): the ~0.6 EUR/m² monthly administration fee no longer
+  applies.** Never quote it. The owner's only yearly cost is the annual property tax
+  — see knowledge/contract-questions.md.
 - Do NOT invent exact guarantee conditions and do NOT add disclaimers about a specialist
   confirming — engage warmly; only if asked for the precise legal terms, offer to connect
   them with the team.
@@ -101,8 +103,14 @@ fire safety).
 - Price depends on typology, floor and view (sea-view costs more).
 
 ## Still confirm with the team
-- Exact 6% guarantee terms; exact terms of the 65% net-rental-income alternative;
-  exact deposit/installment schedule; current sold/available status per unit.
+- Conditions that could void the 6% and the remedy if it is not paid; whether any
+  management fee exists beyond the yearly property tax; one-off taxes and fees at
+  signing (notary, kadastra, transfer, VAT); current sold/available status per unit.
+- Settled 24 Aug 2026 (see knowledge/contract-questions.md): seller is Mei Residence
+  SHPK; three contracts, with the 6% inside the management contract, shared after the
+  5% reservation; ownership passes when the Property Certificate is registered in the
+  buyer's name; 6% is net from Mei and paid yearly; owner pays only the annual
+  property tax; late instalments carry 0.1% per day.
 ## Tone & objection-handling phrasing (Eglent's verified style — add to voice guide):
 Price-per-m² question → reframe: "Ne nuk shesim m2, por apartamente të branduar
 nga Ramada Residences by Wyndham."
