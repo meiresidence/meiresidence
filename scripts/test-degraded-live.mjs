@@ -26,7 +26,7 @@ const state = { sent: [], tagged: [] };
 
 const inboundText = {
   [BUYER_ID]: 'Po kërkoj një apartament me pamje nga deti për veten time dhe klientin tim.',
-  [VENDOR_ID]: 'Përshendetje! Ofrojmë shërbime marketing dhe video për biznese si juaji. A do të ishit të hapur t\'jua tregoja portfolion tonë?',
+  [VENDOR_ID]: 'Përshëndetje! Ofrojmë shërbime marketing dhe video për biznese si juaji. A do të ishit të hapur t\'jua tregoja portfolion tonë?',
 };
 
 // ---- mock GHL ----
