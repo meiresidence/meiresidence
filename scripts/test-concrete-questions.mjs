@@ -75,13 +75,19 @@ check('sanitizeHistory does not mutate the stored history',
 // --- 3. The wiring in index.js ---------------------------------------------
 check('the loop sanitises the history before every call',
   /sanitizeHistory\(conv\.history\)/.test(index));
-check('a truncated tool_use triggers a bigger-budget retry',
-  /stop_reason === 'max_tokens' && resp\.content\.some\(\(b\) => b\.type === 'tool_use'\)/.test(index));
+check('a truncated reply is logged and its half-written tool call dropped',
+  /hit the \$\{MAX_OUTPUT_TOKENS\}-token ceiling/.test(index) &&
+  /content = dropIncompleteToolUse\(content\)|const trimmed = dropIncompleteToolUse\(content\)/.test(index));
 check('a failed loop gets one clean retry before waking a human',
   /runToolLoop/.test(index) && /withTools: false/.test(index) && /conv\.history\.length = 0/.test(index));
-check('the token budget has a floor, not just a default',
-  /Math\.max\(2048, parseInt\(process\.env\.ANTHROPIC_MAX_TOKENS/.test(index));
-check('.env.example no longer ships the 600-token budget', !/ANTHROPIC_MAX_TOKENS=600/.test(env));
+check('the output limit is fixed in code, not configurable',
+  /const MAX_OUTPUT_TOKENS = \d{4,}/.test(index) && /maxTokens: MAX_OUTPUT_TOKENS/.test(index));
+check('ANTHROPIC_MAX_TOKENS can no longer throttle the agent',
+  !/maxTokens:[^\n]*process\.env/.test(index) &&
+  !/max_tokens:[^\n]*process\.env/.test(index) &&
+  /ANTHROPIC_MAX_TOKENS[^\n]*is IGNORED/.test(index));
+check('.env.example no longer sets a token budget at all',
+  !/^ANTHROPIC_MAX_TOKENS=/m.test(env));
 
 // --- 4. The questions themselves now have answers --------------------------
 check('the contract Q&A is loaded into the prompt',

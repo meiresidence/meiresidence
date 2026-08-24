@@ -58,7 +58,7 @@
 // stored that fragment in the contact's history, and every later message from
 // that contact was then rejected by the API with "tool_use ids were found
 // without tool_result blocks" — the holding line forever. Four fixes below:
-// a token FLOOR of 2048, a bigger-budget retry when a tool call is truncated,
+// the output limit taken out of the env entirely (fixed at 8192 since 24 Aug),
 // src/conversation.js (never store and never send a dangling tool_use), and one
 // clean tool-free retry before a human is woken. Plus the answers themselves:
 // knowledge/contract-questions.md, and an explicit "do the arithmetic yourself"
@@ -83,22 +83,24 @@ import { looksLikeNonBuyerOutreach } from './src/not-a-lead.js';
 import { sanitizeHistory, dropIncompleteToolUse } from './src/conversation.js';
 import { PLACES_TOOL, findPlaces, isConfigured as placesConfigured } from './src/places.js';
 
+const MAX_OUTPUT_TOKENS = 8192;
+
 const cfg = {
   port: parseInt(process.env.PORT || '3000', 10),
   anthropic: {
     apiKey: process.env.ANTHROPIC_API_KEY,
     model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-5',
-    // 600 was too tight: the answer-first handoff replies are long, and a
-    // response that spends its whole budget before the first text block comes
-    // back empty.
-    // FLOOR, not just a default (2026-08-22): .env.example and the Render env
-    // still carried ANTHROPIC_MAX_TOKENS=600, which is far too small for the
-    // structured multi-question answers this agent is told to give. A reply cut
-    // off mid tool_use is what poisoned a contact's history and turned every
-    // later concrete question into the "a colleague will reply" holding line.
-    // An env value below the floor is raised here so nobody has to remember to
-    // change it in Render.
-    maxTokens: Math.max(2048, parseInt(process.env.ANTHROPIC_MAX_TOKENS || '2048', 10) || 2048),
+    // NO CONFIGURABLE OUTPUT LIMIT (2026-08-24, Eglent). The API requires a
+    // max_tokens value, so the field cannot literally be removed — but it is a
+    // CEILING, not a spend: you are billed for the tokens actually generated, so
+    // a high ceiling on a 3-line WhatsApp reply costs exactly the same as a low
+    // one. Every incident this agent has had came from that number being too
+    // small (600 truncating a reply mid tool_use, which poisoned the contact's
+    // history and turned every later question into the "a colleague will reply"
+    // holding line). ANTHROPIC_MAX_TOKENS is therefore ignored: nobody can throttle
+    // the agent from Render by accident again. 8192 is ~6,000 words — far beyond
+    // any reply this agent should ever write, and supported by every current model.
+    maxTokens: MAX_OUTPUT_TOKENS,
   },
   ghl: {
     apiKey: process.env.GHL_API_KEY,
@@ -112,8 +114,8 @@ const cfg = {
 for (const k of ['ANTHROPIC_API_KEY', 'GHL_API_KEY']) {
   if (!process.env[k]) console.warn(`[config] Missing env var: ${k}`);
 }
-if (parseInt(process.env.ANTHROPIC_MAX_TOKENS || '0', 10) && parseInt(process.env.ANTHROPIC_MAX_TOKENS, 10) < 2048) {
-  console.warn(`[config] ANTHROPIC_MAX_TOKENS=${process.env.ANTHROPIC_MAX_TOKENS} is too small for full answers — using ${cfg.anthropic.maxTokens}.`);
+if (process.env.ANTHROPIC_MAX_TOKENS) {
+  console.warn(`[config] ANTHROPIC_MAX_TOKENS=${process.env.ANTHROPIC_MAX_TOKENS} is IGNORED — the output limit is fixed at ${MAX_OUTPUT_TOKENS}. You can delete it from Render.`);
 }
 console.log(`[config] places lookup: ${placesConfigured() ? 'ON (Google Places)' : 'OFF (no GOOGLE_MAPS_API_KEY)'}`);
 
@@ -608,19 +610,17 @@ async function runToolLoop(conv, contactId) {
   const messages = sanitizeHistory(conv.history);
   let finalText = '', escalated = false;
   for (let hop = 0; hop < 4; hop++) {
-    let resp = await callClaude(messages, cfg.anthropic.maxTokens);
+    const resp = await callClaude(messages, cfg.anthropic.maxTokens);
 
-    // A reply cut off at max_tokens can carry a HALF-WRITTEN tool_use block: no
-    // usable arguments, impossible to answer with a tool_result, and fatal to
-    // every later call for this contact if it is stored. Give the model one
-    // bigger budget to finish the thought properly.
-    if (resp.stop_reason === 'max_tokens' && resp.content.some((b) => b.type === 'tool_use')) {
-      const bigger = Math.max(4096, cfg.anthropic.maxTokens * 3);
-      console.warn(`[claude] hop ${hop} truncated mid tool_use — retrying with max_tokens=${bigger}`);
-      resp = await callClaude(messages, bigger);
-    }
+    // Every call already runs at the ceiling, so there is no bigger budget to
+    // retry with — but the guard stays: a reply cut off at max_tokens can carry a
+    // HALF-WRITTEN tool_use block with no usable arguments, which can never be
+    // answered with a tool_result and breaks every later call for this contact if
+    // it is stored. Drop the fragment, keep the text, and log it loudly: at 8192
+    // tokens this should never fire, so if it does, something is wrong upstream.
     let content = resp.content;
     if (resp.stop_reason === 'max_tokens') {
+      console.warn(`[claude] hop ${hop} hit the ${MAX_OUTPUT_TOKENS}-token ceiling — reply was truncated`);
       const trimmed = dropIncompleteToolUse(content);
       if (trimmed.length !== content.length) {
         console.warn(`[claude] dropped ${content.length - trimmed.length} incomplete tool_use block(s) — never storing a dangling tool call`);
@@ -670,13 +670,12 @@ async function runToolLoop(conv, contactId) {
     conv.history.push({ role: 'user', content: results });
   }
 
-  // Empty reply? Retry ONCE with a much bigger output budget before giving up.
-  // Covers: the whole budget consumed by non-text blocks, a response cut off at
-  // max_tokens before any text, or a bare empty text block.
+  // Empty reply? Retry ONCE before giving up. Covers a response whose whole
+  // budget went to non-text blocks, one cut off before any text, or a bare empty
+  // text block.
   if (!finalText) {
-    const bigger = Math.max(4096, cfg.anthropic.maxTokens * 3);
-    console.warn(`[claude] empty reply for ${contactId} — retrying once with max_tokens=${bigger}`);
-    const resp = await callClaude(messages, bigger);
+    console.warn(`[claude] empty reply for ${contactId} — retrying once`);
+    const resp = await callClaude(messages, MAX_OUTPUT_TOKENS);
     console.log(`[claude] retry stop:${resp.stop_reason} blocks:[${resp.content.map((b) => b.type).join(',') || 'EMPTY'}]`);
     const content = resp.stop_reason === 'max_tokens' ? dropIncompleteToolUse(resp.content) : resp.content;
     const text = usableText(content);
@@ -715,7 +714,7 @@ async function generateReply(conv, contactId) {
     if (!last) throw e;
     const resp = await callClaude(
       [{ role: 'user', content: last }],
-      Math.max(2048, cfg.anthropic.maxTokens),
+      MAX_OUTPUT_TOKENS,
       { withTools: false },
     );
     const text = usableText(resp.content);

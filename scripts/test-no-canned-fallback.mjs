@@ -34,8 +34,12 @@ const canned = /Si mund t[’']ju ndihmoj per Mei Residence\?/;
 const asFallbackAssignment = /finalText\s*=\s*(?:escalated[^;]*)?['`][^'`]*Si mund t[’']ju ndihmoj/;
 check('generic canned fallback assignment is gone', !asFallbackAssignment.test(index));
 
-// 2. Empty replies retry once with a raised budget.
-check('empty reply retries with a bigger max_tokens', /empty reply[^\n]*retrying once with max_tokens/.test(index) && /Math\.max\(2048/.test(index));
+// 2. Empty replies retry once. (Until 24 Aug 2026 the retry raised max_tokens;
+//    every call now runs at the fixed MAX_OUTPUT_TOKENS ceiling, so there is no
+//    bigger budget to raise it to — the retry itself is what still matters.)
+check('empty reply retries once before giving up',
+  /empty reply[^\n]*retrying once/.test(index) &&
+  /callClaude\(messages, MAX_OUTPUT_TOKENS\)/.test(index));
 
 // 3. Failure handler exists, tags, and alerts.
 check('handleGenerationFailure exists', /async function handleGenerationFailure\(/.test(index));
