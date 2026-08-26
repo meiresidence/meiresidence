@@ -672,9 +672,21 @@ async function escalate(contactId, name, args) {
 // cut off at max_tokens before any text) is one of the ways the agent went
 // silent on 2026-08-19 (contact Borys: two real buyer messages, both answered
 // with the old canned fallback line, no tags, no alert).
+// Prompt caching (2026-08-26): SYSTEM_PROMPT is ~15k tokens of knowledge base
+// and TOOLS never changes, yet both were being re-sent and re-charged at full
+// price on every hop of every message. They are now marked as ONE cache
+// breakpoint: the first call writes the prefix, every call within the 5-minute
+// window reads it at ~10% of the input price (and each write refreshes the
+// window, so a busy agent effectively keeps it warm all day).
+// The per-contact contextNote MUST stay in a second block AFTER the breakpoint
+// — appending it to SYSTEM_PROMPT, as this did before, changed the prefix for
+// every contact and made the cache impossible to hit.
 const callClaude = (messages, maxTokens, { withTools = true, contextNote = '' } = {}) => anthropic.messages.create({
   model: cfg.anthropic.model, max_tokens: maxTokens,
-  system: contextNote ? `${SYSTEM_PROMPT}\n\n${contextNote}` : SYSTEM_PROMPT,
+  system: [
+    { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
+    ...(contextNote ? [{ type: 'text', text: contextNote }] : []),
+  ],
   messages,
   ...(withTools ? { tools: TOOLS } : {}),
 });
@@ -718,7 +730,8 @@ async function runToolLoop(conv, contactId) {
 
     // Always log what came back — this line is what lets Render logs answer
     // "why did the agent go quiet" in one glance.
-    console.log(`[claude] hop ${hop} stop:${resp.stop_reason} blocks:[${content.map((b) => b.type).join(',') || 'EMPTY'}]`);
+    const u = resp.usage || {};
+    console.log(`[claude] hop ${hop} stop:${resp.stop_reason} blocks:[${content.map((b) => b.type).join(',') || 'EMPTY'}] cache:read=${u.cache_read_input_tokens ?? 0} write=${u.cache_creation_input_tokens ?? 0} fresh=${u.input_tokens ?? 0}`);
     if (!content.length) break;
 
     messages.push({ role: 'assistant', content });
