@@ -126,12 +126,18 @@ export function validate(candidate, current = '') {
     // is deliberately narrow so an affirmative claim elsewhere on a line that
     // merely quotes a negation still gets blocked.
     const unless = rule.unlessNearby ? new RegExp(rule.unlessNearby, 'i') : null;
+    // How far around the match the denial may sit (chars, clamped to the same
+    // line). Default 30; a rule can widen it via "unlessWindow" — the studio
+    // rule uses 80, because real denials come in shapes like «a typology we
+    // don't have (e.g. "4 dhoma gjumi për vete", "garsonjere")» where the
+    // negation is ~50 chars before the banned word.
+    const win = Number.isFinite(rule.unlessWindow) ? rule.unlessWindow : 30;
     let m;
     while ((m = re.exec(prose)) !== null) {
       const lineStart = prose.lastIndexOf('\n', m.index) + 1;
       const lineEnd = prose.indexOf('\n', m.index);
-      const windowStart = Math.max(lineStart, m.index - 30);
-      const windowEnd = Math.min(lineEnd === -1 ? prose.length : lineEnd, m.index + m[0].length + 30);
+      const windowStart = Math.max(lineStart, m.index - win);
+      const windowEnd = Math.min(lineEnd === -1 ? prose.length : lineEnd, m.index + m[0].length + win);
       const nearby = prose.slice(windowStart, windowEnd);
       if (unless && unless.test(nearby)) {
         warnings.push({
