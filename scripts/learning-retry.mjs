@@ -24,7 +24,7 @@ export function retryInstruction(problem, rejected) {
       // Aim well under the ceiling — a model that trims to exactly the limit
       // lands over it about as often as not.
       const target = limits.maxChars - 500;
-      return `- TOO LONG. Your draft is ${rejected.length} characters; the hard limit is ${limits.maxChars}. Cut at least ${rejected.length - target} characters to land near ${target}. Merge lines that say the same thing twice and delete the weakest, most generic ones. Do not add anything.`;
+      return `- TOO LONG. Your draft is ${rejected.length} characters; the hard limit is ${limits.maxChars}. Cut at least ${rejected.length - target} characters to land near ${target}. Cut ONLY by deleting whole lines — pick the weakest, most generic or redundant bullets and remove them entirely. Prefer deleting lines that are NOT in the live file below (your own additions and rephrasings). NEVER reword, merge, or compress the lines you keep: a separate check rejects the file unless enough lines of the live file survive character-for-character. Do not add anything.`;
     }
     case 'size/min':
       return `- TOO SHORT. Your draft is only ${rejected.length} characters (minimum ${limits.minChars}) — it looks truncated. Return the complete file, every section filled in.`;
@@ -72,6 +72,7 @@ ${GUARDRAILS.immutableFacts.map((f) => `- ${f}`).join('\n')}
 
 # Rules that still apply
 - You are trimming and reshaping the draft, not learning again. Do not introduce a single new observation.
+- When cutting for length, delete whole lines; never reword a line that also appears in the live file — kept lines must stay character-for-character identical.
 - Never write a client name, phone number, email, price, area or availability status.
 - Never write a percentage other than the settled ones above. Never write "8%".
 - Same terse, imperative style. No preamble, no commentary, no explanation of what you changed.
