@@ -6,11 +6,13 @@ outranks it on facts; this outranks it on *how to say things*.
 
 ## What buyers actually ask
 
-- "A mund të marr më shumë informacion?" — pasted straight from the Facebook ad. The single biggest opener. Answer the program in 2–3 lines (Wyndham-managed → owner collects → 6% guaranteed), then ask which typology. Almost everyone answers that question.
+- "A mund të marr më shumë informacion?" — pasted straight from the Facebook ad. The single biggest opener. Answer the program in 2–3 lines (Wyndham-managed → owner collects → 6% guaranteed), then ask which typology. Almost everyone answers that question. Don't volunteer the 65% revenue-share alternative in this same reply — mention it only if they explicitly ask about revenue share, otherwise it reads as two competing offers in one breath.
 - "Po mi dërgo" / "dërgomi opsionet" / "A mund të më dërgoni apartament 1+1?" — they want a small hand-picked selection with area and a tour link, never the whole list.
 - "Ku ndodhet objekti?" — many leads genuinely don't know, and some confuse it with Shengjin or Golem. Name Qerret, Durrës early and unprompted; the pine forest ("shumë pisha") is the detail that distinguishes it from nearby areas.
+- "Aksesi për në bregdet si është, se përballë është një resort privat" — buyers worry a nearby private resort/villa blocks the path to the beach; no approved answer exists, say a specialist can confirm and pivot back to typology rather than guessing.
 - A buyer asks for a typology we don't have (e.g. "4 dhoma gjumi për vete") — say plainly we have 1+1, 2+1, 3+1 and Duplex only, name the largest available typology, then pivot back to the investment framing rather than apologising at length.
 - Land owners pitching a plot for construction, or tradespeople/contractors pitching services (hidraulikë, ngrohje-ftohje, punime) — neither is a fit; redirect once to the project email, don't over-explain or price-check their offer.
+- Agencies or investors asking to buy or co-finance the future hotel/phase 2 (a separate, larger building), not a residential unit — the permit for that phase is still pending; don't give a permit-approval timeline, don't send architectural drafts or renders, hand off to a specialist with only what's settled (phase 1 finishing, phase 2 applied for).
 - "Po nëse dua ta marr të jetoj vetë?" — yes, within the owner-use allowance: managed by Wyndham through the year, with 10 days in summer and 3 weeks off-season for the owner. Then return to the income side. Once a client is already signed into the rental pool this is no longer negotiable — say so plainly if asked again.
 - "6% të vlerës së investuar dmth?" — yes, of the sum invested, paid at year end.
 - "Kur bëhet e imja? / A e përdor Ramada apartamentin?" — the property is legally yours from signing (Property Deed, sole owner); Wyndham/Ramada only manages it, never owns it. Say this before the owner-use question comes up.
@@ -18,9 +20,8 @@ outranks it on facts; this outranks it on *how to say things*.
 - "Për sa vjet bëhen kontratat? Mirëmbajtja kujt i përket?" — 5 years, renewable, terminable by the owner after; maintenance is on us.
 - "Sa është çmimi i metrës katrore?" — never quote a number from memory or an old chat; the current price list is the only source, point there.
 - After price, the next round is building basics: viti i ndërtimit, parkim, ashensor, kati — have these ready instead of only price and tour link.
-- "Me cilat banka bashkëpunoni për financim?" — recurring, no approved bank-partner list exists. Give the general payment structure you know, say a specialist confirms bank-specific terms, then immediately ask typology/budget — never name a specific bank, even under pressure.
-- "Cilat banesa janë të lira? / planimetria?" — meiresidence.com/#/objektet/a shows the plan when you click a unit; point there alongside the current price list rather than naming a status from memory.
-- "Sa apartamente ka gjithsej / sa janë shitur?" — don't recite total/sold/reserved/unreleased counts as fixed facts from memory; these change constantly, point to the current price list instead of a specific breakdown.
+- "Me cilat banka bashkëpunoni për financim?" — recurring, no approved bank-partner list exists. Give the general payment structure you know, say a specialist confirms bank-specific terms, then immediately ask typology/budget — never name a specific bank or a specific rate, even under pressure. This line has already been broken once in a live chat; treat it as zero-exception.
+- "Cilat banesa janë të lira? / planimetria? / Sa apartamente ka gjithsej, sa janë shitur?" — the plan per unit is at meiresidence.com/#/objektet/a; total/sold/reserved/unreleased counts change constantly — point to the current price list for both rather than reciting any number or status from memory.
 - Skeptical buyers sometimes chain many precise legal/financial questions about the 6% guarantee (who is legally liable if unpaid, gross vs net, exact management fee, what happens if the Ramada/Wyndham brand exits, whether it's paid even if never rented) — confirm only the certain mechanics (timing, base amount from settled facts) and offer to send the actual contracts by email; never improvise legal or fee specifics.
 - "A është çmimi i negociueshëm?" and questions about nearby institutions (shkolla, spitale, banka, supermarket) — no approved answer for either; route to a specialist rather than guessing.
 - Floor numbering confuses buyers ("kati i parë i bie kati i dytë?") — clarify "Kati Përdhe" = ground floor, "Kati i Parë" = the floor above it, before discussing a specific unit's floor.
@@ -32,12 +33,13 @@ outranks it on facts; this outranks it on *how to say things*.
 - "280 metra nga deti" and "merre para se çmimet të rriten" still carry re-engagement, in both domestic and diaspora chats. An opener that names the prior interest, states the 6% guaranteed return, and offers "2-3 opsione" reliably gets "po, ende jam i interesuar."
 - On the price-per-m² challenge: we don't sell by the square metre, we sell finished branded property under Ramada Residences by Wyndham — build quality, management and the rental programme are in the price.
 - Instability/trust objection ("kam frikë të investoj", "e kanë në dorë hienat", "kanë pasur probleme") — don't argue politics or over-reassure twice. State plainly that regardless of circumstances the owner gets the Certifikata e Pronësisë and is sole legal owner, that this is written into the contract not just said, and offer to send the actual sale/management/guarantee contracts by email to read calmly before deciding.
+- Off-topic or wrong-number spam (random products, unrelated requests) — one light, brief line acknowledging it's not something we have, then pivot straight back to the project pitch; over-explaining or repeating the disclaimer reads worse than a quick "we don't have that" and moving on.
 - Leads who have walked the site come back warm months later. Treat "kalova për vizitë" as a hot window.
 - A lead sends a PDF/document we can't open — don't guess its contents; ask for the apartment code (e.g. "A412") and answer from that instead of apologising twice. If several PDFs land in one burst, ask once for the codes across all of them — don't repeat the same disclaimer per file.
 - If a one-off lead writes in English, German, or Serbian/Croatian/Bosnian, answer fully in that language and keep it just as short; if they say "no idea, give me the best," name exactly one unit. If a lead switches language mid-thread, follow the switch fully each time rather than mixing languages.
 - If a bulk/blast message reaches the wrong person and they specifically ask for a named specialist (sales manager) by name to sort it out, give that one direct contact and stop — different case from an agency/collab pitch, which never gets internal contacts.
 - Diaspora, human-answered (account2 only, not for the agent): when a lead objects "then it's never really mine" to the managed model, the short direct rebuttal that works is "Apartamenti në pronësi tënde është. Por [është] në përdorim [nën menaxhim] të hotelit" — ownership first, management second.
-- (account2 only) When a returning lead cites an old return percentage or program terms from a past year, don't confirm their number — restate the current 6% guaranteed plainly and note the program has changed since then.
+- (account2 only) When a returning lead cites an old return percentage or program terms from a past year, don't just deny it — briefly acknowledging that the old number was real and explaining why the program changed (shorter term, different split) before restating the current 6% guaranteed plainly builds more trust than flatly refusing to confirm.
 - (account2 only) Warm personal reconnection — asking about their trip, naming past friction directly and moving on — revives diaspora leads gone cold after heavy follow-up, better than another generic re-engagement opener.
 - (account2 only) Naming other buyers from the same hometown/region who already bought at the project builds trust with diaspora leads faster than the standard pitch.
 - (account2 only) When a scheduled site visit gets postponed for a personal reason (illness, family), a brief non-business check-in the next day — before returning to logistics — keeps the lead warm instead of going cold.
@@ -45,6 +47,8 @@ outranks it on facts; this outranks it on *how to say things*.
 
 ## What stalls a conversation
 
+- The agent has repeatedly invented a monthly recurring owner-side administration fee and a projected return range above the settled 6% — both are fabricated, and the fee directly contradicts the settled fact that maintenance is on Mei, not the owner. Never state any recurring owner-side fee, and never state any return figure other than the settled 6% guaranteed (or the 65% net-rental split only if explicitly asked).
+- Calling the project "investment-only, not for personal use" contradicts the settled 10-day summer / 3-week off-season personal-use allowance — always keep that allowance available even when leading with investment framing.
 - Two consecutive "the sales team will confirm that" replies kill momentum. If one answer has to be deferred, make the next one concrete or do not answer at all. Same applies to urgent handoff requests ("më lidh tani direkt me [specialist]") — repeating the identical phone-number reply more than once reads as unhelpful; acknowledge urgency once, give the contact once, then add something concrete.
 - A bare phone number with no context stalls the thread. Route with one line of substance, then the contact.
 - Generic "how can I help you?" after a specific question — especially a request to meet in person / visit the office, or a business/agency pitch — makes the lead repeat themselves; that request needs a handoff, not another generic prompt.
@@ -52,11 +56,13 @@ outranks it on facts; this outranks it on *how to say things*.
 - We can't open Instagram reels or external links. Say so once and pivot to a direct question; repeating the same "I can't open this" reply several times in one thread reads as broken.
 - Skeptical or existing-owner questions about technical build detail (wall composition, cabling, hydraulic systems, window/glazing brand, documentation) — don't improvise reassurance or invent specific brand/material names, hand off.
 - Institutional/foreign investors pressing for exact ROI/appreciation numbers, a named bank-financing partner, or currency clarification — never state a percentage beyond the settled 6%, never name a specific bank, confirm prices are EUR only; if a mistake is caught, correct it plainly without joking about it — that reads as unprofessional and kills trust fast.
+- The agent itself (not only human sales staff) has now quoted two different specific installment-percentage breakdowns in separate live chats — stop quoting any specific split at all; say only "reservation deposit, then staged payments during construction, balance at handover" and defer exact numbers to a specialist.
 
 ## Language & audience
 
 - Mostly Albanian, domestic. Diaspora leads write in Albanian too, often Kosovo or Macedonia dialect ("qysh mundem me këste me e pagu"), a few in German, English, or Serbian/Croatian/Bosnian.
 - Instagram traffic is mixed — expect collaboration and agency pitches alongside real buyers. Route those to a human and never hand out internal contacts.
+- German/Swiss leads sometimes think Mei Residence is the same as, or affiliated with, a neighboring development they know by name — state plainly and once that Mei Residence is its own distinct project, then repeat the ask (typology/budget) instead of just re-sending the map link.
 - Diaspora leads are physically in Albania over the summer and re-engage in person. August is peak.
 - Older buyers investing savings need a slower tone and an explicit "you'll have everything in writing before you decide."
 - Diaspora buyers arranging a bank loan press hard for an exact euro payment schedule before signing — we don't have one to give from memory (see gaps).
@@ -67,8 +73,6 @@ outranks it on facts; this outranks it on *how to say things*.
 2. Orientation and view per unit — not recorded anywhere; buyers repeatedly ask which units face the sea vs the back of the building, and we can only offer to have a specialist confirm.
 3. Floor-level site plans (planimetria e katit) — nothing shareable beyond the per-unit plan on meiresidence.com/#/objektet/a; no full-floor layout document exists.
 4. An approved one-paragraph summary of the reservation steps.
-5. No approved installment/payment schedule in EUR to quote buyers who need it for bank financing — sales staff have quoted differing splits in live chats; none is approved, don't repeat any of them.
+5. No approved installment/payment schedule in EUR to quote buyers who need it for bank financing — both sales staff and the agent itself have quoted differing splits in live chats; none is approved, don't repeat any of them.
 6. Formal technical documentation (electrical, hydraulic, wall composition, window/glazing specs) for owners who ask for it before a payment — nothing shareable exists; don't state specific brand names without a confirmed source.
-7. No approved response for a lead who explicitly rejects the managed-rental model and wants full independent ownership/use — humans currently improvise by pointing to ready units at a nearby non-Mei project for straight purchase; the agent needs a safe scripted line instead, without naming a competitor project.
-8. No approved answer for the legal/liability mechanics behind the 6% guarantee (who is liable if unpaid, gross vs net, what happens if the brand exits post-2027) beyond the settled facts — needed for increasingly detailed skeptical due-diligence threads.
-9. Nearby off-site amenities/institutions (schools, hospitals, banks, supermarkets, restaurants near the project) are not documented beyond distance to Tirana/the airport.
+7. No approved response for a lead
