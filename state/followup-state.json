@@ -19,7 +19,10 @@
   },
   "aGRpGzNO1UZMaPxqAjYi": {
     "sentiment": "neutral",
-    "language": "sq"
+    "language": "sq",
+    "queuedStage": 0,
+    "queuedAt": 1787914211870,
+    "name": "Myftar"
   },
   "Fm0JjzIypOwxgqCH6Ab0": {
     "sentiment": "neutral",
@@ -27,7 +30,10 @@
   },
   "c7Iq7gwKfFXBA0DrnsEc": {
     "sentiment": "neutral",
-    "language": "sq"
+    "language": "sq",
+    "queuedStage": 0,
+    "queuedAt": 1787914211870,
+    "name": "Rifan"
   },
   "xRErgEcdfUZbma7RFWAG": {
     "sentiment": "negative",
@@ -55,12 +61,15 @@
     "sentiment": "neutral",
     "language": "sq",
     "queuedStage": 0,
-    "queuedAt": 1787913034402,
+    "queuedAt": 1787914211870,
     "name": "Imeri Gjermani Qerret Mei Residence"
   },
   "Nrn4LYc4r2vyXMAtpzUn": {
     "sentiment": "neutral",
-    "language": "sq"
+    "language": "sq",
+    "queuedStage": 0,
+    "queuedAt": 1787914211870,
+    "name": "Fari Selmanllari"
   },
   "YK3GIh4HJAJ31zSQRc8D": {
     "sentiment": "neutral",
@@ -88,18 +97,24 @@
   },
   "wdOzeKWtFK89VsmUFhQa": {
     "sentiment": "neutral",
-    "language": "sq"
+    "language": "sq",
+    "queuedStage": 0,
+    "queuedAt": 1787914211870,
+    "name": "Elma"
   },
   "QLYKuvSODhyzvnY6yjRZ": {},
   "9HvViG3C74y38TLgGDaH": {
     "sentiment": "neutral",
-    "language": "it"
+    "language": "it",
+    "queuedStage": 0,
+    "queuedAt": 1787914211870,
+    "name": "Ela"
   },
   "5XboSFoPSGUH7kqMxMGw": {
     "sentiment": "neutral",
     "language": "sq",
     "queuedStage": 0,
-    "queuedAt": 1787913034402,
+    "queuedAt": 1787914211870,
     "name": "Donald"
   },
   "NxW3CW3AQP9Qyyj0xYKv": {
@@ -112,10 +127,7 @@
   },
   "JWRQmApMUdivZzpA6MSC": {
     "sentiment": "neutral",
-    "language": "sq",
-    "queuedStage": 0,
-    "queuedAt": 1787913034402,
-    "name": "Gjin Marku"
+    "language": "sq"
   },
   "ZkrmCdf70bb3EEtdjGMr": {
     "sentiment": "neutral",
@@ -171,7 +183,10 @@
   },
   "rjKGvQU0by1IMKiqr2bi": {
     "sentiment": "neutral",
-    "language": "sq"
+    "language": "sq",
+    "queuedStage": 0,
+    "queuedAt": 1787914211870,
+    "name": "Sh"
   },
   "JEWsBBDqdWmg4PsMsWHK": {
     "sentiment": "neutral",
@@ -196,17 +211,17 @@
   "GRkh1F0pMZBUuom6AYRX": {},
   "rLwM1QOMgVNtFREEbUh5": {
     "queuedStage": 0,
-    "queuedAt": 1787913034402,
+    "queuedAt": 1787914211870,
     "name": "Jetmir"
   },
   "r7Y5MSUJsAG0VlF5G1gc": {
     "queuedStage": 0,
-    "queuedAt": 1787913034402,
+    "queuedAt": 1787914211870,
     "name": "M-A"
   },
   "8EJv1ts8nFeN989ittS6": {
     "queuedStage": 0,
-    "queuedAt": 1787913034402,
+    "queuedAt": 1787914211870,
     "name": "Astrit"
   },
   "7ymRA1go2amnKss3meK7": {},
@@ -224,102 +239,98 @@
   "hQZpQ5evbxJNl2OdeBNb": {},
   "TcuDa8m5qlBnDrWDGsss": {
     "queuedStage": 0,
-    "queuedAt": 1787913034402,
+    "queuedAt": 1787914211870,
     "name": "Valbona Sinani"
   },
   "6pfx6EIwDbr5lzFOxX55": {
     "queuedStage": 0,
-    "queuedAt": 1787913034402,
+    "queuedAt": 1787914211870,
     "name": "Ndue Gjoni"
   },
   "vyWUlTJftn2rcimknRxn": {
     "queuedStage": 0,
-    "queuedAt": 1787913034402,
+    "queuedAt": 1787914211870,
     "name": "Tatjana Kokaj"
   },
   "shxzB4uhMjVTaB5LoMeu": {
     "queuedStage": 0,
-    "queuedAt": 1787913034402,
+    "queuedAt": 1787914211870,
     "name": "Florina Troci"
   },
   "MhutNpu9GKlBZWnvdK5C": {
     "queuedStage": 0,
-    "queuedAt": 1787913034402,
+    "queuedAt": 1787914211870,
     "name": "Kadife Belba"
   },
   "Z6tbMDwMn0cjq0gKRCCS": {
     "queuedStage": 0,
-    "queuedAt": 1787913034402,
+    "queuedAt": 1787914211870,
     "name": "Vjollca Ajdinaj"
   },
   "l0mP9JmdOBI3QMRnUUKt": {
     "queuedStage": 0,
-    "queuedAt": 1787913034402,
+    "queuedAt": 1787914211870,
     "name": "Hysni Shamo. Te Kafja."
   },
   "4QbrkqQ7ulL86WiAKHuz": {
     "queuedStage": 0,
-    "queuedAt": 1787913034402,
+    "queuedAt": 1787914211870,
     "name": "Moza"
   },
   "yxJqyIme1dq6t24p1Xuw": {
     "queuedStage": 0,
-    "queuedAt": 1787913034402,
+    "queuedAt": 1787914211870,
     "name": "Fatjon Shyti"
   },
   "CPgPbxWgKrrVs7CbRZPn": {
     "queuedStage": 0,
-    "queuedAt": 1787913034402,
+    "queuedAt": 1787914211870,
     "name": "Glejdi"
   },
   "6ccsGkZuipo5pGUUXlyn": {
     "queuedStage": 0,
-    "queuedAt": 1787913034402,
+    "queuedAt": 1787914211870,
     "name": "Martin Strachota"
   },
   "OqjRnfVXD4CrpbYwvnSU": {
     "queuedStage": 0,
-    "queuedAt": 1787913034402,
+    "queuedAt": 1787914211870,
     "name": "Hashim"
   },
   "Q2OOHQBPqCHFeH8nvFpi": {
     "queuedStage": 0,
-    "queuedAt": 1787913034402,
+    "queuedAt": 1787914211870,
     "name": "Jorida"
   },
   "YfsWoX9ouxtwqb3Ky5ZA": {
     "queuedStage": 0,
-    "queuedAt": 1787913034402,
+    "queuedAt": 1787914211870,
     "name": "Shpresa Halimi"
   },
   "xPiUnPPXDiuJleJKJ89v": {
     "queuedStage": 0,
-    "queuedAt": 1787913034402,
+    "queuedAt": 1787914211870,
     "name": "Memi"
   },
   "RUuwe0g5p7aM7klUus0Q": {
     "queuedStage": 0,
-    "queuedAt": 1787913034402,
+    "queuedAt": 1787914211870,
     "name": "File Delia"
   },
   "wVlPHuU6RXvIF5MpkIAE": {
     "queuedStage": 0,
-    "queuedAt": 1787913034402,
+    "queuedAt": 1787914211870,
     "name": "\"perla Shqiptare"
   },
   "TXKNK8iKNSgHu9qyexzs": {
     "queuedStage": 0,
-    "queuedAt": 1787913034402,
+    "queuedAt": 1787914211870,
     "name": "Satber Lamellari"
   },
   "3xWpzWlQINmh1qhcnEV7": {
     "queuedStage": 0,
-    "queuedAt": 1787913034402,
+    "queuedAt": 1787914211870,
     "name": "I"
   },
-  "xTHL4D0xFCVdzDbqgedU": {
-    "queuedStage": 0,
-    "queuedAt": 1787913034402,
-    "name": "Devi"
-  }
+  "xTHL4D0xFCVdzDbqgedU": {}
 }
