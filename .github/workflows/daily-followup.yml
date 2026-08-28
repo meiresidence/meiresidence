@@ -1,0 +1,111 @@
+name: Daily follow-up run
+
+# Every day at 09:30 Europe/Tirane — half an hour AFTER the daily learning job
+# (09:00 local), so this run reads the day's freshly updated knowledge/learnings.md.
+# GitHub cron is UTC and ignores DST: 07:30 UTC in summer, 08:30 UTC in winter,
+# with the same dual-cron DST guard as daily-learning.yml.
+#
+# What a run does depends on the FOLLOWUP_MODE repository variable:
+#   readonly (default) — Phase 1: classify + digest only, nothing written to GHL
+#   queue              — Phase 2+: also applies fu-queue-* tags and drafts notes
+# The digest lands in three places: the Actions step summary, a GitHub issue
+# (one per day, labeled follow-up-digest), and state/followup-state.json is
+# committed so the ladder survives between runs.
+
+on:
+  schedule:
+    - cron: '30 7 * * *'
+    - cron: '30 8 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'readonly or queue (overrides the FOLLOWUP_MODE variable)'
+        required: false
+        default: ''
+
+concurrency:
+  group: daily-followup
+  cancel-in-progress: false
+
+permissions:
+  contents: write # commit state/followup-state.json
+  issues: write   # publish the digest
+
+jobs:
+  followup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Only proceed at 09:30 Europe/Tirane
+        id: clock
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "go=yes" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          OFFSET=$(TZ=Europe/Tirane date +%z)
+          SCHED="${{ github.event.schedule }}"
+          if { [ "$OFFSET" = "+0200" ] && [ "$SCHED" = "30 7 * * *" ]; } || \
+             { [ "$OFFSET" = "+0100" ] && [ "$SCHED" = "30 8 * * *" ]; }; then
+            echo "go=yes" >> "$GITHUB_OUTPUT"
+          else
+            echo "go=no" >> "$GITHUB_OUTPUT"
+            echo "Off-season duplicate cron. Stopping."
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.clock.outputs.go == 'yes'
+
+      - uses: actions/setup-node@v4
+        if: steps.clock.outputs.go == 'yes'
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        if: steps.clock.outputs.go == 'yes'
+        run: npm ci --omit=dev || npm install --omit=dev
+
+      - name: Ladder regression tests
+        if: steps.clock.outputs.go == 'yes'
+        run: |
+          node scripts/test-followup-ladder.mjs
+          node scripts/test-followup-live.mjs
+
+      - name: Run the follow-up pass
+        if: steps.clock.outputs.go == 'yes'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GHL_API_KEY: ${{ secrets.GHL_API_KEY }}
+          GHL_LOCATION_ID: ${{ secrets.GHL_LOCATION_ID }}
+          FOLLOWUP_MODE: ${{ github.event.inputs.mode || vars.FOLLOWUP_MODE || 'readonly' }}
+          FOLLOWUP_MODEL: ${{ vars.FOLLOWUP_MODEL || 'claude-sonnet-5' }}
+        run: node scripts/followup-run.mjs
+
+      - name: Publish the digest
+        if: steps.clock.outputs.go == 'yes'
+        run: |
+          cat .followup-digest.md >> "$GITHUB_STEP_SUMMARY"
+          gh label create follow-up-digest --force --color 0D6157 \
+            --description "Daily follow-up agent digest" || true
+          gh issue create \
+            --title "Follow-up digest — $(date -u +%Y-%m-%d)" \
+            --label follow-up-digest \
+            --body-file .followup-digest.md
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Commit ladder state
+        if: steps.clock.outputs.go == 'yes'
+        run: |
+          rm -f .followup-digest.md .followup-report.json
+          git config user.name  "mei-agent-bot"
+          git config user.email "bot@meiresidence.com"
+          git add state/followup-state.json || true
+          if git diff --staged --quiet; then
+            echo "No state change."
+            exit 0
+          fi
+          # [skip render] — a state change must not redeploy the live webhook agent.
+          git commit -m "chore(followup): daily ladder state [skip render]"
+          git pull --rebase origin main || true
+          git push

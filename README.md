@@ -194,3 +194,28 @@ the owner's yearly cost, and the 0.1%/day late-payment penalty.
 7. **The price list date** — what date should the agent quote as "last updated"?
 8. **Personal use** — still worth settling in writing (owner nights are answered,
     but "can I live in it later" is not).
+
+## Follow-up agent (scheduled)
+
+A daily GitHub Actions run (`.github/workflows/daily-followup.yml`, 09:30
+Europe/Tirane — after the learning job) that reads account 1's conversations,
+decides who has gone quiet, and **stages** follow-ups for Eglent to send. It
+never messages a lead itself. Plan: `claude/followup-agent-plan.md` in the
+Mei Residence Claude project.
+
+- Ladder: day 0 (14d quiet, approved template) → day 3 → 7 → 21, where the
+  later rungs are reached **only through a positive reply**.
+- `FOLLOWUP_MODE` repo variable: `readonly` (default, Phase 1 — digest only,
+  zero GHL writes) or `queue` (applies `fu-queue-d*` tags + drafts in notes).
+- Digest: Actions step summary + a daily `follow-up-digest` GitHub issue.
+- State: `state/followup-state.json`, committed by the workflow (`[skip render]`).
+- Code: `src/followup-agent/` (`ladder.js` pure logic, `classify.js` the
+  structured Claude call) + `scripts/followup-run.mjs`.
+- Tests: `scripts/test-followup-ladder.mjs` (33 rules) and
+  `scripts/test-followup-live.mjs` (mock-GHL end-to-end, both modes).
+- Hard guards: refuses any location but account 1; `fu-stop`/`fu-done`/DND/
+  `mei-fu-sent`/`not-a-lead` never enter; any outbound in 48h blocks; a
+  client's unanswered question routes to `needs-human`, never into the ladder.
+
+Note: `src/followup.js` is the **legacy standalone** Meta-Cloud-API scheduler
+and is not part of this — the scheduled agent lives in `src/followup-agent/`.
