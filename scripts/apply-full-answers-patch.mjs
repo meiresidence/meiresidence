@@ -115,6 +115,20 @@ meeting". Never compress a fifteen-point list into a paragraph of generalities.
   discuss it in person" reads it as us dodging the list.`,
   'ANSWER EVERY QUESTION THEY ASKED — THERE IS NO LENGTH LIMIT');
 
+// ------------------------------ 5. the old test asserted the rule we replaced
+const TEST = path.join(ROOT, 'scripts', 'test-answer-first.mjs');
+let tsrc = fs.readFileSync(TEST, 'utf8');
+const OLD_CHECK = "check('long structured answers allowed when asked a lot', /LENGTH EXCEPTION/.test(index));";
+const NEW_CHECK = "check('every question gets answered, with no length cap', /THERE IS NO LENGTH LIMIT ON A REAL ANSWER/.test(index));";
+if (tsrc.includes(NEW_CHECK)) {
+  edits.push('skip  test-answer-first.mjs (already applied)');
+} else if (tsrc.includes(OLD_CHECK)) {
+  fs.writeFileSync(TEST, tsrc.replace(OLD_CHECK, NEW_CHECK));
+  edits.push('ok    test-answer-first.mjs');
+} else {
+  throw new Error('anchor not found in scripts/test-answer-first.mjs — aborting.');
+}
+
 console.log(edits.join('\n'));
 
 if (src === before) { console.log('\nindex.js already up to date — nothing written.'); process.exit(0); }
