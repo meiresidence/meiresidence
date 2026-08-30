@@ -94,10 +94,22 @@
 // into English. Language is now the FIRST rule: mirror the client's own words,
 // never their phone number and never the example's language.
 
+// Investment framing + handoff timing (2026-08-30): the agent was (a) describing
+// Mei Residence like a seaside holiday apartment without ever saying plainly that
+// it is bought as an investment property, and (b) calling escalate_to_agent on the
+// client's very first message — "a Mei specialist will contact you" before anyone
+// had answered a single question. The prompt now requires every substantive reply
+// to CLOSE on the investment-property line, and forbids a handoff before the third
+// client message unless the client explicitly asks for a person / call / viewing /
+// reservation. src/handoff-timing.js is the deterministic backstop: a too-early
+// escalate() is refused outright — no needs-human tag, no specialist alert — and
+// the model is told to answer the question itself.
+
 import express from 'express';
 import fs from 'fs';
 import Anthropic from '@anthropic-ai/sdk';
 import { looksLikeNonBuyerOutreach } from './src/not-a-lead.js';
+import { handoffTooEarly, MIN_CLIENT_TURNS_BEFORE_HANDOFF } from './src/handoff-timing.js';
 import { sanitizeHistory, dropIncompleteToolUse } from './src/conversation.js';
 import { buildThread } from './src/thread.js';
 import { PLACES_TOOL, findPlaces, isConfigured as placesConfigured } from './src/places.js';
@@ -182,7 +194,8 @@ Messenger, or Instagram DM.
 
 GOALS: reply fast, warm and helpful like Mei's best human agent; give info from the
 KNOWLEDGE BASE; gently learn if they are an investor or agency, which unit type
-(1+1/2+1/duplex) and budget; hand off hot leads to a human.
+(1+1/2+1/duplex) and budget; hand off hot leads to a human — but only after you have
+actually helped them over two or three messages, never on the first one.
 
 LANGUAGE — THE FIRST THING YOU DECIDE, EVERY SINGLE MESSAGE. Reply in the language the
 client wrote to you in. Always. Albanian in, Albanian out. English in, English out.
@@ -313,10 +326,53 @@ say what you do know (Qerret, Durres, ~280 m from the beach, ~45 min from Tirana
 offer to have the team send details — NEVER name a shop, a distance or an opening time
 you have not been given.
 
-HAND OFF (call escalate_to_agent) when: they ask for a person, want a personalized
-quote/viewing/reservation, need payment-plan or exact guarantee terms, are clearly
-hot, are a real-estate agency partner who has BUYERS for our units, or you can't
-answer from the KB. Escalating is an ADDITION to your answer, never a replacement for
+MEI RESIDENCE IS AN INVESTMENT PROPERTY — SAY IT, AND CLOSE ON IT. This is not a
+holiday home you buy to use two weeks a year: it is a managed, income-producing
+investment (Renditeimmobilie) that happens to be on the sea, and the free owner
+use is a bonus on top, not the point. Lead with the property, and END the reply
+with ONE short closing line, in the client's own language, that says plainly that
+Mei Residence is bought as an investment property: the unit is rented out and
+managed for you under Ramada Residences by Wyndham, it earns you a return (the
+65/35 rental pool or the 6% guaranteed — their choice), you hold the Property Deed
+as sole owner, and you still get your own free stay each year.
+- Put it at the END, as the last line, after you have answered everything they
+  asked. Never open with it, never let it push the answer down.
+- One or two sentences. Vary the wording, never paste the same sentence twice in a
+  row, and never turn it into a sales pitch or a list.
+- Say it on every substantive reply — price, availability, a unit, the returns,
+  the location, the timeline, contracts, "what is this?". Skip it only on pure
+  small talk ("thanks", "ok", "good morning"), on a reply to a non-lead, or when
+  you already closed on it in your previous message and nothing new was asked.
+- Example shape (translate, do not copy the words): "Keep in mind Mei Residence is
+  bought as an investment — the apartment is rented out and fully managed under
+  Ramada Residences by Wyndham, so it earns a return while you stay the legal
+  owner, with free use for yourself each year."
+
+DO NOT HAND OFF ON THE FIRST MESSAGE — EARN IT OVER TWO OR THREE. A brand-new chat
+is yours to handle. Someone who has written once or twice ("hello", "how much is a
+1+1?", "send me info") must get a real answer from you, not "a Mei specialist will
+contact you" — that reads as being passed around before anyone has helped them,
+and it burns the specialist's time on a lead nobody has qualified.
+- Client message 1 and 2: NEVER call escalate_to_agent. Answer from the KNOWLEDGE
+  BASE, give concrete units, prices, m2, sea view, tour links, the return options,
+  the payment shape, do the arithmetic — then ask ONE question (typology, budget,
+  timing, whether they are buying to invest) and close on the investment line
+  above.
+- From client message 3 on, a handoff is allowed when the normal HAND OFF
+  conditions below are met and you have genuinely run out of KB answers.
+- THE ONE EXCEPTION, valid from the very first message: they explicitly ask for a
+  person, a phone call, a viewing/meeting, to reserve a unit, or a personalised
+  offer, or they are a real-estate agency with buyers. Then escalate immediately —
+  making someone who asked for a human wait is worse.
+- If you call escalate_to_agent too early the system will refuse it, nothing is
+  tagged and nobody is notified — so a reply that promises a specialist would be a
+  lie. When the tool comes back saying it was too early, just answer well.
+
+HAND OFF (call escalate_to_agent) when — from the third client message on, or
+straight away if they asked for a person/call/viewing/reservation — they ask for a
+person, want a personalized quote/viewing/reservation, need payment-plan or exact
+guarantee terms, are clearly hot, are a real-estate agency partner who has BUYERS
+for our units, or you can't answer from the KB. Escalating is an ADDITION to your answer, never a replacement for
 it: in the same reply, answer everything the KB covers, then close with one short line
 that a Mei specialist will follow up on the specific open item (name it — "the exact
 payment plan", "a viewing") rather than a vague "someone will reach out". Route Polish
@@ -546,7 +602,7 @@ const INBOUND_DEBOUNCE_MS = parseInt(process.env.INBOUND_DEBOUNCE_MS || '5000', 
 const anthropic = new Anthropic({ apiKey: cfg.anthropic.apiKey });
 const TOOLS = [{
   name: 'escalate_to_agent',
-  description: 'Hand this lead to a human Mei sales agent (tags the contact needs-human + hot-lead and pings a specialist). Call when they ask for a person, want a personalized quote/viewing/reservation, need payment or guarantee terms, are hot, are a real-estate agency partner with buyers for our units, or you cannot answer from the KB. Escalating never replaces the answer: after calling, answer every part of their message the KB covers and then name the one open item a specialist will follow up on. Only someone trying to BUY from Mei is a lead. NEVER call this for anyone approaching Mei to sell us something (any trade: marketing, social media, video, SEO, web, ads, software, photography, suppliers, contractors), to apply for a job or internship, to ask for sponsorship, donations or press, or to pitch a "collaboration" — however polite or flattering the message is. Those are not leads and must not be tagged. If you cannot tell which side they are on, ask one plain question instead of calling this.',
+  description: 'Hand this lead to a human Mei sales agent (tags the contact needs-human + hot-lead and pings a specialist). TIMING: do NOT call this on the client\'s first or second message — handle those yourself from the knowledge base; a handoff is allowed from the third client message on. The only exception, valid immediately, is a client who explicitly asks for a person, a phone call, a viewing/meeting, to reserve a unit or a personalised offer, or a real-estate agency with buyers. Too-early calls are refused by the system: nothing is tagged, nobody is notified, so never promise a specialist after one. Call when they ask for a person, want a personalized quote/viewing/reservation, need payment or guarantee terms, are hot, are a real-estate agency partner with buyers for our units, or you cannot answer from the KB. Escalating never replaces the answer: after calling, answer every part of their message the KB covers and then name the one open item a specialist will follow up on. Only someone trying to BUY from Mei is a lead. NEVER call this for anyone approaching Mei to sell us something (any trade: marketing, social media, video, SEO, web, ads, software, photography, suppliers, contractors), to apply for a job or internship, to ask for sponsorship, donations or press, or to pitch a "collaboration" — however polite or flattering the message is. Those are not leads and must not be tagged. If you cannot tell which side they are on, ask one plain question instead of calling this.',
   input_schema: { type: 'object', properties: {
     reason: { type: 'string' }, lead_summary: { type: 'string' },
     interested_in: { type: 'string' }, buyer_type: { type: 'string' },
@@ -597,6 +653,15 @@ async function writeRecentMessages(contactId, n = 3) {
   return r;
 }
 
+// How many separate messages this client has sent in the thread we hold
+// (the CRM history is rebuilt on every message by src/thread.js, so this is
+// the real conversation length, not just this process's memory).
+function countClientMessages(contactId) {
+  const conv = store.get(contactId);
+  if (!conv) return 0;
+  return conv.history.filter((m) => m.role === 'user' && typeof m.content === 'string' && m.content.trim()).length;
+}
+
 function lastClientText(contactId) {
   const conv = store.get(contactId);
   if (!conv) return '';
@@ -617,6 +682,17 @@ async function escalate(contactId, name, args) {
   // no alert. Any buyer signal anywhere in the conversation disables it — see
   // src/not-a-lead.js.
   const clientWords = lastClientMessages(contactId, 6).join('\n');
+
+  // Not on the first message (2026-08-30). The agent handles the first two or
+  // three client messages itself; a handoff only fires from the third client
+  // message on — unless they explicitly ask for a person, a call, a viewing or
+  // a reservation. See src/handoff-timing.js.
+  const clientTurns = countClientMessages(contactId);
+  if (handoffTooEarly({ clientTurns, clientWords })) {
+    console.log(`[handoff] TOO EARLY for ${contactId} — client turn ${clientTurns}/${MIN_CLIENT_TURNS_BEFORE_HANDOFF}, no tags, no alert`);
+    return { ok: true, alerted: false, blocked: 'too-early' };
+  }
+
   if (looksLikeNonBuyerOutreach(clientWords)) {
     console.log(`[handoff] BLOCKED as non-buyer outreach for ${contactId} — no tags, no alert:`,
       clientWords.replace(/\s+/g, ' ').slice(0, 120));
@@ -746,7 +822,9 @@ async function runToolLoop(conv, contactId) {
     for (const b of toolUses) {
       if (b.name === 'escalate_to_agent') {
         const r = await escalate(contactId, conv.name, b.input || {});
-        if (r.blocked === 'not-a-lead') {
+        if (r.blocked === 'too-early') {
+          results.push({ type: 'tool_result', tool_use_id: b.id, content: 'NOT escalated — it is too early. This client has only just started writing to us and did not ask for a person, a call, a viewing or a reservation. Nobody was tagged and no specialist was notified, so do NOT say or hint that anyone will contact them. Answer their question yourself, fully, from the KNOWLEDGE BASE, in their own language — availability, price, m2, sea view, tour links, completion date, the two return options, the payment shape, any arithmetic — and end by asking ONE question that moves the conversation on (which typology, which budget, when they are thinking of investing). Close the reply with the one-line reminder that Mei Residence is an investment property. You may hand over later in the conversation once you have actually helped them.' });
+        } else if (r.blocked === 'not-a-lead') {
           // Not a buyer. Nothing was tagged and no specialist was notified, so
           // the reply must not promise one.
           results.push({ type: 'tool_result', tool_use_id: b.id, content: 'NOT escalated. This person is approaching Mei to sell us something, apply for something, or ask us for something — not to buy. Nobody was tagged or notified. Do NOT say a specialist will contact them. Reply once, short and polite, in their own language: thank them, say Mei handles this internally and is not looking right now, and point them to info@meiresidence.com.' });
