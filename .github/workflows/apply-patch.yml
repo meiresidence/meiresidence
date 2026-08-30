@@ -1,0 +1,59 @@
+name: Apply patch script
+
+# Manual, on-demand runner for the one-time idempotent patch scripts in
+# scripts/apply-*.mjs. Claude sessions cannot push to this repo directly, so a
+# patch to a large file like index.js is committed as a script and applied here,
+# on GitHub, where the change is made by the script itself rather than retyped.
+#
+# Run it from the Actions tab: pick the script, leave dry_run off to commit.
+
+on:
+  workflow_dispatch:
+    inputs:
+      script:
+        description: 'Patch script under scripts/ to run'
+        required: true
+        default: 'apply-handoff-timing-patch.mjs'
+      dry_run:
+        description: 'Report only, commit nothing'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run the patch script
+        run: node "scripts/${{ inputs.script }}" ${{ inputs.dry_run == 'true' && '--check' || '' }}
+
+      - name: Syntax check
+        run: node --check index.js
+
+      - name: Run the repo's test scripts
+        run: |
+          for f in scripts/test-handoff-timing.mjs scripts/test-not-a-lead.mjs scripts/test-answer-first.mjs; do
+            echo "== $f"; node "$f" || exit 1
+          done
+
+      - name: Commit
+        if: inputs.dry_run != 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "Nothing to commit — already applied."
+            exit 0
+          fi
+          git add -A
+          git commit -m "chore(agent): apply ${{ inputs.script }}"
+          git push
