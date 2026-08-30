@@ -130,8 +130,14 @@ type after the slash. Each unit has up to TWO links:
 - `view:` — **sea** or **no sea** (see the sea-view rule below)
 
 **When a client asks for a video, plan/planimetri, layout, photos, or a virtual
-tour of a unit, ALWAYS send BOTH links together** — the video tour AND the 3D
-plan — not just one. If a unit line has only one of the two, send the one it has;
+tour of a unit, the FLOOR PLAN of the apartment comes FIRST**, then the 3D plan and
+the video walkthrough — or the plan together with them. **NEVER send the 3D tour on
+its own** (rule from Eglent, 30 Aug 2026): the 3D is an illustrative model of the
+typology, the plan is the apartment, and a buyer reads the plan first. If no floor
+plan is to hand for that unit, say in one clause that Eglent sends the detailed
+floor plan, and send the tour links alongside that — never instead of it.
+Otherwise **send BOTH links together** — the video tour AND the 3D plan — not just
+one. If a unit line has only one of the two, send the one it has;
 if it has neither, offer the general 3D catalogue https://mei-tour.netlify.app
 and say the team can send the detailed floor-plan PDF on request. Note for the
 3D plan: it is an illustrative model of the typology (the page says so) — real

@@ -15,10 +15,10 @@ const cases = [
   [1, 'A mund te flas me nje agjent?', false, 'asks for an agent (SQ)'],
   [1, 'Can someone call me please?', false, 'asks for a call (EN)'],
   [1, 'Chce zarezerwowac mieszkanie', false, 'wants to reserve (PL)'],
-  [1, 'Ich möchte einen Besichtigungstermin', false, 'wants a viewing (DE)'],
+  [1, 'Ich möchte einen Besichtigungstermin', true, 'viewing request waits — the agent asks what they want to know first (DE)'],
   [1, 'Vorrei parlare con un agente', false, 'wants an agent (IT)'],
   [1, 'Chci mluvit s makléřem', false, 'wants a broker (CZ)'],
-  [1, 'Dua ta shoh apartamentin nga afer', false, 'wants to see the unit (SQ)'],
+  [1, 'Dua ta shoh apartamentin nga afer', true, 'seeing the unit waits — same rule (SQ)'],
 ];
 
 let failed = 0;

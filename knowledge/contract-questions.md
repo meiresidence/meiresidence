@@ -130,18 +130,19 @@ A client sent a 14-point due-diligence list. Eleven points are answered above.
 These three are not written anywhere yet. Do NOT invent them, do NOT reassure with
 a guess, and do NOT hide them in a "we'll discuss it in the meeting".
 
-- **What happens to the 6% in the weeks the owner uses the apartment himself**
-  ("çfarë ndodh me 6% kur e përdor vetë") → the free owner use (1 week–10 days in
-  high season, 2–3 weeks off season) and the 6% are both written into the
-  management contract. How the two interact is set out there, and Eglent goes
-  through exactly that clause before any reservation. Say that; give no percentage,
-  no pro-rata rule and no "it doesn't affect it" of your own.
-- **Can the owner leave the programme and rent the apartment out himself**
-  ("nëse mund të dalësh nga programi dhe ta japesh vetë në qira") → the one thing
-  that is certain and worth saying: the buyer holds the Property Deed as sole legal
-  owner, and the management arrangement is a separate contract running 5+5 years.
-  The exit terms of that contract are a point Eglent goes through personally. Never
-  claim the owner can walk away freely, and never claim he is locked in.
+- **SETTLED 30 Aug 2026 — the 6% is NOT reduced by the owner's own use.** The free
+  owner stay (1 week–10 days in high season, 2–3 weeks off season) does not touch
+  the guarantee: the owner still receives the full 6% for that year. Say it plainly
+  and warmly — it is one of the strongest points we have. "E përdor vetë dhe prapë
+  merr 6% të plotë." Do not add conditions of your own on top.
+- **SETTLED 30 Aug 2026 — the owner CANNOT leave the programme and rent the unit
+  out himself.** The apartment stays in the Ramada Residences management programme;
+  self-renting or renting through someone else is not an option. Say it directly and
+  without apology, then say why it works that way: it is a branded, centrally managed
+  residence — the single operator is what protects the standard, the occupancy and
+  therefore the return for every owner. The buyer is still the sole legal owner with
+  the Property Deed in their own name; what is fixed is the management, not the
+  ownership. Never soften this into "we'd have to check".
 - **Penalties if the building is not delivered on time**
   ("penalitetet nëse objekti nuk dorëzohet në kohë") → the buyer-side penalty
   (0.1% per day on a late instalment) is settled and stated above; the
@@ -164,11 +165,11 @@ the honest lines above. NEVER answer such a list with a summary paragraph or wit
 6. what it is calculated on → the investment amount, i.e. the apartment price the buyer pays
 7. for how many years → 5 years, with a 10-year version
 8. how many weeks of own use → 1 week–10 days high season + 2–3 weeks off season, free
-9. the 6% during own use → OPEN, see above
+9. the 6% during own use → the 6% is NOT reduced; the owner uses the unit and still gets the full 6%
 10. annual maintenance fee → the owner's yearly cost is the property tax; the old ~0.6 EUR/m2 monthly fee is retired
 11. operator commission → in the rental pool 65% owner / 35% SPV; in the 6% programme nothing is deducted from the 6%
 12. taxes / furnishing → property tax yearly; one-off costs at signing itemised by Eglent; furnishing quoted per unit (A212 = +10,400 EUR)
-13. leaving the programme and self-renting → OPEN, see above
+13. leaving the programme and self-renting → not possible; the unit stays in the Ramada programme (ownership is still fully the buyer's)
 14. late-delivery penalties → OPEN, see above; the buyer-side 0.1%/day is settled
 
 Only after all fourteen lines does the meeting or viewing get mentioned — and if

@@ -33,13 +33,12 @@ const EXPLICIT_HUMAN = [
   /\b(rufen sie mich an|anruf|telefonnummer|sprechen mit|telefonisch)\b/i,
   /\b(zadzwo|zadzwoń|rozmawiać|numer telefonu)\w*/i,
   /\b(zavolejte|zavolat|mluvit s|telefonní číslo)\w*/i,
-  // wants a viewing / meeting / site visit
-  /\b(takim|vizit|shoh apartamentin|vij ta shoh|ta shoh nga afer|ta shoh nga afër)\w*/i,
-  /\b(viewing|visit|site visit|meeting|appointment|come and see|see the apartment)\b/i,
-  /\b(visita|appuntamento|incontro)\b/i,
-  /\b(besichtigung|termin|treffen|vor ort)\w*/i,
-  /\b(spotkanie|oglądanie|ogladanie|wizyt)\w*/i,
-  /\b(prohlídk|prohlidk|schůzk|schuzk|návštěv)\w*/i,
+  // NOTE (30 Aug 2026): a viewing / meeting / appointment request is deliberately
+  // NOT in this list any more. Eglent's rule: when a client asks for an
+  // appointment, the agent first asks what they want to know, answers it, and
+  // only then arranges the meeting — so a bare "can we meet?" is handled by the
+  // agent, not bounced straight to a person. A client who asks for a PERSON, a
+  // CALL, a RESERVATION or a personal offer still comes through immediately.
   // wants to reserve / buy now / a personal offer
   /\b(rezervoj|rezervim|kapar|dua ta blej|oferte personale|ofertë personale)\b/i,
   /\b(reserve|reservation|book (it|the unit)|i want to buy|personal offer|personalized offer|personalised offer)\b/i,
