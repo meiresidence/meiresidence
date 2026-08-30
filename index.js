@@ -113,6 +113,7 @@ import { handoffTooEarly, MIN_CLIENT_TURNS_BEFORE_HANDOFF } from './src/handoff-
 import { sanitizeHistory, dropIncompleteToolUse } from './src/conversation.js';
 import { buildThread } from './src/thread.js';
 import { PLACES_TOOL, findPlaces, isConfigured as placesConfigured } from './src/places.js';
+import { splitMessage, MAX_MESSAGE_CHARS } from './src/split-message.js';
 
 const MAX_OUTPUT_TOKENS = 8192;
 
@@ -216,14 +217,29 @@ Arabic — whatever they used, you use.
 - Never apologise for the language, never ask which language they prefer, never answer
   in two languages at once.
 
-STYLE: warm, professional, chat-short (1-4 sentences, plain text, at most one
-emoji). Use their name if known. Ask ONE question at a time. Never say you are an AI
-language model.
-LENGTH EXCEPTION: when a client asks several concrete buying questions at once
-(availability, price, timeline, payment, returns), give the FULL structured answer
-even if it runs long — one short line per point, in the order they asked, exactly
-like Eglent's reply in GOLD-STANDARD REPLIES below. Short stays the default for
-greetings, small talk and single questions.
+STYLE: warm, professional, plain text, at most one emoji. Use their name if known.
+Never say you are an AI language model. Keep greetings and small talk short (1-4
+sentences) and ask ONE question at a time there.
+
+ANSWER EVERY QUESTION THEY ASKED — THERE IS NO LENGTH LIMIT ON A REAL ANSWER.
+When a client asks several concrete questions — and serious buyers send lists of
+ten or fifteen: the contracts, the exact 6% formula, gross or net, what it is
+calculated on, how many years, how many weeks of owner use, the yearly fees, the
+operator's commission, taxes, furnishing, leaving the programme, delay penalties —
+you answer ALL of them, in the order they asked, one short labelled line per point.
+Never pick the three easiest and stop. Never answer half and offer the rest "in a
+meeting". Never compress a fifteen-point list into a paragraph of generalities.
+- Length is NOT a reason to leave anything out. Write as long a reply as the
+  questions need — the system splits a long message into consecutive chat messages
+  by itself, so nothing you write is ever cut.
+- Number or dash the points so a long reply stays readable on a phone. One line
+  each; no essays per point.
+- The ONLY points you may leave open are the ones the CONTRACT & MONEY ANSWERS
+  section marks as not settled — and even those get their honest one-line answer
+  from that section, never silence and never "we'll cover it in the meeting".
+- If they also ask for a meeting or a viewing, answer every point FIRST and put
+  the meeting at the end. A client who sends a due-diligence list and gets "let's
+  discuss it in person" reads it as us dodging the list.
 
 KNOWLEDGE RULES: answer ONLY from the KNOWLEDGE BASE. Obey the "HARD RULES" section at
 the top of the KNOWLEDGE BASE above everything else in this prompt — in particular,
@@ -507,6 +523,28 @@ const CHANNEL_TYPE_MAP = {
 // Instagram/Facebook contacts have no phone.
 const sendReply = (contactId, message, channel = 'WhatsApp') =>
   ghl('/conversations/messages', 'POST', { type: channel, contactId, message }, '2021-04-15');
+// Long answers are SENT IN FULL, as consecutive messages (2026-08-30). The
+// agent used to be told to keep replies short, so a client who asked fourteen
+// due-diligence questions in one message got four sentences back. It now answers
+// every question; anything over the channel's 4096-character limit would be
+// rejected outright by the provider (the client would get nothing), so we split
+// on paragraph boundaries instead of shortening. One part = one chat bubble.
+async function sendReplyChunked(contactId, message, channel = 'WhatsApp') {
+  const parts = splitMessage(message, MAX_MESSAGE_CHARS);
+  if (parts.length <= 1) return sendReply(contactId, message, channel);
+  console.log(`[msg] ${contactId}: reply is ${message.length} chars — sending as ${parts.length} messages`);
+  let last = { ok: true, data: null };
+  for (const [i, part] of parts.entries()) {
+    last = await sendReply(contactId, part, channel);
+    if (!last.ok) {
+      console.error(`[msg] ${contactId}: part ${i + 1}/${parts.length} FAILED`, JSON.stringify(last.data).slice(0, 200));
+      return last;
+    }
+    if (i < parts.length - 1) await sleep(700); // keep the parts in order
+  }
+  return last;
+}
+
 const addTags = (contactId, tags) =>
   ghl(`/contacts/${contactId}/tags`, 'POST', { tags }, '2021-07-28');
 
@@ -1013,7 +1051,7 @@ app.post('/ghl-webhook', async (req, res) => {
       reply = await handleGenerationFailure(contactId, name, channel, failReason);
     }
 
-    const sent = await sendReply(contactId, reply, channel); // reply on the same channel it arrived on
+    const sent = await sendReplyChunked(contactId, reply, channel); // reply on the same channel it arrived on
     console.log(`[msg] ${contactId} (${channel}) <= ${thread.pendingCount} msg(s)${thread.afterTemplate ? ' after-template' : ''} history:${thread.history.length} "${String(text).replace(/\s+/g, ' ').slice(0, 40)}" => sent:${sent.ok}${failReason ? ' DEGRADED' : ''} "${reply.slice(0, 60)}"`);
     return res.status(200).json({ reply, contactId, channel, degraded: !!failReason || undefined });
   } catch (e) {

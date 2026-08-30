@@ -98,7 +98,7 @@ check('no EUR\\/m2 quoting', /Never quote a EUR\/m2 figure/.test(index));
 check('examples.md flags the nearby units as not-to-copy', /NEVER offers these/.test(examples));
 
 // Length rule relaxed for multi-question messages.
-check('long structured answers allowed when asked a lot', /LENGTH EXCEPTION/.test(index));
+check('every question gets answered, with no length cap', /THERE IS NO LENGTH LIMIT ON A REAL ANSWER/.test(index));
 
 // --- 5. Language: always mirror the client, never the example ---------------
 check('language rule is stated first and hard', /LANGUAGE — THE FIRST THING YOU DECIDE/.test(index));
