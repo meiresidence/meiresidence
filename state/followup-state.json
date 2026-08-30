@@ -1,4 +1,10 @@
 {
+  "6NQncSBfAbCSvionk5i7": {},
+  "ESGI1DBHLvsrKJhnH660": {},
+  "n5g3dinyZpBnzl20KhrO": {},
+  "aiIA922zO8pOpHtvCWIQ": {},
+  "U8zP6NNBfCVVvK6LBWe3": {},
+  "JWRQmApMUdivZzpA6MSC": {},
   "m4HUoSRsCcUcUDRcPi78": {},
   "jyKuWcbkTwLqrXzOtVPh": {},
   "Hp5IXBTaYVN8KVCNezxk": {},
@@ -52,8 +58,8 @@
   },
   "e7rXZboVB3ubSEflRBqH": {},
   "Zy9dn8PdqTRkfu5IHsqF": {},
-  "YqVMXmLS2Rciy1Wtqde4": {},
   "g3KyLADB0tcT8BLHmSka": {},
+  "YqVMXmLS2Rciy1Wtqde4": {},
   "7TwxHDWrQhAtzdMsOgjl": {
     "sentiment": "neutral",
     "language": "sq"
@@ -77,13 +83,6 @@
   "HJo6b32JF7NG0pWlAxK1": {
     "sentiment": "neutral",
     "language": "sq"
-  },
-  "JWRQmApMUdivZzpA6MSC": {
-    "sentiment": "neutral",
-    "language": "sq",
-    "queuedStage": 0,
-    "queuedAt": 1788009578166,
-    "name": "Gjin Marku"
   },
   "ZkrmCdf70bb3EEtdjGMr": {
     "sentiment": "neutral",
@@ -186,10 +185,5 @@
   "yxJqyIme1dq6t24p1Xuw": {},
   "CPgPbxWgKrrVs7CbRZPn": {},
   "6ccsGkZuipo5pGUUXlyn": {},
-  "OqjRnfVXD4CrpbYwvnSU": {},
-  "Q2OOHQBPqCHFeH8nvFpi": {},
-  "YfsWoX9ouxtwqb3Ky5ZA": {},
-  "xPiUnPPXDiuJleJKJ89v": {},
-  "RUuwe0g5p7aM7klUus0Q": {},
-  "wVlPHuU6RXvIF5MpkIAE": {}
+  "OqjRnfVXD4CrpbYwvnSU": {}
 }
