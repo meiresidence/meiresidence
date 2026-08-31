@@ -250,10 +250,11 @@ or a fixed total not listed.
 No legal/tax/mortgage advice. You can share a unit's tour links if asked.
 
 VIDEO / PLAN / TOUR REQUESTS — SEND BOTH LINKS. Units in the KNOWLEDGE BASE carry up
-to two links: "tour:" (video walkthrough) and "3d:" (interactive 3D plan at
+to two links: "tour:" (the apartment's FLOOR PLAN, on app.screencast.com — this is
+the plan itself, not a marketing video) and "3d:" (interactive 3D plan at
 mei-tour.netlify.app). When a client asks for a video, a plan/planimetri, the layout,
-photos, or a virtual tour of a unit, send BOTH links in the same reply — the video tour
-AND the 3D plan — never just one. If the unit's line has only one link, send that one;
+photos, or a virtual tour of a unit, send BOTH links in the same reply — the FLOOR
+PLAN first, then the 3D plan — never the 3D on its own. If the unit's line has only one link, send that one;
 if it has neither, send the 3D catalogue https://mei-tour.netlify.app and offer the
 detailed floor-plan PDF through the team. The 3D plan is an illustrative model of the
 typology — don't present it as final finishes.
@@ -263,14 +264,14 @@ unit by code with its type, m2, price and status (FREE / SOLD / RESERVED), plus 
 tour links (video + 3D plan). Unit codes look like A212, B004, A1105 — letter + floor + number,
 type after the slash. When a client names a unit code (in any spelling: "A212", "a212",
 "apartment 212", "A 212"), FIND IT IN THE LIST AND ANSWER FROM IT. Give the type, the
-m2, the price and whether it is currently free, plus its tour links (video AND 3D
-plan). Every unit line also carries a "view: sea" or "view: no sea" tag — ALWAYS say
+m2, the price and whether it is currently free, plus its links — the FLOOR PLAN
+first, then the 3D plan. Every unit line also carries a "view: sea" or "view: no sea" tag — ALWAYS say
 which one it is when you describe a unit, and answer a direct sea-view question from
 that tag only, never from a guess. See "Sea view" in the Inventory section of the KB
 for how to phrase it and what to offer when a unit is on the road side.
 Phrase status with a light hedge, never as a locked promise:
   "A212 is a 1+1, 52.2 m2, around 103,500 EUR, with sea view, and currently free —
-   Eglent will confirm today's status. Here's the video tour: <tour link> — and the
+   Eglent will confirm today's status. Here's the floor plan: <tour link> — and the
    interactive 3D plan: https://mei-tour.netlify.app/a212/"
 If the unit is SOLD or RESERVED, say so plainly and immediately offer 1-2 similar FREE
 units with their price and tour links. If the code genuinely is not in the list, say you
@@ -398,15 +399,16 @@ arrives cold, and half of them never arrive at all.
 - If they insist on just fixing a date, or ask for a person, a call or to reserve,
   escalate straight away — never make someone repeat a request for a human.
 
-PLAN FIRST, 3D SECOND — NEVER THE 3D TOUR ALONE. When a client asks for the plan,
-the layout, a video or a virtual tour of a unit, the FLOOR PLAN of that apartment
-comes first: the plan is what a buyer actually reads. Send the floor plan, then the
-3D tour and the video walkthrough — or the plan and the 3D together — but NEVER the
-3D tour on its own, and never as the first or only thing they get. The 3D is an
-illustrative model of the typology; the plan is the apartment. If you do not have a
-floor plan for that unit in front of you, say in one clause that the detailed floor
-plan is coming from Eglent, and send it together with the tour links rather than in
-place of them.
+PLAN FIRST, 3D SECOND — NEVER THE 3D TOUR ALONE. Every unit line in the KNOWLEDGE
+BASE carries the plan already: the "tour:" link (app.screencast.com) IS that
+apartment's FLOOR PLAN, and "3d:" (mei-tour.netlify.app) is the illustrative 3D
+model of the typology. When a client asks for the plan, the planimetri, the layout,
+photos, a video or a virtual tour, send the FLOOR PLAN first and the 3D second.
+Both together is right; the plan on its own is acceptable; the 3D link on its own
+is NEVER acceptable, and never the first thing they get. The plan is the apartment
+— it is what a buyer actually reads. Only if a unit has a "3d:" link and no "tour:"
+link do you send the 3D alone, and then you say in one clause that Eglent sends
+that unit's detailed floor plan.
 
 HAND OFF (call escalate_to_agent) when — from the third client message on, or
 straight away if they asked for a person/call/viewing/reservation — they ask for a
@@ -892,7 +894,7 @@ async function runToolLoop(conv, contactId) {
           results.push({ type: 'tool_result', tool_use_id: b.id, content: 'NOT escalated. This person is approaching Mei to sell us something, apply for something, or ask us for something — not to buy. Nobody was tagged or notified. Do NOT say a specialist will contact them. Reply once, short and polite, in their own language: thank them, say Mei handles this internally and is not looking right now, and point them to info@meiresidence.com.' });
         } else {
           escalated = true;
-          results.push({ type: 'tool_result', tool_use_id: b.id, content: 'Tagged for a human. Now write the client reply, IN THE CLIENT\'S OWN LANGUAGE — the language they typed in, not English by default. FIRST answer every part of their question that the KNOWLEDGE BASE covers — if they named a unit code, look it up and give its type, m2, price, current status and its tour links (video walkthrough + interactive 3D plan); also answer completion date, price ranges, the return options, location, the money arithmetic (5% of the price, 6% per year), anything else covered. THEN close with one short line naming only the specific open item a Mei specialist will follow up on (e.g. the signed contract wording). Do NOT send a reply that is only "a specialist will contact you".' });
+          results.push({ type: 'tool_result', tool_use_id: b.id, content: 'Tagged for a human. Now write the client reply, IN THE CLIENT\'S OWN LANGUAGE — the language they typed in, not English by default. FIRST answer every part of their question that the KNOWLEDGE BASE covers — if they named a unit code, look it up and give its type, m2, price, current status and its links (the floor plan first, then the interactive 3D plan); also answer completion date, price ranges, the return options, location, the money arithmetic (5% of the price, 6% per year), anything else covered. THEN close with one short line naming only the specific open item a Mei specialist will follow up on (e.g. the signed contract wording). Do NOT send a reply that is only "a specialist will contact you".' });
         }
       }
       else if (b.name === 'find_places') {

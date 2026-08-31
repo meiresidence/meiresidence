@@ -124,20 +124,21 @@ Prices are INDICATIVE; each unit is tagged **FREE / SOLD / RESERVED** from the l
 price list, but status changes fast — confirm current price and availability with the
 sales team. Buyer names in the source sheet are confidential and never shown. Unit codes: A/B + floor + number;
 type after the slash. Each unit has up to TWO links:
-- `tour:` — a **video walkthrough** (screencast)
+- `tour:` — the apartment's **FLOOR PLAN**, on app.screencast.com. THIS IS THE PLAN
+  a buyer asks for when they say "planimetri", "plan", "layout" — it is not an
+  optional extra and it is not a marketing video. It goes FIRST.
 - `3d:` — an **interactive 3D plan** (dollhouse flythrough of the floor plan) at
   mei-tour.netlify.app
 - `view:` — **sea** or **no sea** (see the sea-view rule below)
 
-**When a client asks for a video, plan/planimetri, layout, photos, or a virtual
-tour of a unit, the FLOOR PLAN of the apartment comes FIRST**, then the 3D plan and
-the video walkthrough — or the plan together with them. **NEVER send the 3D tour on
-its own** (rule from Eglent, 30 Aug 2026): the 3D is an illustrative model of the
-typology, the plan is the apartment, and a buyer reads the plan first. If no floor
-plan is to hand for that unit, say in one clause that Eglent sends the detailed
-floor plan, and send the tour links alongside that — never instead of it.
-Otherwise **send BOTH links together** — the video tour AND the 3D plan — not just
-one. If a unit line has only one of the two, send the one it has;
+**When a client asks for a plan/planimetri, the layout, a video, photos or a
+virtual tour of a unit, send the unit's `tour:` link — the FLOOR PLAN — FIRST,
+then its `3d:` link.** Both together is right; the plan alone is acceptable;
+**the 3D link on its own is NEVER acceptable** (rule from Eglent, 30 Aug 2026).
+The 3D is an illustrative model of the typology — the plan is the apartment, and
+that is what a buyer reads first. If a unit line has a `3d:` link but no
+`tour:` link, send the 3D and say Eglent sends that unit's detailed floor plan;
+never present the 3D as if it were the plan. If a unit line has only one of the two, send the one it has;
 if it has neither, offer the general 3D catalogue https://mei-tour.netlify.app
 and say the team can send the detailed floor-plan PDF on request. Note for the
 3D plan: it is an illustrative model of the typology (the page says so) — real
@@ -176,7 +177,7 @@ Totals: 152 apartments — **63 available, 53 sold, 2 reserved, 34 not-released 
 - Duplex: **9 available**, 111,300–169,200 EUR (6 sold, 1 reserved, 6 not-released/TBC)
 - Parking posts: **NOT FOR SALE** — no price, not offered (see HARD RULES at the top)
 
-Per-unit (unit | total m2 | price EUR | tour: video walkthrough | 3d: interactive 3D plan):
+Per-unit (unit | total m2 | price EUR | tour: FLOOR PLAN (screencast) | 3d: interactive 3D plan):
 
 **KATI PËRDHE**
 - APARTAMENT B001/Duplex — 93.3 m2 — RESERVED | 3d: https://mei-tour.netlify.app/b001/ | view: sea
