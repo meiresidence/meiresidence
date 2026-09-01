@@ -13,7 +13,7 @@ on:
       script:
         description: 'Patch script under scripts/ to run'
         required: true
-        default: 'apply-handoff-timing-patch.mjs'
+        default: 'apply-location-kb.mjs'
       dry_run:
         description: 'Report only, commit nothing'
         required: false
@@ -41,7 +41,7 @@ jobs:
 
       - name: Run the repo's test scripts
         run: |
-          for f in scripts/test-handoff-timing.mjs scripts/test-not-a-lead.mjs scripts/test-answer-first.mjs; do
+          for f in scripts/test-handoff-timing.mjs scripts/test-not-a-lead.mjs scripts/test-answer-first.mjs scripts/test-location.mjs; do
             echo "== $f"; node "$f" || exit 1
           done
 
