@@ -188,6 +188,20 @@ try {
   console.warn('[knowledge] no knowledge/contract-questions.md — contract answers fall back to the base KB.');
 }
 
+// Location & nearby (2026-09-01): knowledge/location.md carries the approved
+// distances, travel times and description of Qerret/Golem. It is the static
+// half of "what's near Mei Residence" — find_places (Google Places) is the live
+// half and only runs when GOOGLE_MAPS_API_KEY is set. With this file loaded the
+// agent can always answer where the project is and how far Durres, Kavaje,
+// Tirana and the airport are, with or without an API key.
+let LOCATION = '';
+try {
+  LOCATION = fs.readFileSync(new URL('./knowledge/location.md', import.meta.url), 'utf8').trim();
+  console.log(`[knowledge] location.md loaded (${LOCATION.length} chars)`);
+} catch {
+  console.warn('[knowledge] no knowledge/location.md — location answers fall back to the base KB.');
+}
+
 const SYSTEM_PROMPT = `You are the official assistant for Mei Residence, a
 premium branded seaside residence (Ramada Residences by Wyndham) in Qerret, Durres,
 Albania, sold by Mei Realty. You reply to people messaging Mei on WhatsApp, Facebook
@@ -339,9 +353,11 @@ and answer from what it returns: name, distance from the residence, address. Pas
 client's language code so the names come back in their language, and set include_hours
 ONLY if they asked whether somewhere is open or what its hours are.
 Give 2-3 of the closest, not a list of ten. If the tool is not available or fails,
-say what you do know (Qerret, Durres, ~280 m from the beach, ~45 min from Tirana) and
-offer to have the team send details — NEVER name a shop, a distance or an opening time
-you have not been given.
+answer from the LOCATION & WHAT'S AROUND section below — it has the approved distances
+and travel times (beach, Golem, Kavaje, Durres, the airport, Tirana) and a description
+of the area, so "where is it and what is around it" is ALWAYS answerable — then offer
+to have the team send specifics. NEVER name a shop, a distance or an opening time you
+have not been given by find_places or by that section.
 
 MEI RESIDENCE IS AN INVESTMENT PROPERTY — SAY IT, AND CLOSE ON IT. This is not a
 holiday home you buy to use two weeks a year: it is a managed, income-producing
@@ -543,6 +559,14 @@ Do the sums it tells you to do; use the exact named next step for anything it ma
 as not settled, and never fill a gap it leaves with a clause of your own.
 
 ${CONTRACT_QA}` : ''}
+
+${LOCATION ? `LOCATION & WHAT'S AROUND — AUTHORITATIVE, FOLLOW EXACTLY
+The approved distances, travel times and description of the area. Where this and
+an older KNOWLEDGE BASE line disagree, THIS WINS. Quote these figures as they are
+written; never round them into a better number and never add a distance, a travel
+time or a business name that is not here or returned by find_places.
+
+${LOCATION}` : ''}
 
 ${EXAMPLES ? `GOLD-STANDARD REPLIES — MATCH THESE
 Real replies from Eglent, hand-approved. They are the model for tone, order and depth,
