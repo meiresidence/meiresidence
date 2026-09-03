@@ -1,4 +1,14 @@
 {
+  "6Z1FC7QPOxQmeJfHcQac": {},
+  "v7yZf8T4cKOAUl6raRgm": {},
+  "VQpjpMvDxECJTeAQNssT": {},
+  "LBhvw8eIoQnt2K9B8lKS": {},
+  "rIpukBMlMq4gjR16n01D": {},
+  "bDzL58oApwUeiAkJqadC": {},
+  "u5ull0x7nauBzWQrzAII": {},
+  "YGmbAvSDU24QijMnNRmF": {},
+  "UnHvnOPqhSdwC6ByJ9mH": {},
+  "otTDMezVPCW5uO6wX1nV": {},
   "AAo5czWEyUbGoi4lVRkD": {},
   "vNhKFn5lgj42L5WEx8PJ": {},
   "vU6zvOqD1gvMe1lzyggC": {},
@@ -51,21 +61,23 @@
   "ySWIfpdiKskszozrUGtY": {
     "sentiment": "neutral",
     "language": "sq",
-    "stage": "stopped"
+    "queuedStage": 0,
+    "queuedAt": 1788437599403,
+    "name": "Liri Ceno"
   },
   "q3eJazJYZN7lC80ddUiz": {},
   "9eQYdFoHUeDWPVQRWROb": {
     "sentiment": "neutral",
     "language": "en",
     "queuedStage": 0,
-    "queuedAt": 1788351323842,
+    "queuedAt": 1788437599403,
     "name": "Mary"
   },
   "ic6TNxeeP5l5kgSefPc3": {
     "sentiment": "neutral",
     "language": "sq",
     "queuedStage": 0,
-    "queuedAt": 1788351323842,
+    "queuedAt": 1788437599403,
     "name": "Another Day"
   },
   "eNVMJQlnzQWtqDcxy2iA": {},
@@ -82,25 +94,21 @@
     "sentiment": "neutral",
     "language": "sq",
     "queuedStage": 0,
-    "queuedAt": 1788351323842,
+    "queuedAt": 1788437599403,
     "name": "Flori"
   },
   "lhQOl9h2EAiHI9MGHU3f": {},
   "a345aOuEpqALMbyq8lQL": {},
   "FHx0Km4pCzZd0N29eOAV": {
     "sentiment": "neutral",
-    "language": "sq",
-    "stage": "stopped"
+    "language": "en"
   },
   "Wg0q874eL20wg07NErfz": {},
   "9MEW7SFtA3w6MsV5gtmI": {},
   "NKIfvFfuaFT01i5JkqDt": {},
   "st5OloJhTRODv78hpgR1": {
     "sentiment": "neutral",
-    "language": "sq",
-    "queuedStage": 0,
-    "queuedAt": 1788351323842,
-    "name": "Mendur"
+    "language": "sq"
   },
   "6lwLziAOQ51I6yxTYBGr": {},
   "YfsWoX9ouxtwqb3Ky5ZA": {},
@@ -118,21 +126,21 @@
     "sentiment": "neutral",
     "language": "sq",
     "queuedStage": 0,
-    "queuedAt": 1788351323842,
+    "queuedAt": 1788437599403,
     "name": "Ambra 🩷💙"
   },
   "HJo6b32JF7NG0pWlAxK1": {
     "sentiment": "neutral",
     "language": "sq",
     "queuedStage": 0,
-    "queuedAt": 1788351323842,
+    "queuedAt": 1788437599403,
     "name": "Aferdita"
   },
   "8eiXjG4uCOGHVKxnzFas": {
     "sentiment": "neutral",
     "language": "sq",
     "queuedStage": 0,
-    "queuedAt": 1788351323842,
+    "queuedAt": 1788437599403,
     "name": "Ismail"
   },
   "ZQP7NEwTY03ibuDRPX2w": {},
@@ -146,14 +154,14 @@
     "sentiment": "neutral",
     "language": "sq",
     "queuedStage": 0,
-    "queuedAt": 1788351323842,
+    "queuedAt": 1788437599403,
     "name": "Devi"
   },
   "gfoEyWsG1WIHpRt4IQvk": {
     "sentiment": "neutral",
     "language": "sq",
     "queuedStage": 0,
-    "queuedAt": 1788351323842,
+    "queuedAt": 1788437599403,
     "name": "Dhimitraq Robo"
   },
   "JWRQmApMUdivZzpA6MSC": {},
@@ -161,34 +169,8 @@
     "sentiment": "neutral",
     "language": "sq",
     "queuedStage": 0,
-    "queuedAt": 1788351323842,
+    "queuedAt": 1788437599403,
     "name": "😍"
   },
-  "Z6tbMDwMn0cjq0gKRCCS": {},
-  "NxW3CW3AQP9Qyyj0xYKv": {
-    "sentiment": "neutral",
-    "language": "sq",
-    "queuedStage": 0,
-    "queuedAt": 1788351323842,
-    "name": "Zhidrojorgji"
-  },
-  "rpOSMlaN4JoAo3UUaMrM": {
-    "sentiment": "neutral",
-    "language": "sq",
-    "queuedStage": 0,
-    "queuedAt": 1788351323842,
-    "name": "Flamingo Travel&realty"
-  },
-  "TpUqMZs84eSgFmE2onsD": {},
-  "VgGSUWWGmBpVTozOytok": {},
-  "VX8Cew0NEOKKr8c5nV4r": {},
-  "EDbWtIOBNGayTzhAkjVr": {},
-  "SnvVHOj0Ouau2QRwmUJg": {
-    "sentiment": "neutral",
-    "language": "en",
-    "stage": "stopped"
-  },
-  "pez78gLLK1PkIOYUPtD8": {},
-  "soqQqKUh9o9dUUFDYEyK": {},
-  "gMloGozLHko2QBM5HUA6": {}
+  "Z6tbMDwMn0cjq0gKRCCS": {}
 }
