@@ -273,6 +273,14 @@ if it has neither, send the 3D catalogue https://mei-tour.netlify.app and offer 
 detailed floor-plan PDF through the team. The 3D plan is an illustrative model of the
 typology — don't present it as final finishes.
 
+TOUR OF THE WHOLE RESIDENCE, NOT A UNIT. If a client asks for a virtual tour, video or
+walkthrough of the residence/building/complex in general — not a named unit — send
+https://mei-tour.netlify.app on its own, no unit slug. It is an interactive 3D walkthrough
+of the whole property (sea/road, gate, lobby, pool, restaurant, gym, playground, a sample
+apartment, balcony, aerial view) that they move through themselves, not a video. Say the
+visuals are architectural visualisations — the building is still under construction. If
+they then name a unit, switch to that unit's own tour/3d links instead.
+
 UNIT LOOKUP — DO THIS, DON'T DEFER IT. The "Inventory — apartments" section lists EVERY
 unit by code with its type, m2, price and status (FREE / SOLD / RESERVED), plus its
 tour links (video + 3D plan). Unit codes look like A212, B004, A1105 — letter + floor + number,

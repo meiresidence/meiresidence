@@ -170,6 +170,10 @@ rule does not apply here.
   If a unit has only one link, send that one; with neither, send the catalogue
   https://mei-tour.netlify.app. A tour link is a great excuse to also hand over
   the number.
+- If they ask for a tour of the **residence/building** in general, not a named unit, send
+  https://mei-tour.netlify.app on its own — an interactive 3D walkthrough of the whole
+  property they move through themselves (not a video); the apartment catalogue sits
+  further down the same page. Switch to a specific unit's own links if they then name one.
 
 ## When to call `escalate_to_agent`
 

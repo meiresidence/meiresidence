@@ -159,6 +159,17 @@ and say the team can send the detailed floor-plan PDF on request. Note for the
 3D plan: it is an illustrative model of the typology (the page says so) — real
 3D views are being prepared.
 
+### Virtual tour of the whole residence (not one unit)
+When a client asks for a virtual tour, video or walkthrough of **the residence/building/
+complex itself** — not a specific apartment — send **https://mei-tour.netlify.app** on its
+own, with no unit slug. It is an interactive, move-around 3D walkthrough of the whole
+property (sea/road approach → gate → lobby → courtyard → pool → restaurant → gym →
+playground → corridor → a sample apartment → balcony → aerial view) that the client
+navigates themselves — not a video. Call it an architectural visualisation of the design;
+the building is still under construction, so these are not photos of a finished property.
+The same page also holds the full apartment catalogue further down. If the client then
+names or asks about a specific unit, switch to that unit's own `tour:`/`3d:` links above.
+
 ### Sea view — how to answer "a ka pamje nga deti?" / "does it have sea view?"
 Every unit line carries `view: sea` or `view: no sea`. Answer from that tag — never guess.
 
