@@ -65,6 +65,7 @@ function normalize(rawMessages) {
  *   channel: string,          // WhatsApp | IG | FB | SMS
  *   lastInboundId: string,    // dedupe key: have we already answered this one?
  *   pendingCount: number,
+ *   clientMessageCount: number, // client messages in the whole thread, unmerged
  *   afterTemplate: boolean,   // our last message was an automated follow-up
  *   lastOutboundBody: string,
  * }}
@@ -105,6 +106,11 @@ export function buildThread(rawMessages, { historyTurns = 20 } = {}) {
     channel: CHANNEL_TYPE_MAP[pending[pending.length - 1].messageType] || 'WhatsApp',
     lastInboundId: pending[pending.length - 1].id,
     pendingCount: pending.length,
+    // How many messages the CLIENT has actually sent in this thread, counted one
+    // by one. `history` merges consecutive messages into a single turn because
+    // the Messages API needs alternating roles — so it must never be used to
+    // measure how far into a conversation we are. See the handoff gate.
+    clientMessageCount: priorMsgs.filter((m) => m.direction === 'inbound').length + pending.length,
     afterTemplate: !!lastOutbound && AUTOMATED_SOURCES.has(lastOutbound.source),
     lastOutboundBody: lastOutbound ? lastOutbound.body : '',
   };

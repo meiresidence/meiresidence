@@ -745,6 +745,14 @@ async function sendReplyChunked(contactId, message, channel = 'WhatsApp') {
 const addTags = (contactId, tags) =>
   ghl(`/contacts/${contactId}/tags`, 'POST', { tags }, '2021-07-28');
 
+const removeTags = (contactId, tags) =>
+  ghl(`/contacts/${contactId}/tags`, 'DELETE', { tags }, '2021-07-28');
+
+// Set on a contact whose handoff the timing gate refused. It is the memory the
+// model does not have: it asks for a specialist once, is told "too early", and
+// never asks again — so we fire that handoff ourselves once the wait is over.
+const HANDOFF_DEFERRED_TAG = 'handoff-deferred';
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const HISTORY_MESSAGE_LIMIT = parseInt(process.env.CRM_HISTORY_LIMIT || '30', 10);
@@ -794,10 +802,13 @@ async function fetchThread(contactId, retries = 2, delayMs = 1500) {
 // What the model is told about THIS contact, on top of the static system prompt.
 // It is the difference between "a stranger said 'Kjo'" and "the person we sent a
 // follow-up to three minutes ago said 'Kjo'".
-function buildContextNote({ name, tags, thread }) {
+function buildContextNote({ name, tags, thread, handoffJustFired = false }) {
   const lines = ['CONVERSATION CONTEXT — THIS CONTACT. Internal: never quote or mention it to the client.'];
   if (name) lines.push(`- Client name: ${name}`);
   if (tags?.length) lines.push(`- CRM tags (internal only): ${tags.join(', ')}`);
+  if (handoffJustFired) {
+    lines.push('- A Mei specialist has just been notified about this client: the handoff you asked for earlier in this conversation was held back at the time and has now gone through. Answer their message in full from the KNOWLEDGE BASE, and you may close by naming the one open item the specialist will follow up on.');
+  }
   if (thread.pendingCount > 1) {
     lines.push(`- They sent ${thread.pendingCount} messages in a row and none has been answered yet. Answer ALL of them in one reply.`);
   }
@@ -897,10 +908,44 @@ async function writeRecentMessages(contactId, n = 3) {
 // How many separate messages this client has sent in the thread we hold
 // (the CRM history is rebuilt on every message by src/thread.js, so this is
 // the real conversation length, not just this process's memory).
+//
+// COUNT MESSAGES, NOT TURNS (2026-09-08). buildThread merges consecutive client
+// messages into ONE turn, because the Messages API needs alternating roles — and
+// people type on WhatsApp in bursts. Counting turns under-counted every real
+// conversation, so the gate below refused handoffs that were not early at all:
+// Brahim Selmani, 8 Sep, three messages in and asking for prices, counted as 2
+// -> refused, nothing tagged, nobody alerted, and the model promised him a
+// specialist anyway. thread.clientMessageCount counts them one by one; the
+// merged-turn count stays as the fallback for a conv built without a thread.
 function countClientMessages(contactId) {
   const conv = store.get(contactId);
   if (!conv) return 0;
+  if (Number.isFinite(conv.clientMessageCount) && conv.clientMessageCount > 0) return conv.clientMessageCount;
   return conv.history.filter((m) => m.role === 'user' && typeof m.content === 'string' && m.content.trim()).length;
+}
+
+// The gate refused a handoff as too early: remember it on the contact, and fire
+// it the moment the wait is over. Without this the lead is simply lost — the
+// model asked once, was refused, and moves on.
+async function retryDeferredHandoff(contactId, name, thread) {
+  const tags = Array.isArray(thread?.tags) ? thread.tags : [];
+  if (!tags.includes(HANDOFF_DEFERRED_TAG)) return false;
+
+  const clientTurns = countClientMessages(contactId);
+  const clientWords = lastClientMessages(contactId, 6).join('\n');
+  if (handoffTooEarly({ clientTurns, clientWords })) return false; // still early — keep waiting
+
+  const r = await escalate(contactId, name, {
+    reason: 'Deferred handoff — the agent asked for a specialist earlier in this conversation, when the timing gate still held it back.',
+    lead_summary: lastClientText(contactId).slice(0, 300),
+  });
+  await removeTags(contactId, [HANDOFF_DEFERRED_TAG]).catch(() => {});
+  if (r?.blocked) {
+    console.log(`[handoff] deferred retry for ${contactId} refused (${r.blocked}) — tag cleared`);
+    return false;
+  }
+  console.log(`[handoff] deferred retry fired for ${contactId} (client message ${clientTurns})`);
+  return true;
 }
 
 function lastClientText(contactId) {
@@ -930,7 +975,11 @@ async function escalate(contactId, name, args) {
   // a reservation. See src/handoff-timing.js.
   const clientTurns = countClientMessages(contactId);
   if (handoffTooEarly({ clientTurns, clientWords })) {
-    console.log(`[handoff] TOO EARLY for ${contactId} — client turn ${clientTurns}/${MIN_CLIENT_TURNS_BEFORE_HANDOFF}, no tags, no alert`);
+    // Still no needs-human, no hot-lead and no alert — the gate holds. What is
+    // new is that the refusal is remembered, so the handoff can fire by itself
+    // on a later message instead of being dropped for good.
+    console.log(`[handoff] TOO EARLY for ${contactId} — client message ${clientTurns}/${MIN_CLIENT_TURNS_BEFORE_HANDOFF}, no tags, no alert (deferred)`);
+    await addTags(contactId, [HANDOFF_DEFERRED_TAG]).catch(() => {});
     return { ok: true, alerted: false, blocked: 'too-early' };
   }
 
@@ -1233,7 +1282,16 @@ app.post('/ghl-webhook', async (req, res) => {
     const conv = getConv(contactId, name);
     conv.name = name || conv.name;
     conv.history = [...thread.history, { role: 'user', content: String(text) }];
-    conv.contextNote = buildContextNote({ name, tags: thread.tags, thread });
+    // The client's real message count, for the handoff gate (countClientMessages).
+    conv.clientMessageCount = thread.clientMessageCount || 0;
+
+    // A handoff the gate refused earlier fires here, as soon as the wait is over.
+    const handoffJustFired = await retryDeferredHandoff(contactId, name, thread).catch((e) => {
+      console.error('[handoff] deferred retry failed', e?.message || e);
+      return false;
+    });
+
+    conv.contextNote = buildContextNote({ name, tags: thread.tags, thread, handoffJustFired });
     trim(conv);
 
     // Generation is guarded separately from the rest of the handler: a Claude
