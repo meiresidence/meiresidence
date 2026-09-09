@@ -146,7 +146,7 @@ console.log('\n4. The prompt — new rules present, hard rules intact');
 const idx = fs.readFileSync(new URL('../index.js', import.meta.url), 'utf8');
 const has = (needle, why) => check(why, () => assert.ok(idx.includes(needle), `missing: ${needle}`));
 
-has('HOW YOU WRITE — LIKE A PERSON TYPING ON A PHONE', 'the human-voice section is in the prompt');
+has("HOW YOU WRITE — YOU WRITE IN EGLENT'S VOICE", 'the human-voice section is in the prompt (renamed 2026-09-09)');
 has("BANNED IN EVERY LANGUAGE", 'the banned-phrase list is in the prompt');
 has("WHEN THE MESSAGE ISN'T A NORMAL QUESTION", 'voice notes, photos, jokes and "are you a bot" are covered');
 has('USE WHAT THEY HAVE ALREADY TOLD YOU', 'the do-not-re-ask rule is in the prompt');
