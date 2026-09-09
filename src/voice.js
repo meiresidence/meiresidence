@@ -54,6 +54,41 @@ export const IDENTITY_CLAIMS = [
   /^\s*[-–—]?\s*eglent(?: bici)?\s*$/im,
 ];
 
+// Condescension (2026-09-09). The reply that started this: a client asked
+// "Vendodhja" and got back "shumë e ngatërrojnë Qerretin me diku tjetër" followed
+// by "zona nuk të bind, apo thjesht s'e kishe të qartë ku ndodhet saktësisht?" —
+// two sentences that between them told a buyer she was confused and then guessed
+// at her motive. Nothing may imply the client is uninformed or mistaken. Detection
+// only; logged at error level so it shows up in the Render logs the same day.
+export const CONDESCENDING_PHRASES = [
+  // "many/most people confuse it / don't know"
+  /shum[eë] (?:e )?ngat[eë]rroj/i,
+  /e ngat[eë]rroj[nm][eë][^.!?]{0,40}me diku tjet[eë]r/i,
+  /shum[eë] (?:njer[eë]z )?nuk e din[eë]/i,
+  /(?:many|most) people (?:confuse|mix up|(?:do ?n[o']t|don't) know)/i,
+  /(?:it(?:'s| is)|is) (?:a )?common (?:mistake|misconception|confusion)/i,
+  // "you didn't know / weren't clear"
+  /s[’'`]?e kishe t[eë] qart[eë]/i,
+  /nuk e kishe t[eë] qart[eë]/i,
+  /nuk e ke t[eë] qart[eë]/i,
+  /ndoshta nuk e di/i,
+  /kuptohet q[eë] (?:s[’'`]?e|nuk e) (?:di|ke)/i,
+  /(?:in case )?you (?:may not|might not|probably do ?n[o']t|didn[’'`]t) (?:know|realise|realize)/i,
+  /(?:in case )?you (?:weren[’'`]t|are ?n[o']t) aware/i,
+  // unrequested explanation of something they already used correctly
+  /po ta shpjegoj [cç]far[eë] [eë]sht[eë]/i,
+  /let me explain what .{0,30} (?:is|means)/i,
+  // telling the client what they think or feel
+  /(?:zona|[cç]mimi|projekti) nuk t[eë] bind/i,
+  /you(?:'re| are) probably (?:worried|concerned|thinking)/i,
+];
+
+/** Phrasing that talks down to the client. Diagnostics only. */
+export function findCondescension(text) {
+  const body = String(text || '');
+  return CONDESCENDING_PHRASES.filter((re) => re.test(body)).map((re) => re.source);
+}
+
 /** First-person claims to be Eglent. Diagnostics only. */
 export function findIdentityClaims(text) {
   const body = String(text || '');
@@ -100,5 +135,7 @@ export function tidyForHuman(text, { contactId = '', degraded = false } = {}) {
   if (hits.length) console.warn(`[voice] ${contactId}: stock phrasing in reply -> ${hits.join(' | ')}`);
   const claims = findIdentityClaims(cleaned);
   if (claims.length) console.error(`[voice] ${contactId}: reply claims to BE Eglent -> ${claims.join(' | ')}`);
+  const talkdown = findCondescension(cleaned);
+  if (talkdown.length) console.error(`[voice] ${contactId}: reply talks down to the client -> ${talkdown.join(' | ')}`);
   return cleaned;
 }
