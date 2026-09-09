@@ -25,6 +25,42 @@ You deploy this **once**. After that it runs 24/7 on its own.
 
 ---
 
+## Teaching the agent from WhatsApp (the owner channel)
+
+Eglent (**+355 67 204 9400**) and Mea (**+355 68 517 1265**) are not treated as
+leads. When either of them messages the agent, what they say becomes a **standing
+instruction that every future client conversation follows** — no deploy, no code,
+no dashboard.
+
+```
+Eglent: Gjithmonë pyet për buxhetin para se të dërgosh njësi.
+Agent:  U ruajt (#12). Aktive që tani.
+        └─ saved as a note in the CRM, read by the very next client reply
+```
+
+- **It tells a rule from a question.** "Sa kushton A212?" is answered and stored
+  nowhere — you can test the agent from your own number as a buyer would. Only an
+  instruction is saved, and when it genuinely cannot tell, it asks once:
+  *"Ta ruaj si rregull?"*
+- **It asks before changing a hard rule.** Return figures, prices, the payment
+  shape, parking, who gets a handoff — you can change any of them, but a rule that
+  reaches clients within the minute never gets saved on a single message. It says
+  what the rule is today and waits for a *po*.
+- **Two things it will not do, whatever you send:** claim to BE a named person,
+  or reveal another client's name, number or internal note.
+- **Managing them:** *"Çfarë rregullash ke?"* lists them with numbers.
+  *"Hiq rregullin 7"* revokes one — the note stays in the CRM as history, so an
+  old behaviour is still explainable months later.
+- **Where they live:** notes on one CRM contact (the live copy, read on every
+  client message) mirrored nightly into `knowledge/owner-instructions.md` (the
+  versioned copy, and what the agent boots from if the CRM is unreachable).
+
+Env: `OWNER_NUMBERS` / `OWNER_CONTACT_IDS` change who counts as an owner without a
+deploy, `INSTRUCTIONS_CONTACT_ID` moves the store, `OWNER_MODE=off` turns the whole
+channel off and makes both numbers ordinary contacts again.
+
+---
+
 ## What you need (2 accounts)
 1. **Anthropic API key** — powers Claude (the brain).
 2. **Meta WhatsApp Business (Cloud API)** — a phone number + access token.

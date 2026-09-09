@@ -1,0 +1,56 @@
+name: Sync owner instructions
+
+# Mirrors the owner's standing instructions from the CRM into
+# knowledge/owner-instructions.md once a night, so every rule Eglent or Mea has
+# taught the agent is also versioned and reviewable in a diff.
+#
+# This is the SLOW half of the system and nothing depends on it being fast: the
+# rules are already live the moment they are saved, because the agent reads the
+# CRM notes on every client message. This job only makes them permanent and
+# gives the agent something to boot from when the CRM is unreachable.
+#
+# It never writes to the CRM.
+
+on:
+  schedule:
+    - cron: '30 2 * * *' # 04:30 / 03:30 Europe/Tirane — well away from the learning job
+  workflow_dispatch:
+
+concurrency:
+  group: sync-owner-instructions
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Mirror the CRM notes into the repo
+        env:
+          GHL_API_KEY: ${{ secrets.GHL_API_KEY }}
+          GHL_LOCATION_ID: ${{ secrets.GHL_LOCATION_ID }}
+          INSTRUCTIONS_CONTACT_ID: ${{ vars.INSTRUCTIONS_CONTACT_ID }}
+        run: node scripts/sync-owner-instructions.mjs
+
+      - name: Commit if anything changed
+        run: |
+          git config user.name  "mei-agent-bot"
+          git config user.email "bot@meiresidence.com"
+          git add knowledge/owner-instructions.md
+          if git diff --staged --quiet; then
+            echo "No new or changed rules."
+            exit 0
+          fi
+          COUNT=$(grep -c '^\[MEI-AGENT-RULE\]' knowledge/owner-instructions.md || echo 0)
+          git commit -m "chore(agent): sync owner instructions (${COUNT} rule notes)" \
+                     -m "Mirrored from the CRM by .github/workflows/sync-owner-instructions.yml. The live copy is the notes; this file is the reviewable, bootable fallback."
+          git push
