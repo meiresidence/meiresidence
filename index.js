@@ -123,6 +123,13 @@ import { extractKnownFacts, recallNote } from './src/recall.js';
 import { tidyForHuman } from './src/voice.js';
 import { specialistContactId, deliverAlert } from './src/specialist.js';
 import { promisesHandoff, reconcileEnabled } from './src/promised-handoff.js';
+// The owner channel (2026-09-09): a message from Eglent or Mea is an instruction
+// for every FUTURE client conversation, not a lead. See src/owner.js,
+// src/instructions.js, src/owner-mode.js and claude/agent-owner-channel.md.
+import { identifyOwner } from './src/owner.js';
+import { createInstructionStore } from './src/instructions.js';
+import { OWNER_TOOLS, ownerSystemPrompt } from './src/owner-mode.js';
+import { absoluteBreaches, conflictingRules } from './src/hard-rules.js';
 import { saysAlreadyBought, BOUGHT_TAG } from './src/already-bought.js';
 
 const MAX_OUTPUT_TOKENS = 8192;
@@ -228,6 +235,19 @@ try {
   console.log(`[knowledge] eglent-voice.md loaded (${EGLENT_VOICE.length} chars)`);
 } catch {
   console.warn('[knowledge] no knowledge/eglent-voice.md — falling back to the generic human-voice rules.');
+}
+
+// Owner instructions (2026-09-09): the live copy lives in the CRM as notes, so a
+// rule Eglent sends on WhatsApp is in front of the next client within a minute
+// without a deploy. This file is the nightly-committed mirror of the same rules
+// and the fallback the agent runs on when the CRM read fails — so a GHL outage
+// costs at most a day of rules, never all of them.
+let OWNER_INSTRUCTIONS_FILE = '';
+try {
+  OWNER_INSTRUCTIONS_FILE = fs.readFileSync(new URL('./knowledge/owner-instructions.md', import.meta.url), 'utf8');
+  console.log(`[knowledge] owner-instructions.md loaded (${OWNER_INSTRUCTIONS_FILE.length} chars, fallback only)`);
+} catch {
+  console.log('[knowledge] no knowledge/owner-instructions.md yet — the CRM notes are the only copy.');
 }
 
 const SYSTEM_PROMPT = `You are the official assistant for Mei Residence, a
@@ -902,6 +922,9 @@ const addTags = (contactId, tags) =>
 const removeTags = (contactId, tags) =>
   ghl(`/contacts/${contactId}/tags`, 'DELETE', { tags }, '2021-07-28');
 
+// Standing instructions from Eglent and Mea, stored as notes on one CRM contact.
+const instructions = createInstructionStore({ ghl, fallbackText: OWNER_INSTRUCTIONS_FILE });
+
 // Set on a contact whose handoff the timing gate refused. It is the memory the
 // model does not have: it asks for a specialist once, is told "too early", and
 // never asks again — so we fire that handoff ourselves once the wait is over.
@@ -929,6 +952,8 @@ async function fetchThreadOnce(contactId) {
     ...thread,
     name: conversation.fullName || conversation.contactName || '',
     tags: Array.isArray(conversation.tags) ? conversation.tags : [],
+    // Needed to recognise an owner: a number is stable, a contact record is not.
+    phone: conversation.phone || '',
   };
 }
 
@@ -1402,6 +1427,108 @@ async function handleGenerationFailure(contactId, name, channel, errMsg) {
   return 'Faleminderit per mesazhin tuaj! Nje koleg nga Mei Residence do t’ju pergjigjet personalisht shume shpejt. / Thank you for your message — a Mei Residence colleague will reply to you personally very soon.';
 }
 
+// ---- the owner channel: Eglent and Mea teach the agent ----------------------
+//
+// A message from one of their numbers is never a lead. It is not escalated, not
+// tagged, not followed up, and it gets no investment closing line. It is read as
+// an instruction for every FUTURE client conversation and stored as a standing
+// rule in the CRM, live from the next client message on. See src/owner-mode.js.
+
+/** Run one owner tool call. Returns the tool_result string the model reads back. */
+async function runOwnerTool(call, owner) {
+  const args = call.input || {};
+  try {
+    if (call.name === 'list_instructions') {
+      const rules = (await instructions.load({ force: true })).filter((r) => r.status === 'active');
+      if (!rules.length) return 'No standing instructions yet.';
+      return rules.sort((a, b) => a.n - b.n)
+        .map((r) => `#${r.n} [${r.by}] ${r.text.replace(/\s+/g, ' ')}`)
+        .join('\n');
+    }
+
+    if (call.name === 'revoke_instruction') {
+      const gone = await instructions.revoke(args.number, owner.name);
+      return gone
+        ? `Revoked #${gone.n}. It no longer reaches any client. Tell the owner which rule it was: "${gone.text.replace(/\s+/g, ' ').slice(0, 120)}"`
+        : `No active rule numbered ${args.number}. Call list_instructions and tell the owner what is actually there.`;
+    }
+
+    if (call.name === 'save_instruction') {
+      const text = String(args.instruction || '').trim();
+      if (!text) return 'NOT SAVED — the instruction was empty. Ask the owner what the rule should be.';
+
+      // The two that are never overridable. Refused with a reason, not silently.
+      const breaches = absoluteBreaches(text);
+      if (breaches.length) {
+        const b = breaches[0];
+        console.warn(`[owner] ${owner.name} asked for something that is never allowed (${b.key}): ${text.replace(/\s+/g, ' ').slice(0, 140)}`);
+        return `NOT SAVED and it will not be saved. This asks for something the agent can never do: ${b.what}. `
+          + `Why: ${b.why}. Tell the owner that in ONE short line in their language, offer what it does instead `
+          + `(${b.instead}), and do not save a softer version of the same thing.`;
+      }
+
+      // Everything else the owner may change — but never without them seeing it.
+      const touched = [...new Set([...(Array.isArray(args.overrides) ? args.overrides : []), ...conflictingRules(text)])];
+      if (touched.length && args.confirmed !== true) {
+        console.log(`[owner] ${owner.name}: rule touches ${touched.join(', ')} — asking for confirmation before saving.`);
+        return `NOT SAVED YET. This instruction changes a hard rule (${touched.join(', ')}), and a changed hard rule `
+          + `reaches clients within a minute. Reply to the owner in one or two short lines: what rule it changes, what `
+          + `the agent does today, and ask them to confirm. If they confirm, call save_instruction again with `
+          + `confirmed: true and overrides: ${JSON.stringify(touched)}. If they do not, it stays unsaved.`;
+      }
+
+      const saved = await instructions.save({ text, by: owner.name, overrides: touched });
+      return `Saved as #${saved.n}. It applies to every client conversation from the next message on. `
+        + `Confirm to the owner in one short line with the number${touched.length ? `, and say which rule it now overrides (${touched.join(', ')})` : ''}.`;
+    }
+
+    return `Unknown tool ${call.name}.`;
+  } catch (e) {
+    console.error(`[owner] tool ${call.name} failed:`, e?.message || e);
+    return `The store failed: ${String(e?.message || e).slice(0, 200)}. Tell the owner plainly that it was NOT saved `
+      + `and they should send it again in a minute. Never claim it was saved.`;
+  }
+}
+
+/** The whole owner turn: read what they said, act on it, answer in one or two lines. */
+async function handleOwnerTurn({ contactId, owner, thread }) {
+  const messages = sanitizeHistory([...thread.history, { role: 'user', content: String(thread.text) }]);
+  const system = ownerSystemPrompt({ ownerName: owner.name });
+  let finalText = '';
+  for (let hop = 0; hop < 4; hop++) {
+    const resp = await anthropic.messages.create({
+      model: cfg.anthropic.model,
+      max_tokens: MAX_OUTPUT_TOKENS,
+      system,
+      messages,
+      tools: OWNER_TOOLS,
+    });
+    const text = usableText(resp.content);
+    if (text) finalText = text;
+    const calls = resp.content.filter((b) => b.type === 'tool_use');
+    if (!calls.length) break;
+    messages.push({ role: 'assistant', content: resp.content });
+    const results = [];
+    for (const call of calls) {
+      console.log(`[owner] ${owner.name} -> ${call.name} ${JSON.stringify(call.input).slice(0, 200)}`);
+      results.push({ type: 'tool_result', tool_use_id: call.id, content: await runOwnerTool(call, owner) });
+    }
+    messages.push({ role: 'user', content: results });
+  }
+  return finalText;
+}
+
+/** Owner replies are config, not sales: split if long, but never paced. */
+async function sendToOwner(contactId, message, channel) {
+  const parts = splitIntoBubbles(message);
+  let last = { ok: true, data: null };
+  for (const part of parts) {
+    last = await sendReply(contactId, part, channel);
+    if (!last.ok) return last;
+  }
+  return last;
+}
+
 // ---- server ----
 const app = express();
 app.use(express.json());
@@ -1440,6 +1567,28 @@ app.post('/ghl-webhook', async (req, res) => {
     const name = thread.name || b.full_name || b.first_name || b.name || b.contact?.name || '';
     const { text, channel } = thread;
 
+    // THE OWNER CHANNEL (2026-09-09). Eglent and Mea are not leads and must never
+    // be treated as one: no handoff, no tags, no follow-up ladder, no closing
+    // line, no knowledge base. What they send here teaches the agent instead —
+    // it becomes a standing rule that every client conversation reads from the
+    // next message on. Everything below this block is the client path.
+    const owner = identifyOwner({ contactId, phone: thread.phone });
+    if (owner) {
+      console.log(`[owner] ${owner.name} (${contactId}) says: "${String(text).replace(/\s+/g, ' ').slice(0, 120)}"`);
+      let ownerReply = '';
+      try {
+        ownerReply = await handleOwnerTurn({ contactId, owner, thread });
+      } catch (e) {
+        console.error('[owner] turn failed:', e?.message || e);
+      }
+      // An owner must never be left wondering whether a rule landed. If the model
+      // failed, say so plainly rather than going quiet or sounding like success.
+      if (!ownerReply) ownerReply = 'S\'u përpunua dot ky mesazh — asgjë nuk u ruajt. Provoje edhe një herë.';
+      const sentToOwner = await sendToOwner(contactId, ownerReply, channel);
+      console.log(`[owner] ${owner.name} <= "${ownerReply.replace(/\s+/g, ' ').slice(0, 80)}" sent:${sentToOwner.ok}`);
+      return res.status(200).json({ reply: ownerReply, contactId, channel, owner: owner.name });
+    }
+
     // History is REBUILT from the CRM every time rather than appended to a
     // process-local Map: it survives restarts, it includes messages sent from
     // GHL's inbox or by a bulk template, and it can never drift from what the
@@ -1466,6 +1615,14 @@ app.post('/ghl-webhook', async (req, res) => {
     }
 
     conv.contextNote = buildContextNote({ name, tags: thread.tags, thread, handoffJustFired });
+
+    // What Eglent and Mea have taught the agent, appended AFTER the prompt-cache
+    // breakpoint (see callClaude): putting it in SYSTEM_PROMPT would change the
+    // cached prefix every time a rule is added, and re-charge 15k tokens at full
+    // price on every message. Never throws — a rule read must not cost a reply.
+    const standing = await instructions.block();
+    if (standing) conv.contextNote = `${conv.contextNote}\n\n${standing}`;
+
     trim(conv);
 
     // Generation is guarded separately from the rest of the handler: a Claude
