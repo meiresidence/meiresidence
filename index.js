@@ -121,6 +121,8 @@ import { PLACES_TOOL, findPlaces, isConfigured as placesConfigured } from './src
 import { splitIntoBubbles, pacingPlan, typingDelayMs, humanPacingOn } from './src/human-send.js';
 import { extractKnownFacts, recallNote } from './src/recall.js';
 import { tidyForHuman } from './src/voice.js';
+import { specialistContactId, deliverAlert } from './src/specialist.js';
+import { promisesHandoff, reconcileEnabled } from './src/promised-handoff.js';
 
 const MAX_OUTPUT_TOKENS = 8192;
 
@@ -791,6 +793,27 @@ async function sendReplyChunked(contactId, message, channel = 'WhatsApp') {
   return last;
 }
 
+// The specialist alert is sent with the same endpoint as a client reply, but it
+// may need to go out as Email when WhatsApp's 24-hour window has closed — that
+// variant carries a subject and an html body.
+const sendToSpecialist = (contactId, message, channel, extras = {}) =>
+  ghl('/conversations/messages', 'POST', { type: channel, contactId, message, ...extras }, '2021-04-15');
+
+// Tag failures used to be swallowed by `.catch(() => {})`: the contact stayed
+// untagged, the GHL workflow never fired and the log said nothing. Now every
+// failure is loud and the caller learns whether the tag actually landed.
+async function tagContact(contactId, tags, where) {
+  try {
+    const res = await addTags(contactId, tags);
+    if (!res.ok) console.error(`[${where}] TAGGING FAILED for ${contactId} (${tags.join(', ')}):`, JSON.stringify(res.data).slice(0, 300));
+    else console.log(`[${where}] tagged ${contactId}: ${tags.join(', ')}`);
+    return !!res.ok;
+  } catch (e) {
+    console.error(`[${where}] TAGGING THREW for ${contactId} (${tags.join(', ')}):`, e?.message || e);
+    return false;
+  }
+}
+
 const addTags = (contactId, tags) =>
   ghl(`/contacts/${contactId}/tags`, 'POST', { tags }, '2021-07-28');
 
@@ -1007,7 +1030,7 @@ function lastClientText(contactId) {
   return '';
 }
 
-async function escalate(contactId, name, args) {
+async function escalate(contactId, name, args, opts = {}) {
   // Safety net (Aug 2026): only buyers are leads. Anyone selling US something
   // (any trade), applying for a job, asking for sponsorship or pitching a
   // "collab" is not, however polite the message. One such pitch was tagged
@@ -1023,7 +1046,11 @@ async function escalate(contactId, name, args) {
   // message on — unless they explicitly ask for a person, a call, a viewing or
   // a reservation. See src/handoff-timing.js.
   const clientTurns = countClientMessages(contactId);
-  if (handoffTooEarly({ clientTurns, clientWords })) {
+  // opts.force: the reply has already promised this client a human (see
+  // src/promised-handoff.js). Holding the handoff back now would leave the
+  // promise standing with nothing behind it — the exact failure this gate was
+  // never meant to cause. The non-buyer guard below still applies.
+  if (!opts.force && handoffTooEarly({ clientTurns, clientWords })) {
     // Still no needs-human, no hot-lead and no alert — the gate holds. What is
     // new is that the refusal is remembered, so the handoff can fire by itself
     // on a later message instead of being dropped for good.
@@ -1040,18 +1067,16 @@ async function escalate(contactId, name, args) {
 
   // Write the recent messages first - the GHL email fires off the tag below,
   // so the field must already hold the new value when that happens.
-  await writeRecentMessages(contactId, 3).catch(() => {});
-  await addTags(contactId, ['needs-human', 'hot-lead']).catch(() => {});
+  await writeRecentMessages(contactId, 3).catch((e) => console.error('[handoff] last-message field write failed:', e?.message || e));
+  // THE tag. The GHL "Specialist Handoff Alert" workflow triggers off it, so if
+  // this does not land, nothing downstream happens — never swallow the error.
+  const tagged = await tagContact(contactId, ['needs-human', 'hot-lead'], 'handoff');
 
-  const specialist = process.env.SPECIALIST_CONTACT_ID;
-  if (!specialist) {
-    console.warn('[handoff] SPECIALIST_CONTACT_ID not set - no alert sent');
-    console.log(`[handoff] tagged ${contactId}:`, args.lead_summary || '');
-    return { ok: true, alerted: false };
-  }
+  // Never empty any more: falls back to Eglent's own contact (src/specialist.js).
+  const specialist = specialistContactId();
   if (specialist === contactId) {
     console.warn('[handoff] specialist is the lead - skipping alert to avoid self-message');
-    return { ok: true, alerted: false };
+    return { ok: true, tagged, alerted: false };
   }
 
   const last = lastClientText(contactId);
@@ -1074,12 +1099,19 @@ async function escalate(contactId, name, args) {
     `Open: https://app.gohighlevel.com/v2/location/${cfg.ghl.locationId}/conversations/conversations/${contactId}`,
   ].filter(Boolean);
 
-  const channel = process.env.SPECIALIST_CHANNEL || 'WhatsApp';
-  const sent = await sendReply(specialist, lines.join('\n'), channel);
-  if (!sent.ok) console.error('[handoff] ALERT FAILED', JSON.stringify(sent.data).slice(0, 300));
+  const body = lines.join('\n');
+  const sent = await deliverAlert(
+    (channel, extras) => sendToSpecialist(specialist, body, channel, extras),
+    { subject: `HANDOFF - specialist needed: ${name || 'new lead'}`, body },
+  );
+  if (!sent.ok) {
+    console.error('[handoff] ALERT FAILED on every channel', JSON.stringify(sent.attempts).slice(0, 400));
+  } else if (sent.attempts.length > 1) {
+    console.warn(`[handoff] alert delivered on ${sent.channel} after ${sent.attempts.length - 1} failed channel(s)`, JSON.stringify(sent.attempts).slice(0, 300));
+  }
 
-  console.log(`[handoff] tagged ${contactId}, alert sent:${sent.ok}`);
-  return { ok: true, alerted: sent.ok };
+  console.log(`[handoff] ${contactId}: tagged:${tagged} alert:${sent.ok}${sent.channel ? ` via ${sent.channel}` : ''}${opts.force ? ' (forced by a promise in the reply)' : ''}`);
+  return { ok: true, tagged, alerted: sent.ok, channel: sent.channel };
 }
 
 // One Claude call. maxTokens is a parameter so the empty-reply retry below can
@@ -1260,10 +1292,10 @@ async function handleGenerationFailure(contactId, name, channel, errMsg) {
   }
 
   console.error(`[agent-error] ${contactId}: generation failed (${errMsg || 'empty reply after retry'}) — tagging needs-human and alerting the specialist.`);
-  await writeRecentMessages(contactId, 3).catch(() => {});
-  await addTags(contactId, ['needs-human', 'agent-error']).catch(() => {});
+  await writeRecentMessages(contactId, 3).catch((e) => console.error('[agent-error] last-message field write failed:', e?.message || e));
+  await tagContact(contactId, ['needs-human', 'agent-error'], 'agent-error');
 
-  const specialist = process.env.SPECIALIST_CONTACT_ID;
+  const specialist = specialistContactId();
   if (specialist && specialist !== contactId) {
     const last = lastClientText(contactId);
     const alert = [
@@ -1275,10 +1307,12 @@ async function handleGenerationFailure(contactId, name, channel, errMsg) {
       'The client received a holding message and is waiting for a person.',
       `Open: https://app.gohighlevel.com/v2/location/${cfg.ghl.locationId}/conversations/conversations/${contactId}`,
     ].filter(Boolean).join('\n');
-    const sent = await sendReply(specialist, alert, process.env.SPECIALIST_CHANNEL || 'WhatsApp');
-    if (!sent.ok) console.error('[agent-error] specialist alert FAILED', JSON.stringify(sent.data).slice(0, 300));
-  } else if (!specialist) {
-    console.warn('[agent-error] SPECIALIST_CONTACT_ID not set - relying on the needs-human tag workflow only');
+    const sent = await deliverAlert(
+      (channel, extras) => sendToSpecialist(specialist, alert, channel, extras),
+      { subject: `AGENT ERROR - human needed: ${name || 'lead'}`, body: alert },
+    );
+    if (!sent.ok) console.error('[agent-error] specialist alert FAILED on every channel', JSON.stringify(sent.attempts).slice(0, 400));
+    else console.log(`[agent-error] specialist alerted via ${sent.channel}`);
   }
 
   // Honest holding line, bilingual since we could not detect their language
@@ -1349,9 +1383,13 @@ app.post('/ghl-webhook', async (req, res) => {
     // happen — silent drop for thrown errors, canned greeting for empty
     // replies (contact Borys, 2026-08-19).
     let reply = '', failReason = '';
+    // Did a real handoff fire on this message? (deferred retry, the model's own
+    // escalate_to_agent call, or the generation-failure path, which tags too.)
+    let handoffFired = !!handoffJustFired;
     try {
       const out = await generateReply(conv, contactId);
       reply = out.text;
+      handoffFired = handoffFired || !!out.escalated;
       if (!reply) failReason = 'model returned no text (after one retry)';
     } catch (e) {
       failReason = e?.message || String(e);
@@ -1359,11 +1397,32 @@ app.post('/ghl-webhook', async (req, res) => {
     }
     if (!reply) {
       reply = await handleGenerationFailure(contactId, name, channel, failReason);
+      handoffFired = true; // that path tags needs-human and alerts on its own
     }
 
     // Last pass before it goes out: drop a dead greeting line and log any stock
     // call-centre phrasing that slipped through the voice rules (src/voice.js).
     reply = tidyForHuman(reply, { contactId, degraded: !!failReason });
+
+    // A PROMISE MUST NEVER OUTLIVE THE HANDOFF (2026-09-09). If the reply tells
+    // the client a specialist is coming — or hands over Eglent's direct number —
+    // and no handoff fired this turn, fire it now, before the message goes out.
+    // Otherwise the client waits for a person nobody has been told about: no
+    // needs-human tag, so the GHL "Specialist Handoff Alert" workflow never runs
+    // and Eglent never learns the lead exists. The non-buyer guard inside
+    // escalate() still holds, so a vendor pitch cannot wake anyone this way.
+    if (reply && !handoffFired && reconcileEnabled() && promisesHandoff(reply)) {
+      console.warn(`[handoff] ${contactId}: the reply promises a human but no handoff fired — reconciling now.`);
+      const r = await escalate(contactId, name, {
+        reason: 'Reconciled automatically: the agent promised this client a specialist (or gave out Eglent\'s number) without a handoff behind it.',
+        lead_summary: lastClientText(contactId).slice(0, 300),
+        language: thread.language || undefined,
+      }, { force: true }).catch((e) => {
+        console.error('[handoff] reconciliation failed', e?.message || e);
+        return null;
+      });
+      if (r?.blocked) console.log(`[handoff] ${contactId}: reconciliation refused (${r.blocked})`);
+    }
 
     const sent = await sendReplyChunked(contactId, reply, channel); // reply on the same channel it arrived on
     console.log(`[msg] ${contactId} (${channel}) <= ${thread.pendingCount} msg(s)${thread.afterTemplate ? ' after-template' : ''} history:${thread.history.length} "${String(text).replace(/\s+/g, ' ').slice(0, 40)}" => sent:${sent.ok}${failReason ? ' DEGRADED' : ''} "${reply.slice(0, 60)}"`);
