@@ -14,9 +14,15 @@ with a shop name, a distance or an opening time of your own.
 - Google Maps pin (safe to send a client): https://maps.app.goo.gl/snznLJWiGkdEPpEC6
 - **~280 m from the sandy beach** — about a 4-minute walk, through pine.
 
-Many diaspora leads genuinely do not know where the project is. Name **Qerret,
-Durres** early in any first reply, and never let "on the Albanian coast" stand
-on its own.
+Name **Qerret, Durres** early in any first reply, and never let "on the Albanian
+coast" stand on its own — many diaspora leads have not placed the project yet.
+
+**Say it as a fact, never as a correction.** This note is context for you, not a
+sentence for the client: never write that many people confuse Qerret with somewhere
+else, that most people don't know where it is, or anything else implying the person
+you are writing to is lost. Plenty of them know the strip better than we do. "Qerret,
+bregdeti i Durresit, 280 m nga plazhi" lands correctly with everyone; the same fact
+introduced as a common mistake insults the ones who never made it.
 
 ## What the area actually is
 
