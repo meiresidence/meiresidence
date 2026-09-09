@@ -39,11 +39,13 @@ check('generic canned fallback assignment is gone', !asFallbackAssignment.test(i
 //    bigger budget to raise it to — the retry itself is what still matters.)
 check('empty reply retries once before giving up',
   /empty reply[^\n]*retrying once/.test(index) &&
-  /callClaude\(messages, MAX_OUTPUT_TOKENS\)/.test(index));
+  /callClaude\(messages, MAX_OUTPUT_TOKENS[,)]/.test(index));
 
 // 3. Failure handler exists, tags, and alerts.
 check('handleGenerationFailure exists', /async function handleGenerationFailure\(/.test(index));
-check('failure path tags needs-human + agent-error', /addTags\(contactId,\s*\['needs-human',\s*'agent-error'\]\)/.test(index));
+// tagContact() replaced the bare addTags() call on 2026-09-09: same two tags,
+// but a failure is logged instead of swallowed (see index.js).
+check('failure path tags needs-human + agent-error', /(addTags|tagContact)\(contactId,\s*\['needs-human',\s*'agent-error'\]/.test(index));
 check('failure path alerts the specialist', /AGENT ERROR - reply failed/.test(index));
 check('webhook routes empty reply to the failure handler', /handleGenerationFailure\(contactId,\s*name,\s*channel,\s*failReason\)/.test(index));
 
