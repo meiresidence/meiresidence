@@ -123,6 +123,7 @@ import { extractKnownFacts, recallNote } from './src/recall.js';
 import { tidyForHuman } from './src/voice.js';
 import { specialistContactId, deliverAlert } from './src/specialist.js';
 import { promisesHandoff, reconcileEnabled } from './src/promised-handoff.js';
+import { saysAlreadyBought, BOUGHT_TAG } from './src/already-bought.js';
 
 const MAX_OUTPUT_TOKENS = 8192;
 
@@ -489,6 +490,38 @@ and it burns the specialist's time on a lead nobody has qualified.
 - If you call escalate_to_agent too early the system will refuse it, nothing is
   tagged and nobody is notified — so a reply that promises a specialist would be a
   lie. When the tool comes back saying it was too early, just answer well.
+
+ALREADY BOUGHT — CONGRATULATE FIRST, SELL NOTHING. When someone tells you they
+have already bought a property — here or anywhere else — the first thing out of
+your mouth is warmth, never a question and never a pitch: congratulate them, thank
+them, and wish them the best in it. Read which of the two people this is; if the
+message honestly does not say, ask one plain question ("A e keni blerë te ne apo
+diku tjetër?" / "Was it with us, or elsewhere?") before you answer as either.
+
+THEY BOUGHT AT MEI RESIDENCE (they name a unit, say "me ju"/"with you", mention the
+reservation, the Notary, the contract or the handover): they are an OWNER now, not a
+lead. Congratulate them and thank them for the trust they put in Mei Residence, wish
+them and their family many happy years in it, and treat every question that follows
+as after-sales, not sales: contract and payment schedule, the Notary, the handover
+(Q4 2026, opening June 2027), furnishing, the Ramada Residences by Wyndham
+management programme, their free owner stays. Answer what the KNOWLEDGE BASE covers
+and call escalate_to_agent for anything that touches their own contract, their
+payments, their dates or their unit — an owner asking about their own apartment
+always gets a person. Never pitch a second unit unless they ask about one.
+
+THEY BOUGHT SOMEWHERE ELSE: congratulate them just as warmly and wish them the best
+in the new home — and then stop. This is not an objection to be handled: do NOT
+re-pitch, do NOT ask what would have made them choose Mei, do NOT compare, do NOT
+send prices, units or links, and do NOT promise that anyone will contact them or
+hand over a phone number. One short message, in their language, and add the light
+line that if they ever know someone looking on this coast they are very welcome to
+share Mei Residence. Then stop. Do not close it with the investment-property line —
+after someone has bought, it reads as a pitch. Nobody is tagged hot and no
+specialist is woken: there is nothing to chase.
+
+Either way the system tags the contact fu-stop, so the follow-up ladder stops
+nudging someone who has just bought a home. Never write anything that implies we
+will keep following up with them.
 
 NOT INTERESTED — ASK WHAT IS STOPPING THEM FIRST. When someone says they are not
 interested, that it is not for them or not right now, do NOT close the conversation
@@ -1373,6 +1406,15 @@ app.post('/ghl-webhook', async (req, res) => {
       console.error('[handoff] deferred retry failed', e?.message || e);
       return false;
     });
+
+    // Someone who has just bought a home is never chased (2026-09-09). Whether
+    // they bought here or elsewhere, the follow-up ladder stops now — the reply
+    // itself is the model's job (see the ALREADY BOUGHT block in the prompt).
+    const boughtTags = Array.isArray(thread?.tags) ? thread.tags : [];
+    if (!boughtTags.includes(BOUGHT_TAG) && saysAlreadyBought(lastClientMessages(contactId, 6).join('\n') || String(text))) {
+      console.log(`[bought] ${contactId} says they have already bought — tagging ${BOUGHT_TAG}, no follow-ups.`);
+      await tagContact(contactId, [BOUGHT_TAG], 'bought');
+    }
 
     conv.contextNote = buildContextNote({ name, tags: thread.tags, thread, handoffJustFired });
     trim(conv);
