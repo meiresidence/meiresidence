@@ -41,7 +41,7 @@ jobs:
 
       - name: Run the repo's test scripts
         run: |
-          for f in scripts/test-handoff-timing.mjs scripts/test-not-a-lead.mjs scripts/test-answer-first.mjs scripts/test-location.mjs; do
+          for f in scripts/test-handoff-timing.mjs scripts/test-not-a-lead.mjs scripts/test-answer-first.mjs scripts/test-location.mjs scripts/test-human-voice.mjs scripts/test-eglent-voice.mjs; do
             echo "== $f"; node "$f" || exit 1
           done
 
