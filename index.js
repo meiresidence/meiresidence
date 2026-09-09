@@ -858,6 +858,31 @@ const removeTags = (contactId, tags) =>
 // never asks again — so we fire that handoff ourselves once the wait is over.
 const HANDOFF_DEFERRED_TAG = 'handoff-deferred';
 
+// ONE ALERT PER OPEN HANDOFF (2026-09-09). The model calls escalate_to_agent
+// again on each following client message, and escalate() had no memory: Lorena
+// produced three identical WhatsApp alerts in eight minutes, Fisnik two in six.
+// A specialist who gets the same lead three times learns to ignore the alert,
+// which is exactly how a real one gets missed.
+//
+// The durable signal is the contact's own `needs-human` tag: while it is there,
+// the handoff is open and Eglent has already been told. Clearing the tag (the
+// lead is handled) re-arms the alert. The in-process map is the second layer,
+// for the seconds before the tag write lands.
+const alertedAt = new Map(); // contactId -> ms
+const ALERT_COOLDOWN_MS = parseInt(process.env.HANDOFF_ALERT_COOLDOWN_MIN || '360', 10) * 60_000;
+
+function alertAlreadySent(contactId) {
+  if (String(process.env.HANDOFF_ALERT_DEDUPE || '').toLowerCase() === 'off') return null;
+  const conv = store.get(contactId);
+  const tagsBefore = Array.isArray(conv?.tagsBefore) ? conv.tagsBefore : [];
+  if (tagsBefore.includes('needs-human')) return 'needs-human tag already on the contact';
+  const last = alertedAt.get(contactId);
+  if (last && Date.now() - last < ALERT_COOLDOWN_MS) {
+    return `alerted ${Math.round((Date.now() - last) / 60000)} min ago (cooldown ${ALERT_COOLDOWN_MS / 60000} min)`;
+  }
+  return null;
+}
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const HISTORY_MESSAGE_LIMIT = parseInt(process.env.CRM_HISTORY_LIMIT || '30', 10);
@@ -880,6 +905,10 @@ async function fetchThreadOnce(contactId) {
     ...thread,
     name: conversation.fullName || conversation.contactName || '',
     tags: Array.isArray(conversation.tags) ? conversation.tags : [],
+    // The lead's own number and email. The handoff alert is useless without
+    // them: Eglent had to open the CRM to find out who to call (2026-09-09).
+    phone: conversation.phone || '',
+    email: conversation.email || '',
   };
 }
 
@@ -1118,9 +1147,16 @@ async function escalate(contactId, name, args, opts = {}) {
     return t.length > n ? `${t.slice(0, n - 1)}…` : t;
   };
 
+  const conv = store.get(contactId);
+  const phone = String(conv?.phone || '').trim();
+  const email = String(conv?.email || '').trim();
+  const waLink = phone ? `https://wa.me/${phone.replace(/[^0-9]/g, '')}` : '';
+
   const lines = [
     'HANDOFF - specialist needed',
     `Name: ${name || 'Unknown'}`,
+    phone ? `Phone: ${phone}` : null,
+    email ? `Email: ${email}` : null,
     args.buyer_type ? `Type: ${args.buyer_type}` : null,
     args.interested_in ? `Interested in: ${args.interested_in}` : null,
     args.budget ? `Budget: ${args.budget}` : null,
@@ -1129,10 +1165,19 @@ async function escalate(contactId, name, args, opts = {}) {
     args.lead_summary ? `Summary: ${args.lead_summary}` : null,
     last ? `\nLast message:\n"${clip(last, 400)}"` : null,
     '',
+    waLink ? `WhatsApp: ${waLink}` : null,
     `Open: https://app.gohighlevel.com/v2/location/${cfg.ghl.locationId}/conversations/conversations/${contactId}`,
   ].filter(Boolean);
 
   const body = lines.join('\n');
+
+  // Already told him about this lead? Do not tell him again.
+  const duplicate = alertAlreadySent(contactId);
+  if (duplicate) {
+    console.log(`[handoff] ${contactId}: tagged:${tagged}, alert SUPPRESSED as a duplicate — ${duplicate}`);
+    return { ok: true, tagged, alerted: false, duplicate };
+  }
+
   const sent = await deliverAlert(
     (channel, extras) => sendToSpecialist(specialist, body, channel, extras),
     { subject: `HANDOFF - specialist needed: ${name || 'new lead'}`, body },
@@ -1143,6 +1188,7 @@ async function escalate(contactId, name, args, opts = {}) {
     console.warn(`[handoff] alert delivered on ${sent.channel} after ${sent.attempts.length - 1} failed channel(s)`, JSON.stringify(sent.attempts).slice(0, 300));
   }
 
+  if (sent.ok) alertedAt.set(contactId, Date.now());
   console.log(`[handoff] ${contactId}: tagged:${tagged} alert:${sent.ok}${sent.channel ? ` via ${sent.channel}` : ''}${opts.force ? ' (forced by a promise in the reply)' : ''}`);
   return { ok: true, tagged, alerted: sent.ok, channel: sent.channel };
 }
@@ -1331,9 +1377,13 @@ async function handleGenerationFailure(contactId, name, channel, errMsg) {
   const specialist = specialistContactId();
   if (specialist && specialist !== contactId) {
     const last = lastClientText(contactId);
+    const errConv = store.get(contactId);
+    const errPhone = String(errConv?.phone || '').trim();
     const alert = [
       '⚠️ AGENT ERROR - reply failed, human needed',
       `Name: ${name || 'Unknown'}`,
+      errPhone ? `Phone: ${errPhone}` : null,
+      errPhone ? `WhatsApp: https://wa.me/${errPhone.replace(/[^0-9]/g, '')}` : null,
       errMsg ? `Error: ${String(errMsg).slice(0, 200)}` : 'Error: model returned no text (after one retry)',
       last ? `\nTheir last message:\n"${String(last).replace(/\s+/g, ' ').slice(0, 400)}"` : null,
       '',
@@ -1400,6 +1450,11 @@ app.post('/ghl-webhook', async (req, res) => {
     conv.history = [...thread.history, { role: 'user', content: String(text) }];
     // The client's real message count, for the handoff gate (countClientMessages).
     conv.clientMessageCount = thread.clientMessageCount || 0;
+    // For the handoff alert: who to call, and what the contact was already
+    // tagged with BEFORE this message (the duplicate-alert guard reads it).
+    conv.phone = thread.phone || conv.phone || '';
+    conv.email = thread.email || conv.email || '';
+    conv.tagsBefore = Array.isArray(thread.tags) ? thread.tags : [];
 
     // A handoff the gate refused earlier fires here, as soon as the wait is over.
     const handoffJustFired = await retryDeferredHandoff(contactId, name, thread).catch((e) => {
