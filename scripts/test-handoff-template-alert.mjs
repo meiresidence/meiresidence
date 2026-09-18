@@ -27,6 +27,14 @@ const check = (name, ok, detail) => {
 const index = fs.readFileSync(new URL('../index.js', import.meta.url), 'utf8');
 const specialist = fs.readFileSync(new URL('../src/specialist.js', import.meta.url), 'utf8');
 
+// An indexOf that fails loudly instead of returning -1, which silently made
+// an ordering check pass against a string that no longer existed.
+const at = (needle) => {
+  const i = index.indexOf(needle);
+  if (i < 0) throw new Error(`anchor not found in index.js: ${needle}`);
+  return i;
+};
+
 // --- 1. The default is the workflow, not the agent ---------------------------
 delete process.env.HANDOFF_ALERT_MODE;
 check('the default mode is workflow', alertMode() === 'workflow', alertMode());
@@ -90,6 +98,29 @@ check('the agent-error alert body is built once and used by both paths',
   /function buildAgentErrorAlert\(contactId, name, errMsg\)/.test(index)
   && (index.match(/buildAgentErrorAlert\(contactId, name, errMsg\)/g) || []).length === 3);
 
+// --- 2c. The guard no longer hangs on a tag GHL owns (2026-09-18) -----------
+// Live test that day: `needs-human` was stripped 67s after it was applied in
+// one run and 44s in the next, `hot-lead` untouched. The workflow's own
+// execution log shows why — a Wait, then a Remove Tag step. So the tag cannot
+// be the memory of "already alerted", and re-adding it re-fires the workflow.
+check('a durable tag the agent owns exists', /const HANDOFF_ALERTED_TAG = 'handoff-alerted'/.test(index));
+check('the guard reads it', /tagsBefore\.includes\(HANDOFF_ALERTED_TAG\)/.test(index));
+check('needs-human is still honoured as a secondary signal',
+  /tagsBefore\.includes\('needs-human'\)/.test(index));
+check('the durable tag is checked BEFORE needs-human',
+  index.indexOf('tagsBefore.includes(HANDOFF_ALERTED_TAG)') < index.indexOf("tagsBefore.includes('needs-human')"));
+check('the duplicate check now runs BEFORE the tag write, not after',
+  at('const duplicate = alertAlreadySent(contactId);')
+  < at("await tagContact(contactId, ['needs-human', 'hot-lead', HANDOFF_ALERTED_TAG]"));
+check('a repeat handoff does NOT re-apply needs-human',
+  /duplicate\s*\?\s*await tagContact\(contactId, \['hot-lead', HANDOFF_ALERTED_TAG\]/.test(index));
+check('a repeat handoff still keeps the contact current', /'hot-lead', HANDOFF_ALERTED_TAG\]/.test(index));
+check('the skipped re-tag is logged', /needs-human NOT re-applied/.test(index));
+check('the agent-error path does the same',
+  /errDuplicate\s*\?\s*await tagContact\(contactId, \['agent-error', HANDOFF_ALERTED_TAG\]/.test(index));
+check('every fresh handoff applies the durable tag',
+  /await tagContact\(contactId, \['needs-human', 'hot-lead', HANDOFF_ALERTED_TAG\]/.test(index));
+
 // --- 3. Template-safety: what Meta rejects, we never send --------------------
 check('a newline is flattened', !/\n/.test(templateSafe('one\ntwo')));
 check('a tab is flattened', !/\t/.test(templateSafe('one\ttwo')));
@@ -115,16 +146,29 @@ check('the summary line itself is template-safe', /return templateSafe\(parts\.j
 check('the name and phone are carried INSIDE the summary, not as their own params',
   /name \|\| 'Pa emër'/.test(index) && /phone \|\| 'pa numër/.test(index));
 check('the phone is read off the conversation the CRM rebuilt',
-  /const phone = String\(store\.get\(contactId\)\?\.phone \|\| ''\)\.trim\(\)/.test(index));
+  /const conv = store\.get\(contactId\);\n  const phone = String\(conv\?\.phone \|\| ''\)\.trim\(\)/.test(index));
+// Meta rejects the whole send if ANY parameter is empty, and GHL still logs
+// "Success" — proved live 2026-09-18, where the same workflow delivered for a
+// lead with a phone and delivered nothing for one without.
+check('all four template parameters come from agent-written fields',
+  /id: HANDOFF_SUMMARY_FIELD_ID/.test(index) && /id: HANDOFF_CHANNEL_FIELD_ID/.test(index)
+  && /id: HANDOFF_PHONE_FIELD_ID/.test(index) && /id: HANDOFF_LAST_MSG_FIELD_ID/.test(index));
+check('the channel parameter can never be empty', /HANDOFF_CHANNEL_FIELD_ID, value: templateSafe\(conv\?\.channel, \{ max: 40, fallback: 'WhatsApp' \}\)/.test(index));
+check('the phone parameter can never be empty',
+  /HANDOFF_PHONE_FIELD_ID, value: templateSafe\(phone, \{ max: 40, fallback: 'pa numër/.test(index));
+check('the channel is carried onto the conversation like phone and email',
+  /conv\.channel = thread\.channel \|\| conv\.channel \|\| ''/.test(index));
 check('the lead\'s name is passed in from escalate()',
   /writeHandoffFields\(contactId, args, \{ name \}\)/.test(index));
 check('an empty summary still says something', /fallback: 'Lead i ri — pa detaje'/.test(index));
 
 // --- 5. Ordering: the fields must be on the contact BEFORE the tag fires -----
 check('the fields are written before the tag',
-  index.indexOf('await writeHandoffFields(contactId, args)') < index.indexOf("await tagContact(contactId, ['needs-human', 'hot-lead']"));
+  at('await writeHandoffFields(contactId, args, { name })')
+  < at("await tagContact(contactId, ['needs-human', 'hot-lead', HANDOFF_ALERTED_TAG]"));
 check('the agent-error fields are written before its tag',
-  index.indexOf("summaryPrefix: '⚠️ GABIM I AGJENTIT") < index.indexOf("await tagContact(contactId, ['needs-human', 'agent-error']"));
+  at("summaryPrefix: '⚠️ GABIM I AGJENTIT")
+  < at("await tagContact(contactId, ['needs-human', 'agent-error', HANDOFF_ALERTED_TAG]"));
 check('all three fields go out in ONE PUT, so the tag cannot catch a half-write',
   /const r = await ghl\(`\/contacts\/\$\{contactId\}`, 'PUT', \{ customFields \}/.test(index)
   && (index.match(/await ghl\(`\/contacts\/\$\{contactId\}`, 'PUT', \{ customFields/g) || []).length === 1);

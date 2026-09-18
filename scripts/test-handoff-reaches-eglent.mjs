@@ -65,9 +65,14 @@ check('webhook reconciles a promise with no handoff',
   /!handoffFired && reconcileEnabled\(\) && promisesHandoff\(reply\)/.test(index));
 check('reconciliation runs BEFORE the reply is sent',
   index.indexOf('promisesHandoff(reply)') < index.indexOf('await sendReplyChunked(contactId, reply, channel)'));
+// The tag call carries HANDOFF_ALERTED_TAG since 2026-09-18, so this anchor
+// moved. It is resolved strictly: a missing anchor used to return -1 and let
+// the ordering check pass against a string that no longer existed.
+const tagCallAt = index.indexOf("await tagContact(contactId, ['needs-human', 'hot-lead', HANDOFF_ALERTED_TAG]");
+check('the handoff tag call is where this test thinks it is', tagCallAt > 0, tagCallAt);
 check('reconciled handoff bypasses the timing gate but not the non-buyer guard',
   /\{ force: true \}/.test(index) && /if \(!opts\.force && handoffTooEarly/.test(index)
-  && index.indexOf('looksLikeNonBuyerOutreach(clientWords)') < index.indexOf("await tagContact(contactId, ['needs-human', 'hot-lead']"));
+  && index.indexOf('looksLikeNonBuyerOutreach(clientWords)') < tagCallAt);
 check('tag failures are logged, never swallowed',
   /TAGGING FAILED/.test(index) && !/addTags\(contactId, \['needs-human', 'hot-lead'\]\)\.catch\(\(\) => \{\}\)/.test(index));
 check('handoff alert uses the channel fallback', /deliverAlert\(/.test(index));
