@@ -146,7 +146,18 @@ check('the summary line itself is template-safe', /return templateSafe\(parts\.j
 check('the name and phone are carried INSIDE the summary, not as their own params',
   /name \|\| 'Pa emër'/.test(index) && /phone \|\| 'pa numër/.test(index));
 check('the phone is read off the conversation the CRM rebuilt',
-  /const phone = String\(store\.get\(contactId\)\?\.phone \|\| ''\)\.trim\(\)/.test(index));
+  /const conv = store\.get\(contactId\);\n  const phone = String\(conv\?\.phone \|\| ''\)\.trim\(\)/.test(index));
+// Meta rejects the whole send if ANY parameter is empty, and GHL still logs
+// "Success" — proved live 2026-09-18, where the same workflow delivered for a
+// lead with a phone and delivered nothing for one without.
+check('all four template parameters come from agent-written fields',
+  /id: HANDOFF_SUMMARY_FIELD_ID/.test(index) && /id: HANDOFF_CHANNEL_FIELD_ID/.test(index)
+  && /id: HANDOFF_PHONE_FIELD_ID/.test(index) && /id: HANDOFF_LAST_MSG_FIELD_ID/.test(index));
+check('the channel parameter can never be empty', /HANDOFF_CHANNEL_FIELD_ID, value: templateSafe\(conv\?\.channel, \{ max: 40, fallback: 'WhatsApp' \}\)/.test(index));
+check('the phone parameter can never be empty',
+  /HANDOFF_PHONE_FIELD_ID, value: templateSafe\(phone, \{ max: 40, fallback: 'pa numër/.test(index));
+check('the channel is carried onto the conversation like phone and email',
+  /conv\.channel = thread\.channel \|\| conv\.channel \|\| ''/.test(index));
 check('the lead\'s name is passed in from escalate()',
   /writeHandoffFields\(contactId, args, \{ name \}\)/.test(index));
 check('an empty summary still says something', /fallback: 'Lead i ri — pa detaje'/.test(index));
