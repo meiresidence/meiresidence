@@ -43,10 +43,25 @@ export const EGLENT_CONTACT_ID = 'U8zP6NNBfCVVvK6LBWe3';
 // The two contact fields the WhatsApp template reads, created in location
 // kYtT2id1lBqDXsFCeHgY on 2026-09-17. Both are single-line TEXT on purpose:
 // a WhatsApp template parameter may not contain a newline (see templateSafe).
+// The GHL workflow's approved `leads` template takes four parameters, and
+// Meta rejects the WHOLE send if any one of them is empty — GHL still logs the
+// step as "Success", so the alert vanishes with no error anywhere. Proved live
+// on 2026-09-18: the same workflow delivered for a lead who had a phone number
+// and delivered nothing, twice, for a lead who did not.
+//
+// That is why all four values come from fields this agent writes and
+// guarantees non-empty, rather than from `{{contact.phone}}` and friends.
+// Instagram, Facebook and web-form leads routinely have no phone and no
+// email — exactly the leads a human most needs to see.
+//
 //   contact.handoff_summary      -> {{1}}
-//   contact.handoff_last_message -> {{2}}
+//   contact.handoff_channel      -> {{2}}
+//   contact.handoff_phone        -> {{3}}
+//   contact.handoff_last_message -> {{4}}
 export const HANDOFF_SUMMARY_FIELD_ID = 'xdBaknqf5WOm2Czrfg8k';
 export const HANDOFF_LAST_MSG_FIELD_ID = '1yWjm1Z9IhRBjDDlgl9Z';
+export const HANDOFF_CHANNEL_FIELD_ID = 'X9eyDLi6j5h5oDRtrls8';
+export const HANDOFF_PHONE_FIELD_ID = 'WGXcSfYqTDo0D8rTuuuH';
 
 // How the alert reaches him.
 //   workflow (default) — tag only; the GHL workflow sends the template.
