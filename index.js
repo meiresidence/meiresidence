@@ -124,6 +124,7 @@ import { tidyForHuman } from './src/voice.js';
 import {
   specialistContactId, deliverAlert, alertMode, fallbackChannels, templateSafe,
   detailFollowupEnabled, HANDOFF_SUMMARY_FIELD_ID, HANDOFF_LAST_MSG_FIELD_ID,
+  HANDOFF_CHANNEL_FIELD_ID, HANDOFF_PHONE_FIELD_ID,
 } from './src/specialist.js';
 import { promisesHandoff, reconcileEnabled } from './src/promised-handoff.js';
 import { saysAlreadyBought, BOUGHT_TAG } from './src/already-bought.js';
@@ -1160,9 +1161,14 @@ async function writeHandoffFields(contactId, args = {}, { name = '', summaryPref
     return t.length > max ? `${t.slice(0, max - 1)}…` : t;
   };
   const recent = lastClientMessages(contactId, 3);
-  const phone = String(store.get(contactId)?.phone || '').trim();
+  const conv = store.get(contactId);
+  const phone = String(conv?.phone || '').trim();
+  // Every one of these feeds a template parameter, and Meta rejects the whole
+  // send if ANY of them is empty — so each has a fallback and none may be ''.
   const customFields = [
     { id: HANDOFF_SUMMARY_FIELD_ID, value: handoffSummaryLine(args, { name, phone, prefix: summaryPrefix }) },
+    { id: HANDOFF_CHANNEL_FIELD_ID, value: templateSafe(conv?.channel, { max: 40, fallback: 'WhatsApp' }) },
+    { id: HANDOFF_PHONE_FIELD_ID, value: templateSafe(phone, { max: 40, fallback: 'pa numër — hape bisedën në CRM' }) },
     { id: HANDOFF_LAST_MSG_FIELD_ID, value: templateSafe(lastClientText(contactId), { max: 300, fallback: 'Pa mesazh teksti' }) },
   ];
   if (recent.length) {
@@ -1664,6 +1670,9 @@ app.post('/ghl-webhook', async (req, res) => {
     // tagged with BEFORE this message (the duplicate-alert guard reads it).
     conv.phone = thread.phone || conv.phone || '';
     conv.email = thread.email || conv.email || '';
+    // Feeds {{2}} of the handoff template. A parameter may not be empty, so
+    // writeHandoffFields falls back to 'WhatsApp' when the thread has no channel.
+    conv.channel = thread.channel || conv.channel || '';
     conv.tagsBefore = Array.isArray(thread.tags) ? thread.tags : [];
 
     // A handoff the gate refused earlier fires here, as soon as the wait is over.
