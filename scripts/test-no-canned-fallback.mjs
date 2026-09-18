@@ -45,7 +45,10 @@ check('empty reply retries once before giving up',
 check('handleGenerationFailure exists', /async function handleGenerationFailure\(/.test(index));
 // tagContact() replaced the bare addTags() call on 2026-09-09: same two tags,
 // but a failure is logged instead of swallowed (see index.js).
-check('failure path tags needs-human + agent-error', /(addTags|tagContact)\(contactId,\s*\['needs-human',\s*'agent-error'\]/.test(index));
+// Since 2026-09-18 the call also carries HANDOFF_ALERTED_TAG — the durable
+// marker the duplicate guard reads, because something in GHL strips
+// `needs-human` about a minute after it lands.
+check('failure path tags needs-human + agent-error', /(addTags|tagContact)\(contactId,\s*\['needs-human',\s*'agent-error',\s*HANDOFF_ALERTED_TAG\]/.test(index));
 check('failure path alerts the specialist', /AGENT ERROR - reply failed/.test(index));
 check('webhook routes empty reply to the failure handler', /handleGenerationFailure\(contactId,\s*name,\s*channel,\s*failReason\)/.test(index));
 
