@@ -61,7 +61,9 @@ check('escalated fallback line survives', /Nje specialist i Mei Residence do t[â
 
 // 7. Failure handler respects the not-a-lead guard.
 const hgfStart = index.indexOf('async function handleGenerationFailure');
-const hgf = index.slice(hgfStart, hgfStart + 2500);
+// Window widened 2026-09-09: the alert now carries the lead's phone and a
+// wa.me link, which pushed the holding line past the old 2500-char slice.
+const hgf = index.slice(hgfStart, hgfStart + 3600);
 check('failure handler checks looksLikeNonBuyerOutreach before waking anyone', /looksLikeNonBuyerOutreach\(clientWords\)/.test(hgf));
 
 // 8. The holding line is honest: it promises a person, which the handler just

@@ -121,7 +121,10 @@ import { PLACES_TOOL, findPlaces, isConfigured as placesConfigured } from './src
 import { splitIntoBubbles, pacingPlan, typingDelayMs, humanPacingOn } from './src/human-send.js';
 import { extractKnownFacts, recallNote } from './src/recall.js';
 import { tidyForHuman } from './src/voice.js';
-import { specialistContactId, deliverAlert } from './src/specialist.js';
+import {
+  specialistContactId, deliverAlert, alertMode, fallbackChannels, templateSafe,
+  detailFollowupEnabled, HANDOFF_SUMMARY_FIELD_ID, HANDOFF_LAST_MSG_FIELD_ID,
+} from './src/specialist.js';
 import { promisesHandoff, reconcileEnabled } from './src/promised-handoff.js';
 // The owner channel (2026-09-09): a message from Eglent or Mea is an instruction
 // for every FUTURE client conversation, not a lead. See src/owner.js,
@@ -930,6 +933,59 @@ const instructions = createInstructionStore({ ghl, fallbackText: OWNER_INSTRUCTI
 // never asks again — so we fire that handoff ourselves once the wait is over.
 const HANDOFF_DEFERRED_TAG = 'handoff-deferred';
 
+// ONE ALERT PER OPEN HANDOFF (2026-09-09). The model calls escalate_to_agent
+// again on each following client message, and escalate() had no memory: Lorena
+// produced three identical WhatsApp alerts in eight minutes, Fisnik two in six.
+// A specialist who gets the same lead three times learns to ignore the alert,
+// which is exactly how a real one gets missed.
+//
+// The durable signal is the contact's own `needs-human` tag: while it is there,
+// the handoff is open and Eglent has already been told. Clearing the tag (the
+// lead is handled) re-arms the alert. The in-process map is the second layer,
+// for the seconds before the tag write lands.
+const alertedAt = new Map(); // contactId -> ms
+const ALERT_COOLDOWN_MS = parseInt(process.env.HANDOFF_ALERT_COOLDOWN_MIN || '360', 10) * 60_000;
+
+function alertAlreadySent(contactId) {
+  if (String(process.env.HANDOFF_ALERT_DEDUPE || '').toLowerCase() === 'off') return null;
+  const conv = store.get(contactId);
+  const tagsBefore = Array.isArray(conv?.tagsBefore) ? conv.tagsBefore : [];
+  if (tagsBefore.includes('needs-human')) return 'needs-human tag already on the contact';
+  const last = alertedAt.get(contactId);
+  if (last && Date.now() - last < ALERT_COOLDOWN_MS) {
+    return `alerted ${Math.round((Date.now() - last) / 60000)} min ago (cooldown ${ALERT_COOLDOWN_MS / 60000} min)`;
+  }
+  return null;
+}
+
+// The full alert, sent as ordinary WhatsApp text on top of the template the GHL
+// workflow is delivering. It carries what a template cannot: the email, the
+// client's verbatim message, the one-tap wa.me link and the CRM link.
+//
+// It is refused whenever Eglent has not written to the agent in 24 hours —
+// a template does not re-open that window, only his reply to one does — and
+// that refusal is fine: the template got through on its own. One attempt, no
+// channel fallback (SMS and Email would duplicate what the template just said),
+// nothing thrown.
+async function sendDetailFollowup(contactId, specialist, body) {
+  if (!detailFollowupEnabled()) return { attempted: false };
+  if (alertAlreadySent(contactId)) return { attempted: false, reason: 'duplicate' };
+  try {
+    const res = await sendToSpecialist(specialist, body, 'WhatsApp');
+    if (res?.ok) {
+      alertedAt.set(contactId, Date.now());
+      console.log(`[handoff] ${contactId}: detail message delivered on WhatsApp on top of the template`);
+      return { attempted: true, ok: true };
+    }
+    console.log(`[handoff] ${contactId}: detail message refused (24h window shut) — the template still carried the alert:`,
+      JSON.stringify(res?.data).slice(0, 200));
+    return { attempted: true, ok: false };
+  } catch (e) {
+    console.log(`[handoff] ${contactId}: detail message threw — the template still carried the alert:`, e?.message || e);
+    return { attempted: true, ok: false };
+  }
+}
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const HISTORY_MESSAGE_LIMIT = parseInt(process.env.CRM_HISTORY_LIMIT || '30', 10);
@@ -952,8 +1008,12 @@ async function fetchThreadOnce(contactId) {
     ...thread,
     name: conversation.fullName || conversation.contactName || '',
     tags: Array.isArray(conversation.tags) ? conversation.tags : [],
-    // Needed to recognise an owner: a number is stable, a contact record is not.
+    // The lead's own number and email. The handoff alert is useless without
+    // them: Eglent had to open the CRM to find out who to call (2026-09-09).
+    // The number is also how an owner is recognised: a number is stable, a
+    // contact record is not.
     phone: conversation.phone || '',
+    email: conversation.email || '',
   };
 }
 
@@ -1068,19 +1128,59 @@ function lastClientMessages(contactId, n = 3) {
   return out.reverse();
 }
 
-// Snapshot the recent client messages onto the contact so the GHL handoff
-// email shows the conversation, not just the final line.
-async function writeRecentMessages(contactId, n = 3) {
-  const msgs = lastClientMessages(contactId, n);
-  if (!msgs.length) return { ok: false };
+// (writeRecentMessages was folded into writeHandoffFields on 2026-09-17 — the
+// three fields the alert depends on are now written in ONE PUT, so the tag can
+// never fire between two half-finished writes.)
+
+// The one line Eglent reads on his phone: who they are, their number, and what
+// they want. Joined with a middle dot because a WhatsApp template parameter
+// cannot contain a newline.
+//
+// WHY THE NAME AND PHONE LIVE IN HERE (2026-09-17) rather than as their own
+// parameters fed from {{contact.name}} / {{contact.phone}}: an empty
+// template parameter makes Meta reject the whole send (132000), and a lead who
+// arrives on Instagram or a web form has neither. Everything the template
+// interpolates therefore comes from a field this function guarantees is
+// non-empty — so an anonymous lead still produces an alert that goes out.
+function handoffSummaryLine(args = {}, { name = '', phone = '', prefix = '' } = {}) {
+  const parts = [
+    prefix,
+    name || 'Pa emër',
+    phone || 'pa numër — hape bisedën në CRM',
+    args.buyer_type,
+    args.interested_in,
+    args.budget,
+    args.language,
+    args.reason,
+  ].map((p) => templateSafe(p, { max: 90, fallback: '' })).filter(Boolean);
+  return templateSafe(parts.join(' · '), { max: 300, fallback: 'Lead i ri — pa detaje' });
+}
+
+// Everything the GHL workflow's WhatsApp template needs, written BEFORE the
+// tag that fires it. Three fields in one PUT:
+//   Last Client Message  — the multi-line one the handoff EMAIL renders
+//   Handoff Summary      — {{1}} in the template, one line
+//   Handoff Last Message — {{2}} in the template, one line
+// This is the load-bearing write of the new chain: if it fails the template
+// still sends, but with stale values, so the failure is logged loudly and the
+// caller can decide (escalate() falls back to a direct message only when the
+// TAG fails — a stale field is a worse alert, a missing tag is no alert).
+async function writeHandoffFields(contactId, args = {}, { name = '', summaryPrefix = '' } = {}) {
   const clip = (str, max) => {
     const t = String(str).replace(/\s+/g, ' ').trim();
     return t.length > max ? `${t.slice(0, max - 1)}…` : t;
   };
-  const value = msgs.map((m) => `- ${clip(m, 300)}`).join('\n');
-  const r = await ghl(`/contacts/${contactId}`, 'PUT',
-    { customFields: [{ id: LAST_MSG_FIELD_ID, value }] }, '2021-07-28');
-  if (!r.ok) console.error('[handoff] field update failed', JSON.stringify(r.data).slice(0, 200));
+  const recent = lastClientMessages(contactId, 3);
+  const phone = String(store.get(contactId)?.phone || '').trim();
+  const customFields = [
+    { id: HANDOFF_SUMMARY_FIELD_ID, value: handoffSummaryLine(args, { name, phone, prefix: summaryPrefix }) },
+    { id: HANDOFF_LAST_MSG_FIELD_ID, value: templateSafe(lastClientText(contactId), { max: 300, fallback: 'Pa mesazh teksti' }) },
+  ];
+  if (recent.length) {
+    customFields.unshift({ id: LAST_MSG_FIELD_ID, value: recent.map((m) => `- ${clip(m, 300)}`).join('\n') });
+  }
+  const r = await ghl(`/contacts/${contactId}`, 'PUT', { customFields }, '2021-07-28');
+  if (!r.ok) console.error('[handoff] HANDOFF FIELD WRITE FAILED', JSON.stringify(r.data).slice(0, 300));
   return r;
 }
 
@@ -1172,9 +1272,11 @@ async function escalate(contactId, name, args, opts = {}) {
     return { ok: true, alerted: false, blocked: 'not-a-lead' };
   }
 
-  // Write the recent messages first - the GHL email fires off the tag below,
-  // so the field must already hold the new value when that happens.
-  await writeRecentMessages(contactId, 3).catch((e) => console.error('[handoff] last-message field write failed:', e?.message || e));
+  // Write the fields FIRST — both the GHL email and, since 2026-09-17, the
+  // WhatsApp template fire off the tag below, so the values must already be on
+  // the contact when that happens. Ordering this the other way round sends
+  // Eglent the previous lead's details.
+  await writeHandoffFields(contactId, args, { name }).catch((e) => console.error('[handoff] handoff field write failed:', e?.message || e));
   // THE tag. The GHL "Specialist Handoff Alert" workflow triggers off it, so if
   // this does not land, nothing downstream happens — never swallow the error.
   const tagged = await tagContact(contactId, ['needs-human', 'hot-lead'], 'handoff');
@@ -1192,9 +1294,16 @@ async function escalate(contactId, name, args, opts = {}) {
     return t.length > n ? `${t.slice(0, n - 1)}…` : t;
   };
 
+  const conv = store.get(contactId);
+  const phone = String(conv?.phone || '').trim();
+  const email = String(conv?.email || '').trim();
+  const waLink = phone ? `https://wa.me/${phone.replace(/[^0-9]/g, '')}` : '';
+
   const lines = [
     'HANDOFF - specialist needed',
     `Name: ${name || 'Unknown'}`,
+    phone ? `Phone: ${phone}` : null,
+    email ? `Email: ${email}` : null,
     args.buyer_type ? `Type: ${args.buyer_type}` : null,
     args.interested_in ? `Interested in: ${args.interested_in}` : null,
     args.budget ? `Budget: ${args.budget}` : null,
@@ -1203,13 +1312,51 @@ async function escalate(contactId, name, args, opts = {}) {
     args.lead_summary ? `Summary: ${args.lead_summary}` : null,
     last ? `\nLast message:\n"${clip(last, 400)}"` : null,
     '',
+    waLink ? `WhatsApp: ${waLink}` : null,
     `Open: https://app.gohighlevel.com/v2/location/${cfg.ghl.locationId}/conversations/conversations/${contactId}`,
   ].filter(Boolean);
 
   const body = lines.join('\n');
+
+  // WHO SENDS THE ALERT (2026-09-17). In the default `workflow` mode the agent
+  // does not message Eglent at all: the tag above is the alert, and the GHL
+  // "Specialist Handoff Alert" workflow delivers it as an approved WhatsApp
+  // template, which is the only thing that reaches him outside the 24-hour
+  // window. GHL fires a tag-added trigger only when the tag is genuinely new,
+  // so that path dedupes itself.
+  //
+  // The direct send survives for exactly one case: the tag did NOT land. Then
+  // nothing downstream will ever run and the agent is the only leg left.
+  const mode = alertMode();
+  if (mode === 'workflow' && tagged) {
+    console.log(`[handoff] ${contactId}: tagged:true — alert delegated to the GHL workflow (needs-human → WhatsApp template)${opts.force ? ' (forced by a promise in the reply)' : ''}`);
+    // ...and the detail on top of it, if WhatsApp will take it. Best-effort:
+    // the template already carries the alert, so this failing is not an
+    // incident. See detailFollowupEnabled() in src/specialist.js.
+    const detail = await sendDetailFollowup(contactId, specialist, body);
+    return { ok: true, tagged, alerted: true, via: 'workflow', detail };
+  }
+  if (mode === 'workflow' && !tagged) {
+    console.error(`[handoff] ${contactId}: TAGGING FAILED — the GHL workflow will not fire. Falling back to a direct message.`);
+  }
+
+  // Already told him about this lead? Do not tell him again.
+  const duplicate = alertAlreadySent(contactId);
+  if (duplicate) {
+    console.log(`[handoff] ${contactId}: tagged:${tagged}, alert SUPPRESSED as a duplicate — ${duplicate}`);
+    return { ok: true, tagged, alerted: false, duplicate };
+  }
+
+  // On the fallback path WhatsApp goes last, not first — a free-form message is
+  // the attempt most likely to be refused, and this path only exists because
+  // something already went wrong.
   const sent = await deliverAlert(
     (channel, extras) => sendToSpecialist(specialist, body, channel, extras),
-    { subject: `HANDOFF - specialist needed: ${name || 'new lead'}`, body },
+    {
+      subject: `HANDOFF - specialist needed: ${name || 'new lead'}`,
+      body,
+      channels: mode === 'workflow' ? fallbackChannels() : null,
+    },
   );
   if (!sent.ok) {
     console.error('[handoff] ALERT FAILED on every channel', JSON.stringify(sent.attempts).slice(0, 400));
@@ -1217,8 +1364,9 @@ async function escalate(contactId, name, args, opts = {}) {
     console.warn(`[handoff] alert delivered on ${sent.channel} after ${sent.attempts.length - 1} failed channel(s)`, JSON.stringify(sent.attempts).slice(0, 300));
   }
 
-  console.log(`[handoff] ${contactId}: tagged:${tagged} alert:${sent.ok}${sent.channel ? ` via ${sent.channel}` : ''}${opts.force ? ' (forced by a promise in the reply)' : ''}`);
-  return { ok: true, tagged, alerted: sent.ok, channel: sent.channel };
+  if (sent.ok) alertedAt.set(contactId, Date.now());
+  console.log(`[handoff] ${contactId}: tagged:${tagged} alert:${sent.ok}${sent.channel ? ` via ${sent.channel}` : ''} (direct, mode=${mode})${opts.force ? ' (forced by a promise in the reply)' : ''}`);
+  return { ok: true, tagged, alerted: sent.ok, channel: sent.channel, via: 'direct' };
 }
 
 // One Claude call. maxTokens is a parameter so the empty-reply retry below can
@@ -1391,6 +1539,25 @@ async function generateReply(conv, contactId) {
 //    holding line so they know a person is coming.
 //  - non-buyer outreach (deterministic guard, no model needed): polite
 //    redirect to info@, no tags, nobody woken.
+// The agent-error alert, in full. Built once and used twice: as the detail
+// message sent on top of the GHL template, and as the fallback body when the
+// tag never landed and the workflow therefore cannot fire.
+function buildAgentErrorAlert(contactId, name, errMsg) {
+  const last = lastClientText(contactId);
+  const errPhone = String(store.get(contactId)?.phone || '').trim();
+  return [
+    '⚠️ AGENT ERROR - reply failed, human needed',
+    `Name: ${name || 'Unknown'}`,
+    errPhone ? `Phone: ${errPhone}` : null,
+    errPhone ? `WhatsApp: https://wa.me/${errPhone.replace(/[^0-9]/g, '')}` : null,
+    errMsg ? `Error: ${String(errMsg).slice(0, 200)}` : 'Error: model returned no text (after one retry)',
+    last ? `\nTheir last message:\n"${String(last).replace(/\s+/g, ' ').slice(0, 400)}"` : null,
+    '',
+    'The client received a holding message and is waiting for a person.',
+    `Open: https://app.gohighlevel.com/v2/location/${cfg.ghl.locationId}/conversations/conversations/${contactId}`,
+  ].filter(Boolean).join('\n');
+}
+
 async function handleGenerationFailure(contactId, name, channel, errMsg) {
   const clientWords = lastClientMessages(contactId, 6).join('\n');
   if (looksLikeNonBuyerOutreach(clientWords)) {
@@ -1399,24 +1566,32 @@ async function handleGenerationFailure(contactId, name, channel, errMsg) {
   }
 
   console.error(`[agent-error] ${contactId}: generation failed (${errMsg || 'empty reply after retry'}) — tagging needs-human and alerting the specialist.`);
-  await writeRecentMessages(contactId, 3).catch((e) => console.error('[agent-error] last-message field write failed:', e?.message || e));
-  await tagContact(contactId, ['needs-human', 'agent-error'], 'agent-error');
+  // Same chain as a normal handoff: fields first, then the tag the GHL workflow
+  // watches. The summary line says up front that this one is a failure, not a
+  // hot lead, so the WhatsApp template Eglent gets is not misleading.
+  await writeHandoffFields(contactId, {}, { name, summaryPrefix: '⚠️ GABIM I AGJENTIT — përgjigja dështoi, klienti pret një person' })
+    .catch((e) => console.error('[agent-error] handoff field write failed:', e?.message || e));
+  const errTagged = await tagContact(contactId, ['needs-human', 'agent-error'], 'agent-error');
 
   const specialist = specialistContactId();
-  if (specialist && specialist !== contactId) {
-    const last = lastClientText(contactId);
-    const alert = [
-      '⚠️ AGENT ERROR - reply failed, human needed',
-      `Name: ${name || 'Unknown'}`,
-      errMsg ? `Error: ${String(errMsg).slice(0, 200)}` : 'Error: model returned no text (after one retry)',
-      last ? `\nTheir last message:\n"${String(last).replace(/\s+/g, ' ').slice(0, 400)}"` : null,
-      '',
-      'The client received a holding message and is waiting for a person.',
-      `Open: https://app.gohighlevel.com/v2/location/${cfg.ghl.locationId}/conversations/conversations/${contactId}`,
-    ].filter(Boolean).join('\n');
+  const errMode = alertMode();
+  if (errMode === 'workflow' && errTagged) {
+    console.log(`[agent-error] ${contactId}: tagged — alert delegated to the GHL workflow (needs-human → WhatsApp template)`);
+    if (specialist && specialist !== contactId) {
+      await sendDetailFollowup(contactId, specialist, buildAgentErrorAlert(contactId, name, errMsg));
+    }
+  } else if (specialist && specialist !== contactId) {
+    if (errMode === 'workflow' && !errTagged) {
+      console.error(`[agent-error] ${contactId}: TAGGING FAILED — the GHL workflow will not fire. Falling back to a direct message.`);
+    }
+    const alert = buildAgentErrorAlert(contactId, name, errMsg);
     const sent = await deliverAlert(
       (channel, extras) => sendToSpecialist(specialist, alert, channel, extras),
-      { subject: `AGENT ERROR - human needed: ${name || 'lead'}`, body: alert },
+      {
+        subject: `AGENT ERROR - human needed: ${name || 'lead'}`,
+        body: alert,
+        channels: errMode === 'workflow' ? fallbackChannels() : null,
+      },
     );
     if (!sent.ok) console.error('[agent-error] specialist alert FAILED on every channel', JSON.stringify(sent.attempts).slice(0, 400));
     else console.log(`[agent-error] specialist alerted via ${sent.channel}`);
@@ -1598,6 +1773,11 @@ app.post('/ghl-webhook', async (req, res) => {
     conv.history = [...thread.history, { role: 'user', content: String(text) }];
     // The client's real message count, for the handoff gate (countClientMessages).
     conv.clientMessageCount = thread.clientMessageCount || 0;
+    // For the handoff alert: who to call, and what the contact was already
+    // tagged with BEFORE this message (the duplicate-alert guard reads it).
+    conv.phone = thread.phone || conv.phone || '';
+    conv.email = thread.email || conv.email || '';
+    conv.tagsBefore = Array.isArray(thread.tags) ? thread.tags : [];
 
     // A handoff the gate refused earlier fires here, as soon as the wait is over.
     const handoffJustFired = await retryDeferredHandoff(contactId, name, thread).catch((e) => {
