@@ -916,10 +916,23 @@ const HANDOFF_DEFERRED_TAG = 'handoff-deferred';
 // A specialist who gets the same lead three times learns to ignore the alert,
 // which is exactly how a real one gets missed.
 //
-// The durable signal is the contact's own `needs-human` tag: while it is there,
-// the handoff is open and Eglent has already been told. Clearing the tag (the
-// lead is handled) re-arms the alert. The in-process map is the second layer,
-// for the seconds before the tag write lands.
+// The signal used to be the contact's own `needs-human` tag: while it was there,
+// the handoff was open and Eglent had already been told.
+//
+// THAT TAG IS NOT OURS (2026-09-18). A live test proved something in GHL strips
+// `needs-human` about a minute after it is applied — 67s in one run, 44s in the
+// next, with `hot-lead` left untouched both times. The workflow's own execution
+// log shows why: a Wait step, then a Remove Tag step. So by the client's next
+// message the guard read "never alerted" and the handoff alerted again: exactly
+// the duplicate this guard exists to stop.
+//
+// The guard now hangs on `handoff-alerted`, a tag this agent owns and nothing
+// else writes. `needs-human` is still honoured as a secondary signal so the ten
+// contacts carrying it from before this change are not re-alerted, but it is no
+// longer load-bearing. **Clearing `handoff-alerted` is what re-arms the alert
+// for a lead.** The in-process map stays as the third layer, for the seconds
+// before the tag write lands.
+const HANDOFF_ALERTED_TAG = 'handoff-alerted';
 const alertedAt = new Map(); // contactId -> ms
 const ALERT_COOLDOWN_MS = parseInt(process.env.HANDOFF_ALERT_COOLDOWN_MIN || '360', 10) * 60_000;
 
@@ -927,6 +940,7 @@ function alertAlreadySent(contactId) {
   if (String(process.env.HANDOFF_ALERT_DEDUPE || '').toLowerCase() === 'off') return null;
   const conv = store.get(contactId);
   const tagsBefore = Array.isArray(conv?.tagsBefore) ? conv.tagsBefore : [];
+  if (tagsBefore.includes(HANDOFF_ALERTED_TAG)) return `${HANDOFF_ALERTED_TAG} tag already on the contact`;
   if (tagsBefore.includes('needs-human')) return 'needs-human tag already on the contact';
   const last = alertedAt.get(contactId);
   if (last && Date.now() - last < ALERT_COOLDOWN_MS) {
@@ -1252,9 +1266,23 @@ async function escalate(contactId, name, args, opts = {}) {
   // the contact when that happens. Ordering this the other way round sends
   // Eglent the previous lead's details.
   await writeHandoffFields(contactId, args, { name }).catch((e) => console.error('[handoff] handoff field write failed:', e?.message || e));
-  // THE tag. The GHL "Specialist Handoff Alert" workflow triggers off it, so if
-  // this does not land, nothing downstream happens — never swallow the error.
-  const tagged = await tagContact(contactId, ['needs-human', 'hot-lead'], 'handoff');
+
+  // THE DUPLICATE CHECK MOVED ABOVE THE TAG (2026-09-18). It used to sit after
+  // it: tagging was harmless because the agent sent the alert itself, so a
+  // repeat escalation re-tagged and only the SEND was suppressed. Now the tag
+  // IS the alert — GHL fires "Specialist Handoff Alert" on tag-ADDED — and
+  // something strips `needs-human` a minute later, so re-tagging an open
+  // handoff puts a second template on Eglent's phone for a lead he already has.
+  const duplicate = alertAlreadySent(contactId);
+
+  // THE tag. The GHL workflow triggers off it, so if this does not land,
+  // nothing downstream happens — never swallow the error. On a repeat we keep
+  // the contact's state current but deliberately leave `needs-human` alone, so
+  // the workflow is not re-triggered.
+  const tagged = duplicate
+    ? await tagContact(contactId, ['hot-lead', HANDOFF_ALERTED_TAG], 'handoff')
+    : await tagContact(contactId, ['needs-human', 'hot-lead', HANDOFF_ALERTED_TAG], 'handoff');
+  if (duplicate) console.log(`[handoff] ${contactId}: needs-human NOT re-applied — ${duplicate}`);
 
   // Never empty any more: falls back to Eglent's own contact (src/specialist.js).
   const specialist = specialistContactId();
@@ -1297,12 +1325,23 @@ async function escalate(contactId, name, args, opts = {}) {
   // does not message Eglent at all: the tag above is the alert, and the GHL
   // "Specialist Handoff Alert" workflow delivers it as an approved WhatsApp
   // template, which is the only thing that reaches him outside the 24-hour
-  // window. GHL fires a tag-added trigger only when the tag is genuinely new,
-  // so that path dedupes itself.
+  // window.
+  //
+  // GHL fires a tag-added trigger only when the tag is genuinely new — but
+  // since something strips `needs-human` shortly after it lands (2026-09-18),
+  // "new" comes round again on the next message. The dedupe above is what
+  // keeps that from becoming a second template, by not re-adding the tag.
   //
   // The direct send survives for exactly one case: the tag did NOT land. Then
   // nothing downstream will ever run and the agent is the only leg left.
   const mode = alertMode();
+
+  // Already told him about this lead? Do not tell him again — on any path.
+  if (duplicate) {
+    console.log(`[handoff] ${contactId}: tagged:${tagged}, alert SUPPRESSED as a duplicate — ${duplicate}`);
+    return { ok: true, tagged, alerted: false, duplicate };
+  }
+
   if (mode === 'workflow' && tagged) {
     console.log(`[handoff] ${contactId}: tagged:true — alert delegated to the GHL workflow (needs-human → WhatsApp template)${opts.force ? ' (forced by a promise in the reply)' : ''}`);
     // ...and the detail on top of it, if WhatsApp will take it. Best-effort:
@@ -1313,13 +1352,6 @@ async function escalate(contactId, name, args, opts = {}) {
   }
   if (mode === 'workflow' && !tagged) {
     console.error(`[handoff] ${contactId}: TAGGING FAILED — the GHL workflow will not fire. Falling back to a direct message.`);
-  }
-
-  // Already told him about this lead? Do not tell him again.
-  const duplicate = alertAlreadySent(contactId);
-  if (duplicate) {
-    console.log(`[handoff] ${contactId}: tagged:${tagged}, alert SUPPRESSED as a duplicate — ${duplicate}`);
-    return { ok: true, tagged, alerted: false, duplicate };
   }
 
   // On the fallback path WhatsApp goes last, not first — a free-form message is
@@ -1546,7 +1578,11 @@ async function handleGenerationFailure(contactId, name, channel, errMsg) {
   // hot lead, so the WhatsApp template Eglent gets is not misleading.
   await writeHandoffFields(contactId, {}, { name, summaryPrefix: '⚠️ GABIM I AGJENTIT — përgjigja dështoi, klienti pret një person' })
     .catch((e) => console.error('[agent-error] handoff field write failed:', e?.message || e));
-  const errTagged = await tagContact(contactId, ['needs-human', 'agent-error'], 'agent-error');
+  const errDuplicate = alertAlreadySent(contactId);
+  const errTagged = errDuplicate
+    ? await tagContact(contactId, ['agent-error', HANDOFF_ALERTED_TAG], 'agent-error')
+    : await tagContact(contactId, ['needs-human', 'agent-error', HANDOFF_ALERTED_TAG], 'agent-error');
+  if (errDuplicate) console.log(`[agent-error] ${contactId}: needs-human NOT re-applied — ${errDuplicate}`);
 
   const specialist = specialistContactId();
   const errMode = alertMode();
