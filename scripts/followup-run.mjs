@@ -23,6 +23,7 @@ import path from 'path';
 import Anthropic from '@anthropic-ai/sdk';
 import { decide, queueTag, QUEUE_TAGS } from '../src/followup-agent/ladder.js';
 import { classifyThread } from '../src/followup-agent/classify.js';
+import { identifyOwner } from '../src/owner.js';
 
 const cfg = {
   base: process.env.GHL_API_BASE || 'https://services.leadconnectorhq.com',
@@ -160,7 +161,16 @@ async function main() {
   );
   const conversations = (search?.conversations || []).filter((c) => {
     const t = Number(c.lastMessageDate || c.dateUpdated || 0);
-    return t > 0 && t >= sinceMs && c.contactId;
+    if (!(t > 0 && t >= sinceMs && c.contactId)) return false;
+    // Never chase an owner (2026-09-09). Eglent and Mea talk to the agent to
+    // teach it; a follow-up ladder aimed at them would send "still thinking
+    // about the 1+1?" to the man who owns the building.
+    const owner = identifyOwner({ contactId: c.contactId, phone: c.phone });
+    if (owner) {
+      console.log(`[followup] skipping ${owner.name} (${c.contactId}) — owner channel, never followed up.`);
+      return false;
+    }
+    return true;
   });
   console.log(`[followup] ${conversations.length} conversations active in the last ${cfg.lookbackDays}d`);
 
