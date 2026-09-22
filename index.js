@@ -1124,7 +1124,9 @@ if (placesConfigured()) TOOLS.push(PLACES_TOOL);
 
 // Pull the client's own last words out of the in-memory conversation.
 // Tool-result turns are also role:'user' but carry an array, so require a string.
-// Custom field "Last Client Message" (LARGE_TEXT) - the handoff email renders it.
+// Custom field "Last Client Message" (LARGE_TEXT). The live "Specialist Handoff
+// Alert" WhatsApp template reads it as {{contact.last_client_message}}, so it
+// must be ONE line — see writeHandoffFields().
 const LAST_MSG_FIELD_ID = 'pgjCDvkHlPlXx0C1TJ1p';
 
 // Last N verbatim client messages, oldest first. Tool-result turns are also
@@ -1173,7 +1175,7 @@ function handoffSummaryLine(args = {}, { name = '', phone = '', prefix = '' } = 
 
 // Everything the GHL workflow's WhatsApp template needs, written BEFORE the
 // tag that fires it. Three fields in one PUT:
-//   Last Client Message  — the multi-line one the handoff EMAIL renders
+//   Last Client Message  — the last three client messages on ONE line
 //   Handoff Summary      — {{1}} in the template, one line
 //   Handoff Last Message — {{2}} in the template, one line
 // This is the load-bearing write of the new chain: if it fails the template
@@ -1196,8 +1198,20 @@ async function writeHandoffFields(contactId, args = {}, { name = '', summaryPref
     { id: HANDOFF_PHONE_FIELD_ID, value: templateSafe(phone, { max: 40, fallback: 'pa numër — hape bisedën në CRM' }) },
     { id: HANDOFF_LAST_MSG_FIELD_ID, value: templateSafe(lastClientText(contactId), { max: 300, fallback: 'Pa mesazh teksti' }) },
   ];
+  // ONE LINE, NEVER BULLETS (2026-09-22). The live "Specialist Handoff Alert"
+  // template's {{4}} is the tag {{contact.last_client_message}} typed into the
+  // parameter box — and GHL still resolves it whenever the field has a value.
+  // Meta refuses a template parameter that contains a newline, and GHL logs the
+  // step as Success regardless. Every real handoff from 18 to 22 Sep died right
+  // here, on the bulleted list this used to write, while phone-less test
+  // contacts (field empty, literal placeholder sent) all landed. Proved live:
+  // one line -> the template arrives carrying the text; three bulleted lines ->
+  // nothing arrives.
   if (recent.length) {
-    customFields.unshift({ id: LAST_MSG_FIELD_ID, value: recent.map((m) => `- ${clip(m, 300)}`).join('\n') });
+    customFields.unshift({
+      id: LAST_MSG_FIELD_ID,
+      value: templateSafe(recent.map((m) => clip(m, 200)).join(' | '), { max: 500, fallback: 'Pa mesazh teksti' }),
+    });
   }
   const r = await ghl(`/contacts/${contactId}`, 'PUT', { customFields }, '2021-07-28');
   if (!r.ok) console.error('[handoff] HANDOFF FIELD WRITE FAILED', JSON.stringify(r.data).slice(0, 300));

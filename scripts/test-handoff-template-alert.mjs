@@ -161,6 +161,15 @@ check('the channel is carried onto the conversation like phone and email',
 check('the lead\'s name is passed in from escalate()',
   /writeHandoffFields\(contactId, args, \{ name \}\)/.test(index));
 check('an empty summary still says something', /fallback: 'Lead i ri — pa detaje'/.test(index));
+// Proved live 2026-09-22: the workflow's {{4}} is the typed tag
+// {{contact.last_client_message}}, which GHL resolves whenever the field has a
+// value. A newline in it makes Meta drop the whole send while GHL logs Success —
+// which is how every real handoff since 18 Sep vanished.
+check('Last Client Message is written as ONE line, never a bulleted list',
+  !/`- \$\{clip\(m, 300\)\}`\)\.join\('\\n'\)/.test(index)
+  && /id: LAST_MSG_FIELD_ID,\n\s+value: templateSafe\(recent\.map\(\(m\) => clip\(m, 200\)\)\.join\(' \| '\), \{ max: 500/.test(index));
+check('no handoff field value is ever joined with a newline',
+  !/customFields\.unshift\([\s\S]{0,200}?join\('\\n'\)/.test(index));
 
 // --- 5. Ordering: the fields must be on the contact BEFORE the tag fires -----
 check('the fields are written before the tag',
