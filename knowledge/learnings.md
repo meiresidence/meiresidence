@@ -21,7 +21,7 @@ outranks it on facts; this outranks it on *how to say things*.
 - "Për sa vjet bëhen kontratat? Mirëmbajtja kujt i përket?" — 5 years, renewable, terminable by the owner after; maintenance is on us.
 - "Sa është çmimi i metrës katrore?" — never quote a number from memory or an old chat; the current price list is the only source, point there.
 - After price, the next round is building basics: viti i ndërtimit, parkim, ashensor, kati — have these ready instead of only price and tour link.
-- "Me cilat banka bashkëpunoni për financim?" — recurring, no approved bank-partner list exists. Give the general payment structure you know, say a specialist confirms bank-specific terms, then immediately ask typology/budget — never name a specific bank or a specific rate, even under pressure. Zero-exception.
+- "Me cilat banka bashkëpunoni për financim?" — recurring. Approved answer (Eglent, 26 Sep 2026): Mei Residence works with ProCredit Bank. Name the bank, give the general payment structure you know, say Eglent explains the bank terms for their own situation, then immediately ask typology/budget — never quote a rate, share financed, tenor or eligibility, and never name any other bank, even under pressure. Zero-exception.
 - "Cilat banesa janë të lira? / planimetria? / Sa apartamente ka gjithsej, sa janë shitur?" — the plan per unit is at meiresidence.com/#/objektet/a; total/sold/reserved/unreleased counts change constantly — point to the current price list for both rather than reciting any number or status from memory.
 - "A është çmimi i negociueshëm?" and questions about nearby institutions (shkolla, spitale, banka, supermarket) — no approved answer for either; route to a specialist rather than guessing.
 - Floor numbering confuses buyers ("kati i parë i bie kati i dytë?") — clarify "Kati Përdhe" = ground floor, "Kati i Parë" = the floor above it, before discussing a specific unit's floor.
@@ -69,7 +69,7 @@ outranks it on facts; this outranks it on *how to say things*.
 - We can't open Instagram reels or external links. Say so once and pivot; repeating "I can't open this" several times in one thread reads as broken.
 - The automated re-engagement pitch fires even on leads who explicitly declined days earlier, and on leads who revealed themselves as sellers/resellers, not buyers — skip or soften re-engagement once a thread establishes the lead is not a prospective buyer.
 - Skeptical or existing-owner questions about technical build detail (wall composition, cabling, hydraulic systems, window/glazing brand, documentation) — don't improvise reassurance or invent specific brand/material names, hand off.
-- Institutional/foreign investors pressing for exact ROI/appreciation numbers, a named bank-financing partner, or currency clarification — never state a percentage beyond the settled 6%, never name a specific bank, confirm prices are EUR only.
+- Institutional/foreign investors pressing for exact ROI/appreciation numbers, a named bank-financing partner, or currency clarification — never state a percentage beyond the settled 6%; the only bank you may name is ProCredit Bank (the approved financing partner — no rates or terms, those come from Eglent); confirm prices are EUR only.
 - The agent itself has quoted specific installment-percentage breakdowns from memory in separate live chats more than once — stop quoting any specific split; say only "reservation deposit, then staged payments during construction, balance at handover" and defer exact numbers to a specialist. No exceptions, for anyone.
 
 ## Language & audience
@@ -82,7 +82,7 @@ outranks it on facts; this outranks it on *how to say things*.
 - Exact date the 6% guarantee starts accruing (payment date, handover, or hotel opening), and when the first payout actually lands.
 - Specific conditions under which the 6% guarantee could be reduced or suspended.
 - Whether the 6% guarantee and ownership transfer automatically to a new owner on resale, or can be swapped for the 65/35 model later.
-- Named bank-financing partners and bank-specific rates — no approved list exists.
+- Bank-specific rates, loan share, tenor and eligibility — ProCredit Bank is the approved partner name, but the terms themselves stay with Eglent.
 - Whether price is negotiable — no approved stance.
 - Proximity to schools, hospitals, banks, supermarkets — no approved answer.
 - Whether the private resort/villa across the road blocks beach access.
