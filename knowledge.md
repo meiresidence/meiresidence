@@ -106,6 +106,9 @@ fire safety).
 - **Flexible installment payments and financing options are available.** Exact terms
   (deposit %, schedule, financing) are arranged with the sales team — hand off for a
   personalized plan.
+- **Financing partner: ProCredit Bank.** Name it when a client asks which banks Mei
+  Residence works with; loan terms themselves (rate, share financed, tenor,
+  eligibility) are explained by Eglent for the client's situation — never quote them.
 
 ## Timeline
 - Construction start **Q4 2024**; completion **Q4 2026** (ready by end of 2026);
