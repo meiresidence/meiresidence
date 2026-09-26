@@ -56,6 +56,12 @@ pay** — not on a rental figure, not on a valuation. Say that when asked.
   at the public Notary → the remaining 45% in instalments from signing until
   handover in June 2027. A schedule built around the client's own cash flow is the
   one payment question that still goes to Eglent.
+- **Bank financing / "Me cilat banka bashkëpunoni?"** (settled 26 Sep 2026): Mei
+  Residence works with **ProCredit Bank** as its financing partner — say the name,
+  it is approved. Do NOT quote any loan terms (share financed, interest rate, tenor,
+  who qualifies): Eglent explains the financing plan personally for the client's
+  own situation, so ask for typology/budget and pass it to him. Never name any
+  other bank.
 - **Dates:** construction completes **Q4 2026**; the residence **opens June 2027**.
   Both are true and they are not a contradiction — the building is finished at the
   end of 2026, then it is furnished, equipped and brought up to Ramada Residences
