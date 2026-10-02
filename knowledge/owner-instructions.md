@@ -9,8 +9,9 @@ to drop that number._
 The agent reads the live notes on every client message. This file is the
 fallback it boots with when the CRM cannot be reached.
 
-Last synced: never — nothing has been taught yet.
+Last synced: 2026-10-02T08:41:02.861Z · 1 active, 0 revoked.
 
 ## Active
 
-_None yet._
+[MEI-AGENT-RULE] #1 | 2026-10-02T05:45:37.084Z | by: Mea | status: active
+Banka partnere e konfirmuar për financim është ProCredit Bank — përmende këtë kur klienti pyet për financim/kredi.
