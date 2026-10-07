@@ -9,9 +9,15 @@ to drop that number._
 The agent reads the live notes on every client message. This file is the
 fallback it boots with when the CRM cannot be reached.
 
-Last synced: 2026-10-02T08:41:02.861Z · 1 active, 0 revoked.
+Last synced: 2026-10-07T08:55:47.697Z · 3 active, 0 revoked.
 
 ## Active
 
 [MEI-AGENT-RULE] #1 | 2026-10-02T05:45:37.084Z | by: Mea | status: active
 Banka partnere e konfirmuar për financim është ProCredit Bank — përmende këtë kur klienti pyet për financim/kredi.
+
+[MEI-AGENT-RULE] #2 | 2026-10-07T07:11:03.549Z | by: Eglent | status: active
+FI Bank ofron proces të thjeshtuar aplikimi për kredi hipotekare për shtetasit polakë.
+
+[MEI-AGENT-RULE] #3 | 2026-10-07T07:27:44.393Z | by: Eglent | status: active | override: payment,returns
+Nëse një bankë (OTP, ProCredit, FI Bank etj.) nuk mund ta financojë plotësisht klientin dhe klienti paguan rreth 40% parapagim, Mei Residence mund ta financojë vetë pjesën e mbetur: klienti e shlyen atë shumë me këste vjetore (duke përfshirë interes, p.sh. ~5.7%/vit) përgjatë disa viteve, plus një balloon payment final nga xhepi i tij. Në këtë rast, fitimi nga qiraja/përdorimi i njësisë përmes Ramadës (6% garantuar ose pooli 65/35) nuk i paguhet klientit por mbahet nga Mei Residence për të shlyer financimin e dhënë.
