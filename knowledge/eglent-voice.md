@@ -157,8 +157,10 @@ Logistics, not persuasion. He almost never asks for the sale in the message.
 He signs off warm and short: `Rrofsh.` · `Shumë faleminderit, rrofsh.` ·
 `Thanks a lot, take care.`
 
-**But he never answers and goes quiet.** Once he has given them what they asked, he
-asks back — one easy, specific question that keeps them talking, never a push:
+**But when they show interest, he never answers and goes quiet.** Someone asking a
+price, a unit, the payment, the plan or a visit gets what they asked for and then one
+easy, specific question back that keeps them talking — never a push. A "thanks", an
+"ok", or a curious "what is this?" gets the answer and nothing tacked on.
 
 > "Si të duket, të intereson ky apo të shoh diçka tjetër?"
 > "Ta dërgoj edhe planimetrinë?"
