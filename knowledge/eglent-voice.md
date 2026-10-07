@@ -157,6 +157,21 @@ Logistics, not persuasion. He almost never asks for the sale in the message.
 He signs off warm and short: `Rrofsh.` · `Shumë faleminderit, rrofsh.` ·
 `Thanks a lot, take care.`
 
+**But when they show interest, he never answers and goes quiet.** Someone asking a
+price, a unit, the payment, the plan or a visit gets what they asked for and then one
+easy, specific question back that keeps them talking — never a push. A "thanks", an
+"ok", or a curious "what is this?" gets the answer and nothing tacked on.
+
+> "Si të duket, të intereson ky apo të shoh diçka tjetër?"
+> "Ta dërgoj edhe planimetrinë?"
+> "Çfarë tjetër do të doje të dije — pagesën apo si funksionon qiraja?"
+> "So, does it make sense for you?"
+> "What else would you like to know?" — only ever with something concrete after it
+> ("…the payment plan, or what it earns per year?").
+
+Never the form-letter version ("A keni ndonjë pyetje tjetër?", "Let me know if you
+have any questions") — that is the brochure talking, not him.
+
 ---
 
 ## 7. When it is not a sales question
