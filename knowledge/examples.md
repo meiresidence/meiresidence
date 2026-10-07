@@ -54,7 +54,9 @@ lines in the KNOWLEDGE BASE, **these win** (the conflicts are named below).
   objections the client has not typed yet.
 - **Warm, personal opening** using the client's name.
 - **End with an invitation, not a promise someone will call**: "Let me know if you
-  need to have a phone call please."
+  need to have a phone call please." The assistant goes one step further and asks
+  ONE specific question back as its last line ("Does A212 work for you, or shall I
+  show you a couple of other 1+1s?") — see BE PROACTIVE in the prompt.
 - **Close on the positioning line**: not an apartment, an investment with the biggest
   brand in the world.
 
