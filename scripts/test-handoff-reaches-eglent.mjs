@@ -63,8 +63,11 @@ for (const t of plainAnswers) check(`plain answer left alone: "${t.slice(0, 46)}
 const index = fs.readFileSync(new URL('../index.js', import.meta.url), 'utf8');
 check('webhook reconciles a promise with no handoff',
   /!handoffFired && reconcileEnabled\(\) && promisesHandoff\(reply\)/.test(index));
+// The send call gained a `{ stillOurTurn }` option on 2026-10-07 (human takeover),
+// so the anchor is the call's stable prefix — and it must exist.
+const sendAt = index.indexOf('await sendReplyChunked(contactId, reply, channel');
 check('reconciliation runs BEFORE the reply is sent',
-  index.indexOf('promisesHandoff(reply)') < index.indexOf('await sendReplyChunked(contactId, reply, channel)'));
+  sendAt > -1 && index.indexOf('promisesHandoff(reply)') < sendAt);
 // The tag call carries HANDOFF_ALERTED_TAG since 2026-09-18, so this anchor
 // moved. It is resolved strictly: a missing anchor used to return -1 and let
 // the ordering check pass against a string that no longer existed.

@@ -61,6 +61,26 @@ channel off and makes both numbers ordinary contacts again.
 
 ---
 
+## When a person steps in, the agent steps back
+
+If Eglent or a colleague writes to a client — from the WhatsApp Business app on
+the phone, the GHL inbox, or by calling — the agent stops answering that client.
+
+- **For 24 hours after the person's last message** the agent sends nothing to
+  that client: no reply, no tags, no handoff. Each new message from the person
+  restarts the clock. After that the agent picks the conversation up again,
+  with the person's messages in its history. Change the window with
+  `HUMAN_TAKEOVER_HOURS` on Render (`0` turns it off).
+- **If a person answers while the agent is still writing**, the agent's reply
+  is dropped. It re-reads the chat right before every message it sends.
+- **Tag a contact `ai-off`** in GHL to keep the agent out of that conversation
+  for as long as the tag is there. Remove the tag to hand it back.
+
+How a person is recognised: messages the agent sends carry its GHL integration
+app id; messages typed by a person do not. Bulk sends, workflows and campaigns
+are automated and never count. Logs show `[human] … the agent stays quiet.`
+Code: `src/human-takeover.js`; test: `node scripts/test-human-takeover.mjs`.
+
 ## What you need (2 accounts)
 1. **Anthropic API key** — powers Claude (the brain).
 2. **Meta WhatsApp Business (Cloud API)** — a phone number + access token.

@@ -112,6 +112,7 @@ import { looksLikeNonBuyerOutreach } from './src/not-a-lead.js';
 import { handoffTooEarly, MIN_CLIENT_TURNS_BEFORE_HANDOFF } from './src/handoff-timing.js';
 import { sanitizeHistory, dropIncompleteToolUse } from './src/conversation.js';
 import { buildThread } from './src/thread.js';
+import { humanTakeover } from './src/human-takeover.js';
 import { PLACES_TOOL, findPlaces, isConfigured as placesConfigured } from './src/places.js';
 // Human delivery (2026-09-08): the reply goes out the way a person sends it —
 // a couple of short bubbles with a pause before each — and the model is handed a
@@ -860,8 +861,21 @@ const CHANNEL_TYPE_MAP = {
 // Reply on whichever channel the inbound message actually came in on
 // (WhatsApp / IG / FB), keyed by contactId — not by phone number, since
 // Instagram/Facebook contacts have no phone.
-const sendReply = (contactId, message, channel = 'WhatsApp') =>
-  ghl('/conversations/messages', 'POST', { type: channel, contactId, message }, '2021-04-15');
+//
+// Every message id we send is remembered for a while, so the human-takeover check
+// (src/human-takeover.js) can never mistake one of the agent's own messages for a
+// person on our side, even if GHL left the integration app id off it.
+const ownSentIds = new Set();
+const OWN_SENT_IDS_MAX = 5000;
+async function sendReply(contactId, message, channel = 'WhatsApp') {
+  const res = await ghl('/conversations/messages', 'POST', { type: channel, contactId, message }, '2021-04-15');
+  const id = res?.data?.messageId || res?.data?.id;
+  if (id) {
+    ownSentIds.add(id);
+    if (ownSentIds.size > OWN_SENT_IDS_MAX) ownSentIds.delete(ownSentIds.values().next().value);
+  }
+  return res;
+}
 // Long answers are SENT IN FULL, as consecutive messages (2026-08-30). The
 // agent used to be told to keep replies short, so a client who asked fourteen
 // due-diligence questions in one message got four sentences back. It now answers
@@ -878,11 +892,24 @@ const sendReply = (contactId, message, channel = 'WhatsApp') =>
 // reply is never delayed by more than HUMAN_TOTAL_DELAY_MAX_MS (12s by default).
 // Content is untouched — same words, same numbers, same links. HUMAN_PACING=off
 // restores the old single-message, no-delay behaviour.
-async function sendReplyChunked(contactId, message, channel = 'WhatsApp') {
+//
+// HUMAN TAKEOVER (2026-10-07): `stillOurTurn` is checked right before every bubble.
+// If a person on our side answered the client while the agent was thinking or
+// pacing, the rest of the reply is dropped instead of landing on top of theirs.
+async function sendReplyChunked(contactId, message, channel = 'WhatsApp', { stillOurTurn } = {}) {
+  const yieldToHuman = async (i, total) => {
+    if (!stillOurTurn) return false;
+    let ok = true;
+    try { ok = await stillOurTurn(); } catch (e) { ok = true; } // a failed read must never cost the client a reply
+    if (ok) return false;
+    console.log(`[human] ${contactId}: a person on our side answered while the agent was replying — ${i ? `stopped after ${i}/${total} message(s)` : 'reply not sent'}.`);
+    return true;
+  };
   const parts = splitIntoBubbles(message);
   if (parts.length <= 1) {
     const only = parts[0] ?? message;
     if (humanPacingOn()) await sleep(typingDelayMs(only, 0));
+    if (await yieldToHuman(0, 1)) return { ok: true, data: null, yielded: true };
     return sendReply(contactId, only, channel);
   }
   const delays = pacingPlan(parts);
@@ -890,6 +917,7 @@ async function sendReplyChunked(contactId, message, channel = 'WhatsApp') {
   let last = { ok: true, data: null };
   for (const [i, part] of parts.entries()) {
     if (delays[i]) await sleep(delays[i]);
+    if (await yieldToHuman(i, parts.length)) return { ...last, yielded: true };
     last = await sendReply(contactId, part, channel);
     if (!last.ok) {
       console.error(`[msg] ${contactId}: part ${i + 1}/${parts.length} FAILED`, JSON.stringify(last.data).slice(0, 200));
@@ -1021,6 +1049,11 @@ async function fetchThreadOnce(contactId) {
   if (!thread) return null;
   return {
     ...thread,
+    // Kept for the human-takeover check, which needs every raw message — the
+    // transcript above drops attachment-only messages, and a photo Eglent sends
+    // from his phone still means a person is in the conversation.
+    conversationId: conversation.id,
+    rawMessages: msgs,
     name: conversation.fullName || conversation.contactName || '',
     tags: Array.isArray(conversation.tags) ? conversation.tags : [],
     // The lead's own number and email. The handoff alert is useless without
@@ -1030,6 +1063,21 @@ async function fetchThreadOnce(contactId) {
     phone: conversation.phone || '',
     email: conversation.email || '',
   };
+}
+
+// The newest few messages of a conversation, for the last-second check before a
+// reply goes out (has a person on our side answered in the meantime?). Returns
+// null on any failure — the caller then sends as normal.
+async function fetchRecentMessages(conversationId, limit = 10) {
+  if (!conversationId) return null;
+  try {
+    const m = await ghl(`/conversations/${conversationId}/messages?limit=${limit}`, 'GET', null, '2021-04-15');
+    if (!m.ok) return null;
+    return m.data?.messages?.messages || m.data?.messages || [];
+  } catch (e) {
+    console.error('[human] recent-messages read failed', e?.message || e);
+    return null;
+  }
 }
 
 // A brand-new contact's very first message can trigger this webhook before
@@ -1820,6 +1868,16 @@ app.post('/ghl-webhook', async (req, res) => {
       return res.status(200).json({ reply: ownerReply, contactId, channel, owner: owner.name });
     }
 
+    // A PERSON HAS STEPPED IN (2026-10-07). If Eglent or a colleague has written to
+    // this client recently — from the WhatsApp app on the phone, the GHL inbox, or
+    // a call — the conversation is theirs: no reply, no tags, no handoff. The
+    // contact tag `ai-off` does the same indefinitely. See src/human-takeover.js.
+    const takeover = humanTakeover({ rawMessages: thread.rawMessages, tags: thread.tags, ownIds: ownSentIds });
+    if (takeover) {
+      console.log(`[human] ${contactId}: ${takeover.reason} — the agent stays quiet.`);
+      return res.status(200).json({ reply: '', contactId, humanTakeover: takeover.reason });
+    }
+
     // History is REBUILT from the CRM every time rather than appended to a
     // process-local Map: it survives restarts, it includes messages sent from
     // GHL's inbox or by a bulk template, and it can never drift from what the
@@ -1911,7 +1969,15 @@ app.post('/ghl-webhook', async (req, res) => {
       if (r?.blocked) console.log(`[handoff] ${contactId}: reconciliation refused (${r.blocked})`);
     }
 
-    const sent = await sendReplyChunked(contactId, reply, channel); // reply on the same channel it arrived on
+    // Last look before it goes out (and between bubbles): if a person on our side
+    // answered while the agent was thinking, their message stands alone.
+    const stillOurTurn = async () => {
+      const fresh = await fetchRecentMessages(thread.conversationId);
+      if (!fresh) return true;
+      return !humanTakeover({ rawMessages: fresh, ownIds: ownSentIds });
+    };
+    const sent = await sendReplyChunked(contactId, reply, channel, { stillOurTurn }); // reply on the same channel it arrived on
+    if (sent.yielded) return res.status(200).json({ reply: '', contactId, humanTakeover: 'a person answered while the agent was replying' });
     console.log(`[msg] ${contactId} (${channel}) <= ${thread.pendingCount} msg(s)${thread.afterTemplate ? ' after-template' : ''} history:${thread.history.length} "${String(text).replace(/\s+/g, ' ').slice(0, 40)}" => sent:${sent.ok}${failReason ? ' DEGRADED' : ''} "${reply.slice(0, 60)}"`);
     return res.status(200).json({ reply, contactId, channel, degraded: !!failReason || undefined });
   } catch (e) {
