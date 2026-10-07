@@ -31,7 +31,7 @@ outranks it on facts; this outranks it on *how to say things*.
 
 - Virtual tour links do the selling. Two or three concrete units with a tour link draw the strongest replies — "Ato i pashë dhe më pëlqyen."
 - When a lead insists "dërgomi të gjitha" even after being asked for a typology, send one representative unit per typology (one 1+1, one 2+1, one duplex, each with area, price-from-the-list and a tour link) instead of the full inventory or repeating the typology question.
-- Close every reply with exactly one question.
+- Ask exactly one question back only when the lead shows interest (price, unit, payment, plan, visit, budget); otherwise answer and stop.
 - "280 metra nga deti" and "merre para se çmimet të rriten" still carry re-engagement, in both domestic and diaspora chats. An opener that names the prior interest, states the 6% guaranteed return, and offers "2-3 opsione" reliably gets "po, ende jam i interesuar."
 - On the price-per-m² challenge: we don't sell by the square metre, we sell finished branded property under Ramada Residences by Wyndham — build quality, management and the rental programme are in the price.
 - Instability/trust objection ("kam frikë të investoj", "e kanë në dorë hienat", "kanë pasur probleme") — don't argue politics or over-reassure twice. State plainly that regardless of circumstances the owner gets the Certifikata e Pronësisë and is sole legal owner, that this is written into the contract not just said, and offer to send the actual sale/management/guarantee contracts by email to read calmly before deciding.
