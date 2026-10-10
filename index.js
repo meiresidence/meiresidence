@@ -137,6 +137,7 @@ import { createInstructionStore } from './src/instructions.js';
 import { OWNER_TOOLS, ownerSystemPrompt } from './src/owner-mode.js';
 import { absoluteBreaches, conflictingRules } from './src/hard-rules.js';
 import { saysAlreadyBought, BOUGHT_TAG } from './src/already-bought.js';
+import { isInstagram, hasLink, instagramSafe, instagramNote, phoneLeftNote, extractPhone, rewriteNote } from './src/instagram.js';
 
 const MAX_OUTPUT_TOKENS = 8192;
 
@@ -414,6 +415,9 @@ PLAN first, then the 3D plan — never the 3D on its own. If the unit's line has
 if it has neither, send the 3D catalogue https://mei-tour.netlify.app and offer the
 detailed floor-plan PDF through the team. The 3D plan is an illustrative model of the
 typology — don't present it as final finishes.
+ON INSTAGRAM THERE ARE NO LINKS: Instagram does not deliver a message with a link in it.
+When the CONVERSATION CONTEXT says the client is on Instagram, its CHANNEL rules replace
+every link instruction in this prompt.
 
 TOUR OF THE WHOLE RESIDENCE, NOT A UNIT. If a client asks for a virtual tour, video or
 walkthrough of the residence/building/complex in general — not a named unit — send
@@ -1167,6 +1171,11 @@ function buildContextNote({ name, tags, thread, handoffJustFired = false }) {
   const lines = ['CONVERSATION CONTEXT — THIS CONTACT. Internal: never quote or mention it to the client.'];
   if (name) lines.push(`- Client name: ${name}`);
   if (tags?.length) lines.push(`- CRM tags (internal only): ${tags.join(', ')}`);
+  // Instagram drops any DM with a link in it (2026-10-10) — see src/instagram.js.
+  if (isInstagram(thread.channel)) {
+    lines.push(instagramNote());
+    if (thread.igPhoneLeft) lines.push(phoneLeftNote(thread.igPhoneLeft));
+  }
   if (handoffJustFired) {
     lines.push('- A Mei specialist has just been notified about this client: the handoff you asked for earlier in this conversation was held back at the time and has now gone through. Answer their message in full from the KNOWLEDGE BASE, and you may close by naming the one open item the specialist will follow up on.');
   }
@@ -1564,6 +1573,27 @@ const usableText = (content) => content
   .filter(Boolean)
   .join('\n')
   .trim();
+
+// Instagram drops a DM with a link in it (2026-10-10). Ask the model once to say
+// the same thing without the link, moving plans and tours to WhatsApp. On any
+// failure the draft comes back unchanged and the caller strips the link instead.
+async function rewriteForInstagram(conv, contactId, clientText, draft) {
+  try {
+    const resp = await callClaude([
+      { role: 'user', content: String(clientText || '') || '.' },
+      { role: 'assistant', content: draft },
+      { role: 'user', content: rewriteNote() },
+    ], 2048, { withTools: false, contextNote: conv.contextNote });
+    const text = usableText(resp.content);
+    if (text) {
+      console.log(`[ig] ${contactId}: reply had a link — rewritten without it`);
+      return tidyForHuman(text, { contactId });
+    }
+  } catch (e) {
+    console.error(`[ig] ${contactId}: rewrite failed`, e?.message || e);
+  }
+  return draft;
+}
 
 // The tool-use loop. Kept separate from generateReply so that ANY failure in
 // here (a 400 from a malformed history, a transient API error) gets one clean
@@ -1974,6 +2004,25 @@ app.post('/ghl-webhook', async (req, res) => {
       await tagContact(contactId, [BOUGHT_TAG], 'bought');
     }
 
+    // INSTAGRAM: THE CLIENT LEFT THEIR NUMBER (2026-10-10). Floor plans only travel
+    // as links and Instagram drops links, so on Instagram the agent asks for their
+    // number (or gives ours). When they leave it, it goes on the contact — an
+    // Instagram contact has no phone — and a handoff fires after the reply, so a
+    // person sends them the plan on WhatsApp. See src/instagram.js.
+    let igPhone = '';
+    if (isInstagram(channel)) {
+      igPhone = extractPhone(text);
+      if (igPhone) {
+        thread.igPhoneLeft = igPhone;
+        if (!thread.phone) {
+          const saved = await ghl(`/contacts/${contactId}`, 'PUT', { phone: igPhone }, '2021-07-28')
+            .catch((e) => ({ ok: false, data: { message: e?.message || String(e) } }));
+          console.log(`[ig] ${contactId} left their phone ${igPhone} on Instagram — saved on contact:${!!saved?.ok}`);
+        }
+        conv.phone = conv.phone || igPhone;
+      }
+    }
+
     conv.contextNote = buildContextNote({ name, tags: thread.tags, thread, handoffJustFired });
 
     // What Eglent and Mea have taught the agent, appended AFTER the prompt-cache
@@ -2011,8 +2060,35 @@ app.post('/ghl-webhook', async (req, res) => {
     // Last pass before it goes out: drop a dead greeting line and log any stock
     // call-centre phrasing that slipped through the voice rules (src/voice.js).
     reply = tidyForHuman(reply, { contactId, degraded: !!failReason });
+
+    // INSTAGRAM: NO LINKS (2026-10-10). A DM with a link in it is never delivered,
+    // so a reply that still carries one is rewritten once without it, and whatever
+    // survives the rewrite is cut out before sending. See src/instagram.js.
+    if (isInstagram(channel) && hasLink(reply)) {
+      if (!failReason) reply = await rewriteForInstagram(conv, contactId, text, reply);
+      if (hasLink(reply)) {
+        console.warn(`[ig] ${contactId}: reply still had a link after the rewrite — stripping it`);
+        reply = instagramSafe(reply);
+      }
+    }
     // Did it ask back after answering? Logged as [proactive], never rewritten.
     checkProactive(reply, { contactId, clientText: text, degraded: !!failReason });
+
+    // An Instagram client who left their number is waiting for the plan on
+    // WhatsApp: a person has to know, so the handoff fires now (the timing gate
+    // does not apply — they asked for it). The non-buyer guard still does.
+    if (igPhone && !handoffFired) {
+      const r = await escalate(contactId, name, {
+        reason: `Instagram client left their phone number (${igPhone}) to get the floor plan / details on WhatsApp — links do not arrive on Instagram.`,
+        lead_summary: lastClientText(contactId).slice(0, 300),
+        language: thread.language || undefined,
+      }, { force: true }).catch((e) => {
+        console.error('[ig] phone handoff failed', e?.message || e);
+        return null;
+      });
+      if (r?.ok && !r?.blocked) handoffFired = true;
+      else if (r?.blocked) console.log(`[ig] ${contactId}: phone handoff refused (${r.blocked})`);
+    }
 
     // A PROMISE MUST NEVER OUTLIVE THE HANDOFF (2026-09-09). If the reply tells
     // the client a specialist is coming — or hands over Eglent's direct number —
